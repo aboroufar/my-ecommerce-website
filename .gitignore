@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase CLI local link metadata
+/supabase/.temp/
+
+# claude code local tooling config
+/.claude/settings.local.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

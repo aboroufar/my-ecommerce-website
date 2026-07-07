@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProduct, deleteProduct } from "@/lib/actions/products";
 import { ProductForm } from "@/components/admin/ProductForm";
+import type { ProductStatus } from "@/lib/supabase/types";
 
 export default async function EditProductPage({
   params,
@@ -47,7 +48,7 @@ export default async function EditProductPage({
           price: product.price_cents / 100,
           sku: product.sku,
           stock_qty: product.stock_qty,
-          status: product.status,
+          status: product.status as ProductStatus,
           image_url: image?.url ?? "",
         }}
         extraAction={
