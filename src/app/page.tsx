@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { getActiveProducts } from "@/lib/products";
+import { getActiveProducts, getCategories } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { FeaturedCarousel } from "@/components/FeaturedCarousel";
+import { BestSellers } from "@/components/BestSellers";
 import { TrustBadges } from "@/components/TrustBadges";
 
 export default async function Home() {
-  const allProducts = await getActiveProducts();
+  const [allProducts, categories] = await Promise.all([
+    getActiveProducts(),
+    getCategories(),
+  ]);
   const featuredProducts = allProducts.slice(0, 8);
   const products = allProducts.slice(0, 4);
 
@@ -39,6 +43,8 @@ export default async function Home() {
       <TrustBadges />
 
       <FeaturedCarousel products={featuredProducts} />
+
+      <BestSellers products={allProducts} categories={categories} />
 
       <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-16">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[220px_1fr]">

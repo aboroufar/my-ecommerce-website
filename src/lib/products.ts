@@ -114,6 +114,58 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 /**
+ * Searches active products by name/description substring match.
+ * Returns an empty array for a blank query, on error, or if Supabase isn't
+ * configured yet.
+ */
+const PRODUCT_SEARCH_SELECT =
+  "id, name, slug, description, price_cents, currency, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))";
+
+export async function searchProducts(query: string): Promise<ProductSummary[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  try {
+    const supabase = createPublicClient();
+    // Escape ilike wildcards (% _) so the query is treated as a literal
+    // substring. Deliberately NOT using .or('name.ilike...,description...')
+    // here -- PostgREST's logic-tree parser for .or()/.and() treats `,` and
+    // `()` as structural syntax that can't be escaped away (confirmed: a
+    // query containing a comma or parenthesis throws "failed to parse logic
+    // tree" even with backslash-escaping). Running two plain .ilike() calls
+    // and merging client-side sidesteps that parser entirely.
+    const escaped = trimmed.replace(/[%_]/g, (char) => `\\${char}`);
+    const pattern = `%${escaped}%`;
+
+    const [byName, byDescription] = await Promise.all([
+      supabase
+        .from("products")
+        .select(PRODUCT_SEARCH_SELECT)
+        .eq("status", "active")
+        .ilike("name", pattern),
+      supabase
+        .from("products")
+        .select(PRODUCT_SEARCH_SELECT)
+        .eq("status", "active")
+        .ilike("description", pattern),
+    ]);
+
+    if (byName.error) console.error("searchProducts (name) error:", byName.error.message);
+    if (byDescription.error)
+      console.error("searchProducts (description) error:", byDescription.error.message);
+
+    const seen = new Map<string, ProductSummary>();
+    for (const product of [...(byName.data ?? []), ...(byDescription.data ?? [])]) {
+      seen.set(product.id, product);
+    }
+    return [...seen.values()];
+  } catch (err) {
+    console.error("searchProducts failed (Supabase not configured?):", err);
+    return [];
+  }
+}
+
+/**
  * Fetches a single active product by slug for the detail page.
  * Returns null if not found, not active, or Supabase isn't reachable.
  */

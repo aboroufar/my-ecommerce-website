@@ -66,7 +66,9 @@ export async function SiteHeader() {
             <span className="hidden items-center gap-1 sm:flex">
               <span aria-hidden>+</span> US ($)
             </span>
-            <SearchIcon />
+            <Link href="/search" aria-label="Search" className="transition-opacity hover:opacity-70">
+              <SearchIcon />
+            </Link>
             <CartLink />
             <AccountLink />
           </div>
