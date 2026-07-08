@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
-import { MagicLinkForm } from "@/components/auth/MagicLinkForm";
+import { SignInForm } from "@/components/auth/SignInForm";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
 export default async function AccountLayout({
@@ -11,13 +11,7 @@ export default async function AccountLayout({
   const user = await getSessionUser();
 
   if (!user) {
-    return (
-      <MagicLinkForm
-        next="/account"
-        heading="Sign in to your account"
-        description="Enter your email and we'll send a one-time sign-in link. No password to manage."
-      />
-    );
+    return <SignInForm next="/account" />;
   }
 
   return (
