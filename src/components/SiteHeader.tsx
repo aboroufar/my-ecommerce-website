@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CartLink } from "./CartLink";
 import { AccountLink } from "./AccountLink";
+import { MegaMenu } from "./MegaMenu";
 import { getCategories } from "@/lib/products";
 
 // TODO: replace with real profile URLs once social accounts exist.
@@ -80,20 +81,7 @@ export async function SiteHeader() {
           >
             Storefront
           </Link>
-          <nav className="hidden items-center gap-8 text-xs font-medium uppercase tracking-wide text-foreground sm:flex">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/products?category=${category.slug}`}
-                className="transition-colors hover:text-accent"
-              >
-                {category.name}
-              </Link>
-            ))}
-            <Link href="/products" className="transition-colors hover:text-accent">
-              Shop all
-            </Link>
-          </nav>
+          <MegaMenu categories={categories} />
         </div>
       </div>
 
