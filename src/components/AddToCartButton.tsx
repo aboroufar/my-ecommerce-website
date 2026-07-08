@@ -31,7 +31,7 @@ export function AddToCartButton({ product }: { product: ProductDetail }) {
       <button
         onClick={handleAdd}
         disabled={!inStock}
-        className="mt-8 w-full max-w-xs bg-accent px-6 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+        className="mt-8 w-full max-w-xs bg-foreground px-6 py-3.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
       >
         {!inStock ? "Out of stock" : added ? "Added ✓" : "Add to cart"}
       </button>

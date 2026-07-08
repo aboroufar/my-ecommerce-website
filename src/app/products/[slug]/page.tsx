@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getActiveProducts, getProductBySlug } from "@/lib/products";
-import { PriceTag } from "@/components/PriceTag";
+import { formatPrice } from "@/lib/format";
 import { AddToCartButton } from "@/components/AddToCartButton";
 
 export const revalidate = 60;
@@ -53,14 +53,14 @@ export default async function ProductDetailPage({
       </Link>
 
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2">
-        <div className="aspect-square overflow-hidden bg-accent-soft">
+        <div className="aspect-square overflow-hidden bg-surface">
           {images[0] ? (
             <Image
               src={images[0].url}
               alt={images[0].alt_text ?? product.name}
               width={800}
               height={800}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain p-10"
               priority
             />
           ) : (
@@ -73,12 +73,12 @@ export default async function ProductDetailPage({
         </div>
 
         <div className="flex flex-col">
-          <h1 className="font-display text-3xl text-foreground">
+          <h1 className="font-display text-4xl font-bold text-foreground">
             {product.name}
           </h1>
 
-          <div className="mt-4">
-            <PriceTag cents={product.price_cents} currency={product.currency} />
+          <div className="mt-3 text-lg font-medium text-foreground">
+            {formatPrice(product.price_cents, product.currency)}
           </div>
 
           {product.description && (

@@ -49,6 +49,36 @@ export async function getActiveProducts(): Promise<ProductSummary[]> {
   }
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+/**
+ * Fetches all categories for nav/mega-menu use.
+ * Returns an empty array (rather than throwing) if Supabase isn't configured
+ * yet or the request fails.
+ */
+export async function getCategories(): Promise<Category[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, slug")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("getCategories error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("getCategories failed (Supabase not configured?):", err);
+    return [];
+  }
+}
+
 /**
  * Fetches a single active product by slug for the detail page.
  * Returns null if not found, not active, or Supabase isn't reachable.
