@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { getActiveProducts } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
+import { FeaturedCarousel } from "@/components/FeaturedCarousel";
 import { TrustBadges } from "@/components/TrustBadges";
 
 export default async function Home() {
-  const products = (await getActiveProducts()).slice(0, 4);
+  const allProducts = await getActiveProducts();
+  const featuredProducts = allProducts.slice(0, 8);
+  const products = allProducts.slice(0, 4);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -34,6 +37,8 @@ export default async function Home() {
       </section>
 
       <TrustBadges />
+
+      <FeaturedCarousel products={featuredProducts} />
 
       <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-16">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[220px_1fr]">
