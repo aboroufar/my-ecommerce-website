@@ -6,6 +6,16 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "hydrogen-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "PATH=/opt/homebrew/opt/node@24/bin:$PATH npm run dev"
+      ],
+      "cwd": "hydrogen-storefront",
+      "port": 3000
     }
   ]
 }

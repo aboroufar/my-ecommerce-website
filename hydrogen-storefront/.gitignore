@@ -1,0 +1,9 @@
+node_modules
+.cache
+dist
+build
+.env
+.env.*
+!.env.example
+.turbo
+.shopify
