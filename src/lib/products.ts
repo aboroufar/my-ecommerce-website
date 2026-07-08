@@ -7,7 +7,7 @@ export interface ProductImage {
 }
 
 export interface ProductCategoryRef {
-  categories: { name: string } | null;
+  categories: { name: string; slug: string } | null;
 }
 
 export interface ProductSummary {
@@ -27,28 +27,56 @@ export interface ProductDetail extends ProductSummary {
   stock_qty: number;
 }
 
+export type ProductSort = "newest" | "price-asc" | "price-desc" | "name-asc";
+
+const sortColumns: Record<ProductSort, { column: string; ascending: boolean }> = {
+  newest: { column: "created_at", ascending: false },
+  "price-asc": { column: "price_cents", ascending: true },
+  "price-desc": { column: "price_cents", ascending: false },
+  "name-asc": { column: "name", ascending: true },
+};
+
 /**
- * Fetches all active products for the listing page, ordered newest first.
- * Returns an empty array (rather than throwing) if Supabase isn't configured
- * yet or the request fails, so the page can render a friendly empty state
- * instead of crashing.
+ * Fetches active products for the listing page, optionally filtered by
+ * category slug and sorted. Returns an empty array (rather than throwing)
+ * if Supabase isn't configured yet or the request fails, so the page can
+ * render a friendly empty state instead of crashing.
  */
-export async function getActiveProducts(): Promise<ProductSummary[]> {
+export async function getActiveProducts(options?: {
+  categorySlug?: string;
+  sort?: ProductSort;
+}): Promise<ProductSummary[]> {
   try {
     const supabase = createPublicClient();
+    const { column, ascending } = sortColumns[options?.sort ?? "newest"];
+
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, currency, product_images(url, alt_text, sort_order), product_categories(categories(name))"
+        "id, name, slug, description, price_cents, currency, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
       )
       .eq("status", "active")
-      .order("created_at", { ascending: false });
+      .order(column, { ascending });
 
     if (error) {
       console.error("getActiveProducts error:", error.message);
       return [];
     }
-    return data ?? [];
+
+    const products = data ?? [];
+    if (!options?.categorySlug) return products;
+
+    // Filter by category client-side: with only two categories and a
+    // handful of products, this avoids the type-inference breakage that
+    // dynamic !inner select strings cause with postgrest-js (see
+    // src/lib/supabase/types.ts notes on Insert/Update literal shapes --
+    // the same "computed types silently collapse to never" trap applies
+    // to select-string interpolation here).
+    return products.filter((p) =>
+      p.product_categories.some(
+        (pc) => pc.categories?.slug === options.categorySlug
+      )
+    );
   } catch (err) {
     console.error("getActiveProducts failed (Supabase not configured?):", err);
     return [];
@@ -97,7 +125,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, currency, sku, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name))"
+        "id, name, slug, description, price_cents, currency, sku, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
       )
       .eq("slug", slug)
       .eq("status", "active")

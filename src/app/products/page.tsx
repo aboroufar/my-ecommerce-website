@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { getActiveProducts } from "@/lib/products";
+import Link from "next/link";
+import { getActiveProducts, getCategories, type ProductSort } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
+import { SortDropdown } from "@/components/SortDropdown";
 
 export const revalidate = 60;
 
@@ -9,34 +11,110 @@ export const metadata: Metadata = {
   description: "Browse the full catalog.",
 };
 
-export default async function ProductsPage() {
-  const products = await getActiveProducts();
+const validSorts: ProductSort[] = ["newest", "price-asc", "price-desc", "name-asc"];
+
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; sort?: string }>;
+}) {
+  const { category, sort } = await searchParams;
+  const activeSort = validSorts.includes(sort as ProductSort)
+    ? (sort as ProductSort)
+    : "newest";
+
+  const [products, categories] = await Promise.all([
+    getActiveProducts({ categorySlug: category, sort: activeSort }),
+    getCategories(),
+  ]);
+
+  const activeCategory = categories.find((c) => c.slug === category);
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
-      <div className="mb-10">
-        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-          Catalog
-        </span>
-        <h1 className="mt-2 font-display text-3xl text-foreground">
-          Shop all
-        </h1>
+    <main className="w-full flex-1">
+      <div className="border-b border-line bg-surface px-6 py-4">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+          <SortDropdown current={activeSort} />
+          <Breadcrumb categoryName={activeCategory?.name} />
+        </div>
       </div>
 
-      {products.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+      <div className="mx-auto w-full max-w-6xl px-6 py-12">
+        <div className="mb-10">
+          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+            Catalog
+          </span>
+          <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
+            {activeCategory?.name ?? "Shop all"}
+          </h1>
         </div>
-      )}
+
+        {products.length === 0 ? (
+          <EmptyState hasFilter={!!category} />
+        ) : (
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   );
 }
 
-function EmptyState() {
+function Breadcrumb({ categoryName }: { categoryName?: string }) {
+  return (
+    <nav
+      aria-label="Breadcrumb"
+      className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted"
+    >
+      <Link href="/" aria-label="Home" className="transition-colors hover:text-foreground">
+        <HomeIcon />
+      </Link>
+      <span aria-hidden>·</span>
+      <Link href="/products" className="transition-colors hover:text-foreground">
+        Shop
+      </Link>
+      {categoryName && (
+        <>
+          <span aria-hidden>·</span>
+          <span className="text-foreground">{categoryName}</span>
+        </>
+      )}
+    </nav>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+      <path
+        d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function EmptyState({ hasFilter }: { hasFilter: boolean }) {
+  if (hasFilter) {
+    return (
+      <div className="rounded-sm border border-dashed border-line px-6 py-16 text-center">
+        <p className="font-display text-lg text-foreground">
+          No products in this category yet.
+        </p>
+        <Link
+          href="/products"
+          className="mt-3 inline-block text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4"
+        >
+          View all products
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-sm border border-dashed border-line px-6 py-16 text-center">
       <p className="font-display text-lg text-foreground">
