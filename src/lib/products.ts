@@ -6,13 +6,19 @@ export interface ProductImage {
   sort_order: number;
 }
 
+export interface ProductCategoryRef {
+  categories: { name: string } | null;
+}
+
 export interface ProductSummary {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
   price_cents: number;
   currency: string;
   product_images: ProductImage[];
+  product_categories: ProductCategoryRef[];
 }
 
 export interface ProductDetail extends ProductSummary {
@@ -33,7 +39,7 @@ export async function getActiveProducts(): Promise<ProductSummary[]> {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, price_cents, currency, product_images(url, alt_text, sort_order)"
+        "id, name, slug, description, price_cents, currency, product_images(url, alt_text, sort_order), product_categories(categories(name))"
       )
       .eq("status", "active")
       .order("created_at", { ascending: false });
@@ -91,7 +97,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, currency, sku, stock_qty, product_images(url, alt_text, sort_order)"
+        "id, name, slug, description, price_cents, currency, sku, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name))"
       )
       .eq("slug", slug)
       .eq("status", "active")

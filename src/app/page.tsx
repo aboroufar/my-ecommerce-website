@@ -35,33 +35,35 @@ export default async function Home() {
 
       <TrustBadges />
 
-      <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-16">
-        <div className="mb-10">
-          <h2 className="font-display text-4xl font-bold text-foreground">
-            Trending
-          </h2>
-          <p className="mt-1 font-display text-xl italic text-muted">
-            The formulas everyone&apos;s talking about.
-          </p>
-          <Link
-            href="/products"
-            className="mt-3 inline-block text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4"
-          >
-            Shop all →
-          </Link>
-        </div>
-
-        {products.length > 0 ? (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+      <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-16">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[220px_1fr]">
+          <div>
+            <h2 className="font-display text-4xl font-bold leading-tight text-foreground">
+              Trending
+            </h2>
+            <p className="mt-2 font-display text-xl italic leading-snug text-muted">
+              The formulas everyone&apos;s talking about.
+            </p>
+            <Link
+              href="/products"
+              className="mt-4 inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4"
+            >
+              Shop all →
+            </Link>
           </div>
-        ) : (
-          <p className="text-sm text-muted">
-            No products yet — add some via /admin.
-          </p>
-        )}
+
+          {products.length > 0 ? (
+            <div className="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted">
+              No products yet — add some via /admin.
+            </p>
+          )}
+        </div>
       </section>
 
       <section className="border-t border-line bg-surface px-6 py-20 sm:px-16">
