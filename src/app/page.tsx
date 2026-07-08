@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getActiveProducts, getCategories } from "@/lib/products";
-import { ProductCard } from "@/components/ProductCard";
 import { FeaturedCarousel } from "@/components/FeaturedCarousel";
 import { BestSellers } from "@/components/BestSellers";
 import { TrustBadges } from "@/components/TrustBadges";
@@ -11,7 +10,6 @@ export default async function Home() {
     getCategories(),
   ]);
   const featuredProducts = allProducts.slice(0, 8);
-  const products = allProducts.slice(0, 4);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -45,37 +43,6 @@ export default async function Home() {
       <FeaturedCarousel products={featuredProducts} />
 
       <BestSellers products={allProducts} categories={categories} />
-
-      <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-16">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[220px_1fr]">
-          <div>
-            <h2 className="font-display text-4xl font-bold leading-tight text-foreground">
-              Trending
-            </h2>
-            <p className="mt-2 font-display text-xl italic leading-snug text-muted">
-              The formulas everyone&apos;s talking about.
-            </p>
-            <Link
-              href="/products"
-              className="mt-4 inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4"
-            >
-              Shop all →
-            </Link>
-          </div>
-
-          {products.length > 0 ? (
-            <div className="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted">
-              No products yet — add some via /admin.
-            </p>
-          )}
-        </div>
-      </section>
 
       <section className="border-t border-line bg-surface px-6 py-20 sm:px-16">
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-4">
