@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAFAF8;
-  --foreground: #1C1E1B;
-  --accent: #2F4538;
-  --accent-soft: #E4EAE1;
-  --muted: #6B6F68;
-  --line: #DEDCD2;
+  --background: #FAF7F2;
+  --foreground: #2A211D;
+  --accent: #B26654;
+  --accent-soft: #F1E0D9;
+  --muted: #8A7B72;
+  --line: #E7DDD3;
 }
 
 @theme inline {
@@ -16,9 +16,9 @@
   --color-accent-soft: var(--accent-soft);
   --color-muted: var(--muted);
   --color-line: var(--line);
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --font-display: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font-display: var(--font-cormorant), Georgia, "Iowan Old Style", "Times New Roman", serif;
 }
 
 body {

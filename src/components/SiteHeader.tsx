@@ -4,16 +4,16 @@ import { AccountLink } from "./AccountLink";
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-line">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+    <header className="border-b border-line bg-background">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Link
           href="/"
-          className="font-display text-xl tracking-tight text-foreground"
+          className="font-display text-2xl tracking-wide text-foreground"
         >
           Storefront
         </Link>
-        <nav className="flex items-center gap-6 text-sm text-muted">
-          <Link href="/products" className="transition-colors hover:text-foreground">
+        <nav className="flex items-center gap-8 text-xs font-medium uppercase tracking-wide text-muted">
+          <Link href="/products" className="transition-colors hover:text-accent">
             Shop
           </Link>
           <AccountLink />

@@ -32,8 +32,8 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           className="absolute right-3 top-3"
         />
       </div>
-      <div className="mt-3 flex items-baseline justify-between">
-        <h3 className="text-sm text-foreground">{product.name}</h3>
+      <div className="mt-4 flex items-baseline justify-between">
+        <h3 className="font-display text-lg text-foreground">{product.name}</h3>
       </div>
     </Link>
   );
