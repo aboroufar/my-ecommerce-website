@@ -7,3 +7,6 @@ build
 !.env.example
 .turbo
 .shopify
+.react-router
+*storefrontapi.generated.d.ts
+customer-accountapi.generated.d.ts
