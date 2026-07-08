@@ -15,19 +15,23 @@ export default async function EditProductPage({
   const { error } = await searchParams;
 
   const supabase = createAdminClient();
-  const { data: product } = await supabase
-    .from("products")
-    .select(
-      "id, name, slug, description, price_cents, sku, stock_qty, status, product_images(url, sort_order)"
-    )
-    .eq("id", id)
-    .single();
+  const [{ data: product }, { data: categories }] = await Promise.all([
+    supabase
+      .from("products")
+      .select(
+        "id, name, slug, description, price_cents, sku, stock_qty, status, product_images(url, sort_order), product_categories(category_id)"
+      )
+      .eq("id", id)
+      .single(),
+    supabase.from("categories").select("id, name").order("name", { ascending: true }),
+  ]);
 
   if (!product) notFound();
 
   const image = [...product.product_images].sort(
     (a, b) => a.sort_order - b.sort_order
   )[0];
+  const categoryIds = product.product_categories.map((pc) => pc.category_id);
 
   const updateWithId = updateProduct.bind(null, id);
   const deleteWithId = deleteProduct.bind(null, id);
@@ -41,6 +45,7 @@ export default async function EditProductPage({
         action={updateWithId}
         error={error}
         submitLabel="Save changes"
+        categories={categories ?? []}
         defaultValues={{
           name: product.name,
           slug: product.slug,
@@ -50,6 +55,7 @@ export default async function EditProductPage({
           stock_qty: product.stock_qty,
           status: product.status as ProductStatus,
           image_url: image?.url ?? "",
+          categoryIds,
         }}
         extraAction={
           <form action={deleteWithId}>

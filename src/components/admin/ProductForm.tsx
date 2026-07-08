@@ -1,4 +1,5 @@
 import type { ProductStatus } from "@/lib/supabase/types";
+import { ImageUploadField } from "./ImageUploadField";
 
 interface ProductFormValues {
   name?: string;
@@ -9,6 +10,7 @@ interface ProductFormValues {
   stock_qty?: number;
   status?: ProductStatus;
   image_url?: string;
+  categoryIds?: string[];
 }
 
 export function ProductForm({
@@ -17,12 +19,14 @@ export function ProductForm({
   error,
   submitLabel,
   extraAction,
+  categories,
 }: {
   action: (formData: FormData) => void;
   defaultValues?: ProductFormValues;
   error?: string;
   submitLabel: string;
   extraAction?: React.ReactNode;
+  categories: { id: string; name: string }[];
 }) {
   return (
     <form action={action} className="mt-8 flex max-w-lg flex-col gap-5">
@@ -107,17 +111,32 @@ export function ProductForm({
       </div>
 
       <Field
-        label="Image URL"
-        hint="Paste a URL — e.g. a public Supabase Storage link. Replaces the existing image if editing."
+        label="Product image"
+        hint="Upload a file, or paste a URL below. Replaces the existing image if editing."
       >
-        <input
-          name="image_url"
-          type="url"
-          placeholder="https://..."
-          defaultValue={defaultValues?.image_url ?? ""}
-          className="border border-line bg-transparent px-3 py-2 text-sm"
-        />
+        <ImageUploadField defaultValue={defaultValues?.image_url ?? ""} />
       </Field>
+
+      {categories.length > 0 && (
+        <Field label="Categories">
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {categories.map((category) => (
+              <label
+                key={category.id}
+                className="flex items-center gap-2 text-sm text-foreground"
+              >
+                <input
+                  type="checkbox"
+                  name="category_ids"
+                  value={category.id}
+                  defaultChecked={defaultValues?.categoryIds?.includes(category.id)}
+                />
+                {category.name}
+              </label>
+            ))}
+          </div>
+        </Field>
+      )}
 
       <div className="mt-2 flex items-center gap-4">
         <button

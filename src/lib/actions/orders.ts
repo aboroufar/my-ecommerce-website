@@ -52,3 +52,32 @@ export async function updateOrderStatus(id: string, formData: FormData) {
   revalidatePath("/account/orders");
   redirect(`/admin/orders/${id}`);
 }
+
+export async function bulkUpdateOrderStatus(formData: FormData) {
+  await requireAdmin();
+
+  const ids = formData.getAll("order_ids") as string[];
+  const parsedStatus = z
+    .enum(["pending", "paid", "fulfilled", "cancelled", "refunded"])
+    .safeParse(formData.get("bulk_status"));
+
+  if (ids.length === 0 || !parsedStatus.success) {
+    redirect(
+      `/admin/orders?error=${encodeURIComponent("Select at least one order and a status.")}`
+    );
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: parsedStatus.data })
+    .in("id", ids);
+
+  if (error) {
+    redirect(`/admin/orders?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/account/orders");
+  redirect("/admin/orders");
+}

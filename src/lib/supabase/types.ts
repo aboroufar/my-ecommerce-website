@@ -61,6 +61,24 @@ export type Database = {
           },
         ]
       }
+      admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           cart_id: string

@@ -20,7 +20,7 @@ export default async function AdminLayout({
     );
   }
 
-  if (!isAdminEmail(user.email)) {
+  if (!(await isAdminEmail(user.email))) {
     return (
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-20 text-center">
         <h1 className="font-display text-2xl text-foreground">
@@ -60,6 +60,18 @@ export default async function AdminLayout({
             className="text-sm text-muted transition-colors hover:text-foreground"
           >
             Customers
+          </Link>
+          <Link
+            href="/admin/categories"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Categories
+          </Link>
+          <Link
+            href="/admin/settings"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Settings
           </Link>
         </nav>
         <div className="flex items-center gap-4 text-xs text-muted">

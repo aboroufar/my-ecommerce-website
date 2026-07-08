@@ -1,4 +1,5 @@
 import { createProduct } from "@/lib/actions/products";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ProductForm } from "@/components/admin/ProductForm";
 
 export default async function NewProductPage({
@@ -7,6 +8,11 @@ export default async function NewProductPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+  const supabase = createAdminClient();
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name")
+    .order("name", { ascending: true });
 
   return (
     <div>
@@ -15,6 +21,7 @@ export default async function NewProductPage({
         action={createProduct}
         error={error}
         submitLabel="Create product"
+        categories={categories ?? []}
       />
     </div>
   );

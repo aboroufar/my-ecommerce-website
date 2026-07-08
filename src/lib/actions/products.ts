@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminUser } from "@/lib/auth";
+import { setProductCategories } from "@/lib/actions/categories";
 
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -69,6 +70,8 @@ export async function createProduct(formData: FormData) {
       .insert({ product_id: product.id, url: image_url, sort_order: 0 });
   }
 
+  await setProductCategories(product.id, formData.getAll("category_ids") as string[]);
+
   revalidatePath("/products");
   revalidatePath("/admin/products");
   redirect("/admin/products");
@@ -113,6 +116,8 @@ export async function updateProduct(id: string, formData: FormData) {
       .insert({ product_id: id, url: image_url, sort_order: 0 });
   }
 
+  await setProductCategories(id, formData.getAll("category_ids") as string[]);
+
   revalidatePath("/products");
   revalidatePath(`/products/${rest.slug}`);
   revalidatePath("/admin/products");
@@ -130,6 +135,56 @@ export async function deleteProduct(id: string) {
       `/admin/products?error=${encodeURIComponent(
         "Could not delete: " + error.message
       )}`
+    );
+  }
+
+  revalidatePath("/products");
+  revalidatePath("/admin/products");
+  redirect("/admin/products");
+}
+
+export async function bulkUpdateProductStatus(formData: FormData) {
+  await requireAdmin();
+
+  const ids = formData.getAll("product_ids") as string[];
+  const status = formData.get("bulk_status");
+  const parsedStatus = z.enum(["draft", "active", "archived"]).safeParse(status);
+
+  if (ids.length === 0 || !parsedStatus.success) {
+    redirect(
+      `/admin/products?error=${encodeURIComponent("Select at least one product and a status.")}`
+    );
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("products")
+    .update({ status: parsedStatus.data })
+    .in("id", ids);
+
+  if (error) {
+    redirect(`/admin/products?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/products");
+  revalidatePath("/admin/products");
+  redirect("/admin/products");
+}
+
+export async function bulkDeleteProducts(formData: FormData) {
+  await requireAdmin();
+
+  const ids = formData.getAll("product_ids") as string[];
+  if (ids.length === 0) {
+    redirect(`/admin/products?error=${encodeURIComponent("Select at least one product.")}`);
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("products").delete().in("id", ids);
+
+  if (error) {
+    redirect(
+      `/admin/products?error=${encodeURIComponent("Could not delete: " + error.message)}`
     );
   }
 
