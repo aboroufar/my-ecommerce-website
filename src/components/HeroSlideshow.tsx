@@ -44,13 +44,15 @@ export function HeroSlideshow({ categories }: { categories: Category[] }) {
   }, [slides.length]);
 
   if (slides.length === 0) {
-    return (
-      <section className="relative flex min-h-[60vh] items-center bg-surface px-6 py-20 sm:px-16" />
-    );
+    return <section className="relative flex min-h-[60vh] items-center bg-surface" />;
+  }
+
+  function goTo(i: number) {
+    setActive((i + slides.length) % slides.length);
   }
 
   return (
-    <section className="relative flex min-h-[60vh] items-end overflow-hidden px-6 py-16 sm:px-16">
+    <section className="relative flex min-h-[60vh] items-center overflow-hidden">
       {slides.map((slide, i) => (
         <Image
           key={slide.category.id}
@@ -64,38 +66,55 @@ export function HeroSlideshow({ categories }: { categories: Category[] }) {
           }`}
         />
       ))}
-      <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/20 to-transparent" />
 
-      <div className="relative max-w-xl text-background">
-        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-          {slides[active].category.name}
+      <div className="relative max-w-xl px-6 text-background sm:px-16">
+        <span className="text-xs font-semibold uppercase tracking-[0.2em]">
+          Everything you may know
         </span>
-        <h1 className="mt-2 font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl">
+        <h1 className="mt-3 font-display text-4xl font-extrabold leading-[1.1] sm:text-5xl">
           {slides[active].caption}
         </h1>
         <Link
           href={`/products?category=${slides[active].category.slug}`}
-          className="mt-6 inline-block text-sm font-semibold uppercase tracking-wide underline underline-offset-4 transition-opacity hover:opacity-80"
+          className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-background hover:text-foreground"
         >
           Read more
         </Link>
       </div>
 
       {slides.length > 1 && (
-        <div className="absolute bottom-6 right-6 flex gap-2 sm:right-16">
-          {slides.map((slide, i) => (
-            <button
-              key={slide.category.id}
-              type="button"
-              aria-label={`Show ${slide.category.name} slide`}
-              onClick={() => setActive(i)}
-              className={`h-2 w-2 rounded-full transition-colors ${
-                i === active ? "bg-accent" : "bg-background/50"
-              }`}
-            />
-          ))}
-        </div>
+        <>
+          <button
+            type="button"
+            aria-label="Previous slide"
+            onClick={() => goTo(active - 1)}
+            className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-background transition-opacity hover:opacity-70 sm:left-8"
+          >
+            <ChevronIcon direction="left" />
+          </button>
+          <button
+            type="button"
+            aria-label="Next slide"
+            onClick={() => goTo(active + 1)}
+            className="absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-background transition-opacity hover:opacity-70 sm:right-8"
+          >
+            <ChevronIcon direction="right" />
+          </button>
+        </>
       )}
     </section>
+  );
+}
+
+function ChevronIcon({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+      <path
+        d={direction === "left" ? "m15 6-6 6 6 6" : "m9 6 6 6-6 6"}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
