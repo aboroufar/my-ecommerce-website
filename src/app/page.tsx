@@ -5,6 +5,8 @@ import { FeaturedCarousel } from "@/components/FeaturedCarousel";
 import { BestSellers } from "@/components/BestSellers";
 import { TrustBadges } from "@/components/TrustBadges";
 import { CategoryGrid } from "@/components/CategoryGrid";
+import { SaleSection } from "@/components/SaleSection";
+import { CategoryNavBlocks } from "@/components/CategoryNavBlocks";
 
 export default async function Home() {
   const [allProducts, categories, content] = await Promise.all([
@@ -46,6 +48,10 @@ export default async function Home() {
       <CategoryGrid categories={categories} products={allProducts} />
 
       <FeaturedCarousel products={featuredProducts} />
+
+      <SaleSection products={allProducts} />
+
+      <CategoryNavBlocks categories={categories} />
 
       <BestSellers products={allProducts} categories={categories} />
 

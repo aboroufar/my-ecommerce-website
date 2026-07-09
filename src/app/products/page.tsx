@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getActiveProducts, getCategories, type ProductSort } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { SortDropdown } from "@/components/SortDropdown";
+import { ShopSidebar } from "@/components/ShopSidebar";
 
 export const revalidate = 60;
 
@@ -39,25 +40,29 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-6 py-12">
-        <div className="mb-10">
-          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-            Catalog
-          </span>
-          <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
-            {activeCategory?.name ?? "Shop all"}
-          </h1>
-        </div>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 lg:flex-row">
+        <ShopSidebar categories={categories} activeSlug={category} />
 
-        {products.length === 0 ? (
-          <EmptyState hasFilter={!!category} />
-        ) : (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+        <div className="min-w-0 flex-1">
+          <div className="mb-10">
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+              Catalog
+            </span>
+            <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
+              {activeCategory?.name ?? "Shop all"}
+            </h1>
           </div>
-        )}
+
+          {products.length === 0 ? (
+            <EmptyState hasFilter={!!category} />
+          ) : (
+            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
