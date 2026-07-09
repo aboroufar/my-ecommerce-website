@@ -3,7 +3,6 @@ import { getActiveProducts, getCategories } from "@/lib/products";
 import { getSiteContent } from "@/lib/content";
 import { FeaturedCarousel } from "@/components/FeaturedCarousel";
 import { BestSellers } from "@/components/BestSellers";
-import { TrustBadges } from "@/components/TrustBadges";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { SaleSection } from "@/components/SaleSection";
 import { CategoryNavBlocks } from "@/components/CategoryNavBlocks";
@@ -43,8 +42,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      <TrustBadges />
 
       <CategoryGrid categories={categories} products={allProducts} />
 
