@@ -17,8 +17,8 @@ export default async function AdminContentPage({
         Homepage content
       </h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        Edit the closing section and footer text shown on the homepage.
-        Changes go live immediately.
+        Edit the footer text shown on every page. Changes go live
+        immediately.
       </p>
 
       {error && (
@@ -33,39 +33,6 @@ export default async function AdminContentPage({
       )}
 
       <form action={updateSiteContent} className="mt-8 max-w-lg space-y-10">
-        <fieldset className="space-y-4">
-          <legend className="text-xs font-medium uppercase tracking-wide text-muted">
-            Closing section
-          </legend>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted">Headline</span>
-            <input
-              name="closing.headline"
-              defaultValue={content["closing.headline"]}
-              required
-              className="border border-line bg-transparent px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted">Subheadline</span>
-            <input
-              name="closing.subheadline"
-              defaultValue={content["closing.subheadline"]}
-              required
-              className="border border-line bg-transparent px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted">Button label</span>
-            <input
-              name="closing.cta_label"
-              defaultValue={content["closing.cta_label"]}
-              required
-              className="border border-line bg-transparent px-3 py-2 text-sm"
-            />
-          </label>
-        </fieldset>
-
         <fieldset className="space-y-4">
           <legend className="text-xs font-medium uppercase tracking-wide text-muted">
             Footer
