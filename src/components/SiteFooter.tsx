@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { PaymentIcons } from "./PaymentIcons";
+import { getSiteContent } from "@/lib/content";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const content = await getSiteContent();
+
   return (
     <footer className="border-t border-line bg-background">
       <div className="mx-auto max-w-6xl px-6 py-16">
@@ -26,8 +29,7 @@ export function SiteFooter() {
           <div>
             <h3 className="font-display text-lg text-foreground">About</h3>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">
-              Small-batch essentials, formulated with restraint and made to
-              be used — not just displayed.
+              {content["footer.about_text"]}
             </p>
           </div>
           <div>

@@ -1,0 +1,140 @@
+import { getSiteContent } from "@/lib/content";
+import { updateSiteContent } from "@/lib/actions/content";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminContentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; saved?: string }>;
+}) {
+  const { error, saved } = await searchParams;
+  const content = await getSiteContent();
+
+  return (
+    <div>
+      <h1 className="font-display text-2xl text-foreground">
+        Homepage content
+      </h1>
+      <p className="mt-2 max-w-lg text-sm text-muted">
+        Edit the headline, subheadline, and button text shown on the
+        homepage and in the footer. Changes go live immediately.
+      </p>
+
+      {error && (
+        <p className="mt-6 max-w-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+      {saved && (
+        <p className="mt-6 max-w-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+          Saved.
+        </p>
+      )}
+
+      <form action={updateSiteContent} className="mt-8 max-w-lg space-y-10">
+        <fieldset className="space-y-4">
+          <legend className="text-xs font-medium uppercase tracking-wide text-muted">
+            Hero section
+          </legend>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Headline</span>
+            <input
+              name="hero.headline"
+              defaultValue={content["hero.headline"]}
+              required
+              className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Subheadline</span>
+            <input
+              name="hero.subheadline"
+              defaultValue={content["hero.subheadline"]}
+              required
+              className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </label>
+          <div className="flex gap-3">
+            <label className="flex flex-1 flex-col gap-1.5">
+              <span className="text-xs text-muted">Primary button label</span>
+              <input
+                name="hero.cta_primary_label"
+                defaultValue={content["hero.cta_primary_label"]}
+                required
+                className="border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="flex flex-1 flex-col gap-1.5">
+              <span className="text-xs text-muted">
+                Secondary button label
+              </span>
+              <input
+                name="hero.cta_secondary_label"
+                defaultValue={content["hero.cta_secondary_label"]}
+                required
+                className="border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset className="space-y-4">
+          <legend className="text-xs font-medium uppercase tracking-wide text-muted">
+            Closing section
+          </legend>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Headline</span>
+            <input
+              name="closing.headline"
+              defaultValue={content["closing.headline"]}
+              required
+              className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Subheadline</span>
+            <input
+              name="closing.subheadline"
+              defaultValue={content["closing.subheadline"]}
+              required
+              className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Button label</span>
+            <input
+              name="closing.cta_label"
+              defaultValue={content["closing.cta_label"]}
+              required
+              className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </label>
+        </fieldset>
+
+        <fieldset className="space-y-4">
+          <legend className="text-xs font-medium uppercase tracking-wide text-muted">
+            Footer
+          </legend>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">About text</span>
+            <textarea
+              name="footer.about_text"
+              defaultValue={content["footer.about_text"]}
+              required
+              rows={3}
+              className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </label>
+        </fieldset>
+
+        <button
+          type="submit"
+          className="bg-accent px-6 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
+          Save changes
+        </button>
+      </form>
+    </div>
+  );
+}
