@@ -7,6 +7,7 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { SaleSection } from "@/components/SaleSection";
 import { CategoryNavBlocks } from "@/components/CategoryNavBlocks";
 import { NewsletterBanner } from "@/components/NewsletterBanner";
+import { HeroSlideshow } from "@/components/HeroSlideshow";
 
 export default async function Home() {
   const [allProducts, categories, content] = await Promise.all([
@@ -18,30 +19,7 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <section className="relative flex min-h-[60vh] flex-col justify-center gap-4 bg-surface px-6 py-20 sm:px-16">
-        <div className="max-w-xl">
-          <h1 className="font-display text-5xl font-extrabold leading-[1.05] text-foreground sm:text-6xl">
-            {content["hero.headline"]}
-          </h1>
-          <p className="mt-3 max-w-md text-lg text-muted">
-            {content["hero.subheadline"]}
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/products"
-              className="rounded-full bg-accent px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90"
-            >
-              {content["hero.cta_primary_label"]}
-            </Link>
-            <Link
-              href="/products"
-              className="rounded-full border border-foreground px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-foreground transition-colors hover:bg-foreground hover:text-background"
-            >
-              {content["hero.cta_secondary_label"]}
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroSlideshow categories={categories} />
 
       <CategoryGrid categories={categories} products={allProducts} />
 
