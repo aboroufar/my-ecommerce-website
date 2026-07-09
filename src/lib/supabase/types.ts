@@ -189,6 +189,24 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string
@@ -339,6 +357,7 @@ export type Database = {
       }
       products: {
         Row: {
+          compare_at_price_cents: number | null
           created_at: string
           currency: string
           description: string | null
@@ -352,6 +371,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          compare_at_price_cents?: number | null
           created_at?: string
           currency?: string
           description?: string | null
@@ -365,6 +385,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          compare_at_price_cents?: number | null
           created_at?: string
           currency?: string
           description?: string | null

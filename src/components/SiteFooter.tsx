@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { NewsletterSignup } from "./NewsletterSignup";
+import { PaymentIcons } from "./PaymentIcons";
 
 export function SiteFooter() {
   return (
@@ -7,6 +9,18 @@ export function SiteFooter() {
         <h2 className="text-center font-display text-4xl font-bold uppercase tracking-wide text-foreground">
           Storefront
         </h2>
+
+        <div className="mx-auto mt-10 max-w-sm text-center">
+          <h3 className="font-display text-lg text-foreground">
+            Subscribe to our emails
+          </h3>
+          <p className="mt-2 text-sm text-muted">
+            New products, restocks, and the occasional sale.
+          </p>
+          <div className="mt-4">
+            <NewsletterSignup />
+          </div>
+        </div>
 
         <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-3">
           <div>
@@ -39,6 +53,11 @@ export function SiteFooter() {
                   FAQ
                 </Link>
               </li>
+              <li>
+                <Link href="/returns" className="transition-colors hover:text-foreground">
+                  Returns
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
@@ -58,8 +77,19 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-14 border-t border-line pt-6 text-center text-xs uppercase tracking-wide text-muted">
-          © {new Date().getFullYear()} Storefront. All rights reserved.
+        <div className="mt-14 border-t border-line pt-6">
+          <PaymentIcons />
+          <div className="mt-4 flex flex-col items-center gap-2 text-xs uppercase tracking-wide text-muted">
+            <p>© {new Date().getFullYear()} Storefront. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="transition-colors hover:text-foreground">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="transition-colors hover:text-foreground">
+                Terms of Service
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

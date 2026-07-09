@@ -15,6 +15,13 @@ const productSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug: lowercase letters, numbers, hyphens only"),
   description: z.string().optional().default(""),
   price: z.coerce.number().nonnegative("Price must be 0 or more"),
+  // Empty input means "not on sale", not "$0" -- coerce only runs on
+  // non-empty strings, so a blank field is treated as undefined and
+  // caught by the literal("") branch instead of becoming NaN.
+  compare_at_price: z
+    .union([z.coerce.number().nonnegative("Compare-at price must be 0 or more"), z.literal("")])
+    .optional()
+    .default(""),
   sku: z.string().optional().default(""),
   stock_qty: z.coerce.number().int().nonnegative("Stock must be 0 or more"),
   status: z.enum(["draft", "active", "archived"]),
@@ -44,7 +51,7 @@ export async function createProduct(formData: FormData) {
     );
   }
 
-  const { image_url, price, description, sku, ...rest } = parsed.data;
+  const { image_url, price, compare_at_price, description, sku, ...rest } = parsed.data;
   const supabase = createAdminClient();
 
   const { data: product, error } = await supabase
@@ -52,6 +59,8 @@ export async function createProduct(formData: FormData) {
     .insert({
       ...rest,
       price_cents: Math.round(price * 100),
+      compare_at_price_cents:
+        compare_at_price === "" ? null : Math.round(compare_at_price * 100),
       description: description || null,
       sku: sku || null,
     })
@@ -87,7 +96,7 @@ export async function updateProduct(id: string, formData: FormData) {
     );
   }
 
-  const { image_url, price, description, sku, ...rest } = parsed.data;
+  const { image_url, price, compare_at_price, description, sku, ...rest } = parsed.data;
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -95,6 +104,8 @@ export async function updateProduct(id: string, formData: FormData) {
     .update({
       ...rest,
       price_cents: Math.round(price * 100),
+      compare_at_price_cents:
+        compare_at_price === "" ? null : Math.round(compare_at_price * 100),
       description: description || null,
       sku: sku || null,
     })

@@ -6,6 +6,7 @@ interface ProductFormValues {
   slug?: string;
   description?: string | null;
   price?: number; // dollars, not cents -- this is a display/input concern
+  compare_at_price?: number | null; // dollars, same reasoning
   sku?: string | null;
   stock_qty?: number;
   status?: ProductStatus;
@@ -76,18 +77,32 @@ export function ProductForm({
             className="border border-line bg-transparent px-3 py-2 text-sm"
           />
         </Field>
-        <Field label="Stock quantity">
+        <Field
+          label="Compare-at price (USD)"
+          hint="Optional. Set higher than price to show a sale badge."
+        >
           <input
-            name="stock_qty"
+            name="compare_at_price"
             type="number"
-            step="1"
+            step="0.01"
             min="0"
-            required
-            defaultValue={defaultValues?.stock_qty ?? 0}
+            defaultValue={defaultValues?.compare_at_price ?? ""}
             className="border border-line bg-transparent px-3 py-2 text-sm"
           />
         </Field>
       </div>
+
+      <Field label="Stock quantity">
+        <input
+          name="stock_qty"
+          type="number"
+          step="1"
+          min="0"
+          required
+          defaultValue={defaultValues?.stock_qty ?? 0}
+          className="max-w-[calc(50%-8px)] border border-line bg-transparent px-3 py-2 text-sm"
+        />
+      </Field>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="SKU" hint="Optional">

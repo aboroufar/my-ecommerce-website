@@ -16,6 +16,7 @@ export interface ProductSummary {
   slug: string;
   description: string | null;
   price_cents: number;
+  compare_at_price_cents: number | null;
   currency: string;
   stock_qty: number;
   product_images: ProductImage[];
@@ -54,7 +55,7 @@ export async function getActiveProducts(options?: {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
       )
       .eq("status", "active")
       .order(column, { ascending });
@@ -120,7 +121,7 @@ export async function getCategories(): Promise<Category[]> {
  * configured yet.
  */
 const PRODUCT_SEARCH_SELECT =
-  "id, name, slug, description, price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))";
+  "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))";
 
 export async function searchProducts(query: string): Promise<ProductSummary[]> {
   const trimmed = query.trim();
@@ -205,7 +206,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, currency, sku, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
       )
       .eq("slug", slug)
       .eq("status", "active")

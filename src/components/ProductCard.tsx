@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { ProductSummary } from "@/lib/products";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, getSaleInfo } from "@/lib/format";
 import { useCart } from "./CartProvider";
 
 export function ProductCard({ product }: { product: ProductSummary }) {
@@ -12,6 +12,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
     (a, b) => a.sort_order - b.sort_order
   )[0];
   const categoryName = product.product_categories[0]?.categories?.name;
+  const sale = getSaleInfo(product.price_cents, product.compare_at_price_cents);
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
@@ -30,6 +31,11 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   return (
     <Link href={`/products/${product.slug}`} className="group block">
       <div className="relative aspect-square overflow-hidden bg-surface">
+        {sale.onSale && (
+          <span className="absolute left-2 top-2 z-10 bg-accent px-2 py-1 text-xs font-medium text-background">
+            −{sale.percentOff}%
+          </span>
+        )}
         {image ? (
           <Image
             src={image.url}
@@ -75,8 +81,15 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           >
             <CartPlusIcon />
           </button>
-          <span className="text-sm font-medium text-foreground">
-            {formatPrice(product.price_cents, product.currency)}
+          <span className="flex items-baseline gap-2">
+            <span className="text-sm font-medium text-foreground">
+              {formatPrice(product.price_cents, product.currency)}
+            </span>
+            {sale.onSale && (
+              <span className="text-xs text-muted line-through">
+                {formatPrice(product.compare_at_price_cents!, product.currency)}
+              </span>
+            )}
           </span>
         </div>
       </div>

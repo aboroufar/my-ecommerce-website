@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getActiveProducts, getProductBySlug, getRecommendedProducts } from "@/lib/products";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, getSaleInfo } from "@/lib/format";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { ProductCard } from "@/components/ProductCard";
 
@@ -54,6 +54,7 @@ export default async function ProductDetailPage({
     .filter((slug): slug is string => !!slug);
   const categoryName = product.product_categories[0]?.categories?.name;
   const recommended = await getRecommendedProducts(product.id, categorySlugs);
+  const sale = getSaleInfo(product.price_cents, product.compare_at_price_cents);
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
@@ -102,8 +103,20 @@ export default async function ProductDetailPage({
             </div>
           )}
 
-          <div className="mt-4 text-2xl font-bold text-foreground">
-            {formatPrice(product.price_cents, product.currency)}
+          <div className="mt-4 flex items-baseline gap-3">
+            <span className="text-2xl font-bold text-foreground">
+              {formatPrice(product.price_cents, product.currency)}
+            </span>
+            {sale.onSale && (
+              <>
+                <span className="text-lg text-muted line-through">
+                  {formatPrice(product.compare_at_price_cents!, product.currency)}
+                </span>
+                <span className="bg-accent px-2 py-1 text-xs font-medium text-background">
+                  −{sale.percentOff}%
+                </span>
+              </>
+            )}
           </div>
           <p className="mt-1 text-xs text-muted">Tax included at checkout.</p>
 
