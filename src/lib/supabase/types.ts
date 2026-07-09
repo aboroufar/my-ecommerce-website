@@ -189,6 +189,44 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_slides: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string
+          headline: string
+          id: string
+          image_url: string
+          sort_order: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string
+          headline: string
+          id?: string
+          image_url: string
+          sort_order?: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string
+          headline?: string
+          id?: string
+          image_url?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hero_slides_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string

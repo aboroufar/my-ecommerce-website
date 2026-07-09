@@ -1,4 +1,5 @@
 import { getActiveProducts, getCategories } from "@/lib/products";
+import { getHeroSlides } from "@/lib/heroSlides";
 import { BestSellers } from "@/components/BestSellers";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { SaleSection } from "@/components/SaleSection";
@@ -6,14 +7,15 @@ import { HeroSlideshow } from "@/components/HeroSlideshow";
 import { ProductMarquee } from "@/components/ProductMarquee";
 
 export default async function Home() {
-  const [allProducts, categories] = await Promise.all([
+  const [allProducts, categories, heroSlides] = await Promise.all([
     getActiveProducts(),
     getCategories(),
+    getHeroSlides(),
   ]);
 
   return (
     <main className="flex flex-1 flex-col">
-      <HeroSlideshow categories={categories} />
+      <HeroSlideshow slides={heroSlides} />
 
       <CategoryGrid categories={categories} products={allProducts} />
 

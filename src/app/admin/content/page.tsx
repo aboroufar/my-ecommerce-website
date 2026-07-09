@@ -1,5 +1,7 @@
 import { getSiteContent } from "@/lib/content";
 import { updateSiteContent } from "@/lib/actions/content";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { HeroSlidesManager } from "@/components/admin/HeroSlidesManager";
 
 export const dynamic = "force-dynamic";
 
@@ -11,13 +13,22 @@ export default async function AdminContentPage({
   const { error, saved } = await searchParams;
   const content = await getSiteContent();
 
+  const supabase = createAdminClient();
+  const [{ data: slides }, { data: categories }] = await Promise.all([
+    supabase
+      .from("hero_slides")
+      .select("id, category_id, headline, description, image_url, sort_order")
+      .order("sort_order", { ascending: true }),
+    supabase.from("categories").select("id, name").order("name", { ascending: true }),
+  ]);
+
   return (
     <div>
       <h1 className="font-display text-2xl text-foreground">
         Homepage content
       </h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        Edit the footer text shown on every page. Changes go live
+        Manage the homepage hero slideshow and footer text. Changes go live
         immediately.
       </p>
 
@@ -32,7 +43,18 @@ export default async function AdminContentPage({
         </p>
       )}
 
-      <form action={updateSiteContent} className="mt-8 max-w-lg space-y-10">
+      <div className="mt-8">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
+          Hero slideshow
+        </h2>
+        <p className="mt-2 max-w-lg text-sm text-muted">
+          Each slide links to a category&apos;s product listing. Slides show
+          in the order below.
+        </p>
+        <HeroSlidesManager slides={slides ?? []} categories={categories ?? []} />
+      </div>
+
+      <form action={updateSiteContent} className="mt-14 max-w-lg space-y-10 border-t border-line pt-10">
         <fieldset className="space-y-4">
           <legend className="text-xs font-medium uppercase tracking-wide text-muted">
             Footer

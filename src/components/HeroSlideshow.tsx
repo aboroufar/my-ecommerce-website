@@ -3,36 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import type { Category } from "@/lib/products";
-
-/**
- * Stock placeholder art (Unsplash, free-to-use) shown until a category has
- * a real product photo to use as its hero background. Distinct pool from
- * CategoryGrid's so the two sections don't repeat the same images.
- */
-const placeholderImages = [
-  "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&q=80",
-  "https://images.unsplash.com/photo-1445205170230-053b83016050?w=1600&q=80",
-  "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1600&q=80",
-];
-
-const captionsBySlug: Record<string, string> = {
-  accessories:
-    "The small details that finish a look — bags, hats, and everyday carry.",
-  apparel: "Wardrobe staples made to be worn, washed, and worn again.",
-};
+import type { HeroSlide } from "@/lib/heroSlides";
 
 const SLIDE_DURATION_MS = 6000;
 
-export function HeroSlideshow({ categories }: { categories: Category[] }) {
-  const slides = categories.map((category, i) => ({
-    category,
-    image: placeholderImages[i % placeholderImages.length],
-    caption:
-      captionsBySlug[category.slug] ??
-      `Explore what's new in ${category.name}.`,
-  }));
-
+export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -51,13 +26,15 @@ export function HeroSlideshow({ categories }: { categories: Category[] }) {
     setActive((i + slides.length) % slides.length);
   }
 
+  const current = slides[active];
+
   return (
     <section className="relative flex min-h-[60vh] items-center overflow-hidden">
       {slides.map((slide, i) => (
         <Image
-          key={slide.category.id}
-          src={slide.image}
-          alt={slide.category.name}
+          key={slide.id}
+          src={slide.image_url}
+          alt={slide.headline}
           fill
           priority={i === 0}
           sizes="100vw"
@@ -69,18 +46,27 @@ export function HeroSlideshow({ categories }: { categories: Category[] }) {
       <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/20 to-transparent" />
 
       <div className="relative max-w-3xl px-6 text-background sm:px-16">
-        <span className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm">
-          Everything you may know
-        </span>
+        {current.category && (
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm">
+            {current.category.name}
+          </span>
+        )}
         <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
-          {slides[active].caption}
+          {current.headline}
         </h1>
-        <Link
-          href={`/products?category=${slides[active].category.slug}`}
-          className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-background hover:text-foreground"
-        >
-          Read more
-        </Link>
+        {current.description && (
+          <p className="mt-4 max-w-xl text-base text-background/85 sm:text-lg">
+            {current.description}
+          </p>
+        )}
+        {current.category && (
+          <Link
+            href={`/products?category=${current.category.slug}`}
+            className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-background hover:text-foreground"
+          >
+            Read more
+          </Link>
+        )}
       </div>
 
       {slides.length > 1 && (
