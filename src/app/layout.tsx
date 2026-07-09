@@ -1,22 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CartProvider } from "@/components/CartProvider";
 
-const inter = Inter({
+const poppins = Poppins({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
-  variable: "--font-inter",
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
-  style: ["normal", "italic"],
-  display: "swap",
-  variable: "--font-playfair",
+  variable: "--font-poppins",
 });
 
 export const metadata: Metadata = {
@@ -30,10 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`h-full antialiased ${inter.variable} ${playfair.variable}`}
-    >
+    <html lang="en" className={`h-full antialiased ${poppins.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
         <CartProvider>
           <SiteHeader />

@@ -4,6 +4,7 @@ import { getSiteContent } from "@/lib/content";
 import { FeaturedCarousel } from "@/components/FeaturedCarousel";
 import { BestSellers } from "@/components/BestSellers";
 import { TrustBadges } from "@/components/TrustBadges";
+import { CategoryGrid } from "@/components/CategoryGrid";
 
 export default async function Home() {
   const [allProducts, categories, content] = await Promise.all([
@@ -15,24 +16,24 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <section className="relative flex min-h-[70vh] flex-col justify-center gap-4 bg-surface px-6 py-20 sm:px-16">
+      <section className="relative flex min-h-[60vh] flex-col justify-center gap-4 bg-surface px-6 py-20 sm:px-16">
         <div className="max-w-xl">
-          <h1 className="font-display text-6xl font-bold leading-[1.05] text-foreground sm:text-7xl">
+          <h1 className="font-display text-5xl font-extrabold leading-[1.05] text-foreground sm:text-6xl">
             {content["hero.headline"]}
           </h1>
-          <p className="mt-3 font-display text-2xl italic text-foreground/80">
+          <p className="mt-3 max-w-md text-lg text-muted">
             {content["hero.subheadline"]}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/products"
-              className="bg-foreground px-8 py-3.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90"
+              className="rounded-full bg-accent px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90"
             >
               {content["hero.cta_primary_label"]}
             </Link>
             <Link
               href="/products"
-              className="border border-foreground px-8 py-3.5 text-sm font-medium uppercase tracking-wide text-foreground transition-colors hover:bg-foreground hover:text-background"
+              className="rounded-full border border-foreground px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-foreground transition-colors hover:bg-foreground hover:text-background"
             >
               {content["hero.cta_secondary_label"]}
             </Link>
@@ -42,21 +43,23 @@ export default async function Home() {
 
       <TrustBadges />
 
+      <CategoryGrid categories={categories} products={allProducts} />
+
       <FeaturedCarousel products={featuredProducts} />
 
       <BestSellers products={allProducts} categories={categories} />
 
-      <section className="border-t border-line bg-surface px-6 py-20 sm:px-16">
+      <section className="border-t border-line bg-foreground px-6 py-20 sm:px-16">
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-4">
-          <h2 className="font-display text-4xl font-bold text-foreground">
+          <h2 className="font-display text-4xl font-bold text-background">
             {content["closing.headline"]}
           </h2>
-          <p className="font-display text-xl italic text-muted">
+          <p className="text-xl text-background/70">
             {content["closing.subheadline"]}
           </p>
           <Link
             href="/products"
-            className="mt-4 border border-foreground px-8 py-3.5 text-sm font-medium uppercase tracking-wide text-foreground transition-colors hover:bg-foreground hover:text-background"
+            className="mt-4 rounded-full bg-accent px-8 py-3.5 text-sm font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90"
           >
             {content["closing.cta_label"]}
           </Link>

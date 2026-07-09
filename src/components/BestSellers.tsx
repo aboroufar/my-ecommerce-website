@@ -37,10 +37,10 @@ export function BestSellers({
             key={category.id}
             type="button"
             onClick={() => setActiveSlug(category.slug)}
-            className={`px-6 py-2.5 text-xs font-medium uppercase tracking-wide transition-colors ${
+            className={`rounded-full px-6 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
               activeSlug === category.slug
-                ? "bg-foreground text-background"
-                : "text-foreground hover:bg-surface"
+                ? "bg-accent text-background"
+                : "bg-surface text-foreground hover:bg-line/60"
             }`}
           >
             {category.name}
@@ -63,7 +63,7 @@ export function BestSellers({
       <div className="mt-10 text-center">
         <Link
           href="/products"
-          className="inline-block border border-foreground px-8 py-3.5 text-xs font-medium uppercase tracking-wide text-foreground transition-colors hover:bg-foreground hover:text-background"
+          className="inline-block rounded-full border border-foreground px-8 py-3.5 text-xs font-semibold uppercase tracking-wide text-foreground transition-colors hover:bg-foreground hover:text-background"
         >
           View all
         </Link>
