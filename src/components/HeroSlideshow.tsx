@@ -68,11 +68,11 @@ export function HeroSlideshow({ categories }: { categories: Category[] }) {
       ))}
       <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/20 to-transparent" />
 
-      <div className="relative max-w-xl px-6 text-background sm:px-16">
-        <span className="text-xs font-semibold uppercase tracking-[0.2em]">
+      <div className="relative max-w-3xl px-6 text-background sm:px-16">
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm">
           Everything you may know
         </span>
-        <h1 className="mt-3 font-display text-4xl font-extrabold leading-[1.1] sm:text-5xl">
+        <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
           {slides[active].caption}
         </h1>
         <Link

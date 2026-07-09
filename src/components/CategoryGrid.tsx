@@ -51,13 +51,13 @@ export function CategoryGrid({
   });
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 pt-6 sm:px-16">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+    <section className="w-full px-2 pt-2 sm:px-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {cards.map(({ category, url, alt, isPlaceholder }) => (
           <Link
             key={category.id}
             href={`/products?category=${category.slug}`}
-            className="group relative aspect-[4/3] overflow-hidden rounded-xl"
+            className="group relative aspect-square overflow-hidden rounded-xl"
           >
             <Image
               src={url}
@@ -73,8 +73,8 @@ export function CategoryGrid({
               </span>
             )}
             <div className="absolute bottom-4 left-4 text-background">
-              <h3 className="text-base font-bold">{category.name}</h3>
-              <span className="text-xs font-medium underline underline-offset-4">
+              <h3 className="text-lg font-bold">{category.name}</h3>
+              <span className="text-sm font-medium underline underline-offset-4">
                 View More
               </span>
             </div>
