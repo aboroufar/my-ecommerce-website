@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "./CartProvider";
 import type { ProductDetail } from "@/lib/products";
 
@@ -21,6 +22,7 @@ export function AddToCartButton({ product }: { product: ProductDetail }) {
       currency: product.currency,
       imageUrl: image?.url ?? null,
       quantity: 1,
+      stockQty: product.stock_qty,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -36,9 +38,16 @@ export function AddToCartButton({ product }: { product: ProductDetail }) {
         {!inStock ? "Out of stock" : added ? "Added ✓" : "Add to cart"}
       </button>
       <p className="mt-2 text-xs text-muted">
-        {inStock
-          ? "Ships in 2–3 business days."
-          : "Check back soon — this item is currently unavailable."}
+        {inStock ? (
+          <>
+            Ships in 2–3 business days.{" "}
+            <Link href="/shipping" className="underline underline-offset-4 hover:text-foreground">
+              Shipping details
+            </Link>
+          </>
+        ) : (
+          "Check back soon — this item is currently unavailable."
+        )}
       </p>
     </div>
   );

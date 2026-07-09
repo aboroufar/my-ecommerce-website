@@ -23,6 +23,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
       currency: product.currency,
       imageUrl: image?.url ?? null,
       quantity: 1,
+      stockQty: product.stock_qty,
     });
   }
 
@@ -56,6 +57,12 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         {product.description && (
           <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
             {product.description}
+          </p>
+        )}
+
+        {product.stock_qty > 0 && product.stock_qty <= 10 && (
+          <p className="mt-2 text-xs font-medium text-accent">
+            Only {product.stock_qty} left
           </p>
         )}
 

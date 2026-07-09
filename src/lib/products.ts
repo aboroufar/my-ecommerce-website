@@ -17,6 +17,7 @@ export interface ProductSummary {
   description: string | null;
   price_cents: number;
   currency: string;
+  stock_qty: number;
   product_images: ProductImage[];
   product_categories: ProductCategoryRef[];
 }
@@ -53,7 +54,7 @@ export async function getActiveProducts(options?: {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, currency, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
+        "id, name, slug, description, price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
       )
       .eq("status", "active")
       .order(column, { ascending });
@@ -119,7 +120,7 @@ export async function getCategories(): Promise<Category[]> {
  * configured yet.
  */
 const PRODUCT_SEARCH_SELECT =
-  "id, name, slug, description, price_cents, currency, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))";
+  "id, name, slug, description, price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))";
 
 export async function searchProducts(query: string): Promise<ProductSummary[]> {
   const trimmed = query.trim();
@@ -163,6 +164,33 @@ export async function searchProducts(query: string): Promise<ProductSummary[]> {
     console.error("searchProducts failed (Supabase not configured?):", err);
     return [];
   }
+}
+
+/**
+ * Products to show as "You may also like" on a product detail page:
+ * other active products sharing at least one category with the given
+ * product, newest first. Falls back to the newest active products overall
+ * if the product has no categories or none of its category-mates are
+ * still active, so the section is never empty without reason.
+ */
+export async function getRecommendedProducts(
+  productId: string,
+  categorySlugs: string[],
+  limit = 4
+): Promise<ProductSummary[]> {
+  const all = await getActiveProducts();
+  const others = all.filter((p) => p.id !== productId);
+
+  if (categorySlugs.length > 0) {
+    const sameCategory = others.filter((p) =>
+      p.product_categories.some(
+        (pc) => pc.categories && categorySlugs.includes(pc.categories.slug)
+      )
+    );
+    if (sameCategory.length > 0) return sameCategory.slice(0, limit);
+  }
+
+  return others.slice(0, limit);
 }
 
 /**

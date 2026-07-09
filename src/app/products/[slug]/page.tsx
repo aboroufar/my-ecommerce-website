@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getActiveProducts, getProductBySlug } from "@/lib/products";
+import { getActiveProducts, getProductBySlug, getRecommendedProducts } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
 import { AddToCartButton } from "@/components/AddToCartButton";
+import { ProductCard } from "@/components/ProductCard";
 
 export const revalidate = 60;
 export const dynamicParams = true; // render on-demand for slugs not in the list below
@@ -48,7 +49,11 @@ export default async function ProductDetailPage({
     (a, b) => a.sort_order - b.sort_order
   );
   const inStock = product.stock_qty > 0;
+  const categorySlugs = product.product_categories
+    .map((pc) => pc.categories?.slug)
+    .filter((slug): slug is string => !!slug);
   const categoryName = product.product_categories[0]?.categories?.name;
+  const recommended = await getRecommendedProducts(product.id, categorySlugs);
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
@@ -104,7 +109,11 @@ export default async function ProductDetailPage({
 
           <div className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
             {!inStock && <WarningIcon />}
-            {inStock ? "In stock" : "Out of stock"}
+            {!inStock
+              ? "Out of stock"
+              : product.stock_qty <= 10
+                ? `Only ${product.stock_qty} left in stock`
+                : "In stock"}
           </div>
 
           <ul className="mt-6 space-y-3 border-y border-line py-6">
@@ -128,6 +137,19 @@ export default async function ProductDetailPage({
           <AddToCartButton product={product} />
         </div>
       </div>
+
+      {recommended.length > 0 && (
+        <section className="mt-20 border-t border-line pt-12">
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            You may also like
+          </h2>
+          <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
+            {recommended.map((item) => (
+              <ProductCard key={item.id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

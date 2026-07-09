@@ -90,19 +90,29 @@ export default function CartPage() {
               </p>
 
               <div className="mt-2 flex items-center gap-3">
-                <label className="text-xs text-muted" htmlFor={`qty-${item.productId}`}>
-                  Qty
-                </label>
-                <input
-                  id={`qty-${item.productId}`}
-                  type="number"
-                  min={1}
-                  value={item.quantity}
-                  onChange={(e) =>
-                    setQuantity(item.productId, Number(e.target.value))
-                  }
-                  className="w-14 border border-line bg-transparent px-2 py-1 text-xs"
-                />
+                <div className="flex items-center border border-line">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                    disabled={item.quantity <= 1}
+                    aria-label={`Decrease quantity of ${item.name}`}
+                    className="flex h-7 w-7 items-center justify-center text-sm text-foreground transition-opacity hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    −
+                  </button>
+                  <span className="w-8 text-center text-xs text-foreground">
+                    {item.quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                    disabled={item.quantity >= item.stockQty}
+                    aria-label={`Increase quantity of ${item.name}`}
+                    className="flex h-7 w-7 items-center justify-center text-sm text-foreground transition-opacity hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    +
+                  </button>
+                </div>
                 <button
                   onClick={() => removeItem(item.productId)}
                   className="text-xs text-muted underline underline-offset-4 hover:text-foreground"
@@ -110,6 +120,11 @@ export default function CartPage() {
                   Remove
                 </button>
               </div>
+              {item.quantity >= item.stockQty && (
+                <p className="mt-1.5 text-xs text-muted">
+                  Max available in stock
+                </p>
+              )}
             </div>
 
             <p className="text-sm text-foreground">

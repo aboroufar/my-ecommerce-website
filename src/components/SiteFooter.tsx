@@ -29,6 +29,16 @@ export function SiteFooter() {
                   Cart
                 </Link>
               </li>
+              <li>
+                <Link href="/shipping" className="transition-colors hover:text-foreground">
+                  Shipping &amp; Delivery
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="transition-colors hover:text-foreground">
+                  FAQ
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

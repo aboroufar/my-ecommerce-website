@@ -31,15 +31,30 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         (i) => i.productId === action.item.productId
       );
       if (existing) {
+        // stockQty comes from the fresher add-to-cart click, so trust it
+        // over whatever was cached in the existing cart line.
+        const cap = action.item.stockQty;
         return {
           items: state.items.map((i) =>
             i.productId === action.item.productId
-              ? { ...i, quantity: i.quantity + action.item.quantity }
+              ? {
+                  ...i,
+                  quantity: Math.min(i.quantity + action.item.quantity, cap),
+                  stockQty: cap,
+                }
               : i
           ),
         };
       }
-      return { items: [...state.items, action.item] };
+      return {
+        items: [
+          ...state.items,
+          {
+            ...action.item,
+            quantity: Math.min(action.item.quantity, action.item.stockQty),
+          },
+        ],
+      };
     }
     case "REMOVE_ITEM":
       return {
@@ -50,7 +65,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         items: state.items
           .map((i) =>
             i.productId === action.productId
-              ? { ...i, quantity: action.quantity }
+              ? { ...i, quantity: Math.min(action.quantity, i.stockQty) }
               : i
           )
           .filter((i) => i.quantity > 0),
@@ -82,7 +97,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        dispatch({ type: "HYDRATE", items: JSON.parse(raw) });
+        const items = (JSON.parse(raw) as CartItem[]).map((item) => ({
+          // Carts saved before stockQty existed won't have it -- treat
+          // missing/invalid as "unknown, don't block" rather than NaN-ing
+          // every Math.min() call downstream.
+          ...item,
+          stockQty:
+            typeof item.stockQty === "number" && Number.isFinite(item.stockQty)
+              ? item.stockQty
+              : Infinity,
+        }));
+        dispatch({ type: "HYDRATE", items });
       }
     } catch {
       // corrupt/unavailable storage -- start with an empty cart
