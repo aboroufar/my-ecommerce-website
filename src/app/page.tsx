@@ -7,6 +7,7 @@ import { TrustBadges } from "@/components/TrustBadges";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { SaleSection } from "@/components/SaleSection";
 import { CategoryNavBlocks } from "@/components/CategoryNavBlocks";
+import { NewsletterBanner } from "@/components/NewsletterBanner";
 
 export default async function Home() {
   const [allProducts, categories, content] = await Promise.all([
@@ -54,6 +55,8 @@ export default async function Home() {
       <CategoryNavBlocks categories={categories} />
 
       <BestSellers products={allProducts} categories={categories} />
+
+      <NewsletterBanner />
 
       <section className="border-t border-line bg-foreground px-6 py-20 sm:px-16">
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-4">

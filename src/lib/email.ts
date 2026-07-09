@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import OrderConfirmationEmail from "@/emails/OrderConfirmationEmail";
+import ContactMessageEmail from "@/emails/ContactMessageEmail";
 
 let resend: Resend | null = null;
 
@@ -52,5 +53,41 @@ export async function sendOrderConfirmationEmail(params: {
     // never roll back or fail the webhook -- that would cause Stripe to
     // retry the whole event, re-running an already-completed order.
     console.error("sendOrderConfirmationEmail failed:", err);
+  }
+}
+
+/**
+ * Sends a contact-form submission to the store's admin address(es). Unlike
+ * sendOrderConfirmationEmail, this one is allowed to throw -- there's no
+ * already-completed side effect to protect, so the caller (the contact
+ * form action) should surface a real error to the visitor if this fails,
+ * rather than silently pretending the message was sent.
+ */
+export async function sendContactMessageEmail(params: {
+  name: string;
+  email: string;
+  message: string;
+}) {
+  const recipients = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+
+  if (recipients.length === 0) {
+    throw new Error(
+      "No ADMIN_EMAILS configured -- contact form has nowhere to send messages."
+    );
+  }
+
+  const { error } = await getResend().emails.send({
+    from: FROM_ADDRESS,
+    to: recipients,
+    replyTo: params.email,
+    subject: `Contact form: ${params.name}`,
+    react: ContactMessageEmail(params),
+  });
+
+  if (error) {
+    throw new Error(error.message);
   }
 }

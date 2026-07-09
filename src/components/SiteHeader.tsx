@@ -78,7 +78,7 @@ export async function SiteHeader() {
             <MegaMenu categories={categories} />
           </div>
           <Link
-            href="/account"
+            href="/contact"
             className="hidden rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90 sm:inline-block"
           >
             Contact us
