@@ -5,8 +5,7 @@ export type HomepageSectionKey =
   | "category_grid"
   | "sale"
   | "best_sellers"
-  | "brand_bar"
-  | "product_marquee";
+  | "brand_bar";
 
 export interface HomepageSection {
   key: HomepageSectionKey;
@@ -26,7 +25,6 @@ const defaults: HomepageSection[] = [
   { key: "sale", label: "Products on sale", enabled: true, sort_order: 2 },
   { key: "best_sellers", label: "Top bestsellers", enabled: true, sort_order: 3 },
   { key: "brand_bar", label: "Brand bar", enabled: true, sort_order: 4 },
-  { key: "product_marquee", label: "Product marquee", enabled: true, sort_order: 5 },
 ];
 
 /**

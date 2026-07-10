@@ -5,8 +5,8 @@ export interface HeroSlide {
   headline: string;
   description: string;
   image_url: string;
+  link_url: string;
   sort_order: number;
-  category: { name: string; slug: string } | null;
 }
 
 /**
@@ -20,7 +20,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("hero_slides")
-      .select("id, headline, description, image_url, sort_order, categories(name, slug)")
+      .select("id, headline, description, image_url, link_url, sort_order")
       .order("sort_order", { ascending: true });
 
     if (error) {
@@ -28,14 +28,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
       return [];
     }
 
-    return (data ?? []).map((slide) => ({
-      id: slide.id,
-      headline: slide.headline,
-      description: slide.description,
-      image_url: slide.image_url,
-      sort_order: slide.sort_order,
-      category: slide.categories,
-    }));
+    return data ?? [];
   } catch (err) {
     console.error("getHeroSlides failed (Supabase not configured?):", err);
     return [];

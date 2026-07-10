@@ -19,13 +19,10 @@ export default async function AdminContentPage({
   ]);
 
   const supabase = createAdminClient();
-  const [{ data: slides }, { data: categories }] = await Promise.all([
-    supabase
-      .from("hero_slides")
-      .select("id, category_id, headline, description, image_url, sort_order")
-      .order("sort_order", { ascending: true }),
-    supabase.from("categories").select("id, name").order("name", { ascending: true }),
-  ]);
+  const { data: slides } = await supabase
+    .from("hero_slides")
+    .select("id, headline, description, image_url, link_url, sort_order")
+    .order("sort_order", { ascending: true });
 
   return (
     <div>
@@ -63,10 +60,10 @@ export default async function AdminContentPage({
           Hero slideshow
         </h2>
         <p className="mt-2 max-w-lg text-sm text-muted">
-          Each slide links to a category&apos;s product listing. Slides show
-          in the order below.
+          Each slide has its own photo, headline, description, and Read
+          more link. Slides show in the order below.
         </p>
-        <HeroSlidesManager slides={slides ?? []} categories={categories ?? []} />
+        <HeroSlidesManager slides={slides ?? []} />
       </div>
 
       <form action={updateSiteContent} className="mt-14 max-w-lg space-y-10 border-t border-line pt-10">

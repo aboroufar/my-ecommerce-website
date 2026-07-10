@@ -7,10 +7,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminUser } from "@/lib/auth";
 
 const slideSchema = z.object({
-  category_id: z.string().uuid("Choose a category"),
   headline: z.string().min(1, "Headline is required"),
   description: z.string().default(""),
   image_url: z.string().min(1, "An image is required"),
+  link_url: z.string().min(1, "A link is required"),
 });
 
 /**

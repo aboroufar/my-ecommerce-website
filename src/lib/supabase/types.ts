@@ -221,30 +221,33 @@ export type Database = {
       }
       hero_slides: {
         Row: {
-          category_id: string
+          category_id: string | null
           created_at: string
           description: string
           headline: string
           id: string
           image_url: string
+          link_url: string
           sort_order: number
         }
         Insert: {
-          category_id: string
+          category_id?: string | null
           created_at?: string
           description?: string
           headline: string
           id?: string
           image_url: string
+          link_url?: string
           sort_order?: number
         }
         Update: {
-          category_id?: string
+          category_id?: string | null
           created_at?: string
           description?: string
           headline?: string
           id?: string
           image_url?: string
+          link_url?: string
           sort_order?: number
         }
         Relationships: [

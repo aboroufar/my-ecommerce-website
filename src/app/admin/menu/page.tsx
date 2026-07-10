@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminMenuPage() {
   const supabase = createAdminClient();
-  const [{ data: columns }, { data: items }] = await Promise.all([
+  const [{ data: columns }, { data: items }, { data: categories }] = await Promise.all([
     supabase
       .from("menu_columns")
       .select("id, title, enabled, sort_order")
@@ -14,6 +14,7 @@ export default async function AdminMenuPage() {
       .from("menu_items")
       .select("id, column_id, label, href, sort_order")
       .order("sort_order", { ascending: true }),
+    supabase.from("categories").select("id, name, slug").order("name", { ascending: true }),
   ]);
 
   const columnsWithItems = (columns ?? []).map((column) => ({
@@ -27,13 +28,12 @@ export default async function AdminMenuPage() {
         Navigation menu
       </h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        The Category column in the header menu is built automatically from
-        your categories. Add extra columns here (e.g. &quot;Concern&quot; or
-        &quot;Collection&quot;) with their own links.
+        The Category column is built automatically from your Categories
+        page. Add, edit, reorder, or remove extra columns and links below.
       </p>
 
       <div className="mt-8">
-        <MenuManager columns={columnsWithItems} />
+        <MenuManager columns={columnsWithItems} categories={categories ?? []} />
       </div>
     </div>
   );

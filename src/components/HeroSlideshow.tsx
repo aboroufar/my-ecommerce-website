@@ -46,12 +46,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
       <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/20 to-transparent" />
 
       <div className="relative max-w-3xl px-6 text-background sm:px-16">
-        {current.category && (
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm">
-            {current.category.name}
-          </span>
-        )}
-        <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
+        <h1 className="font-display text-5xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
           {current.headline}
         </h1>
         {current.description && (
@@ -59,14 +54,12 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
             {current.description}
           </p>
         )}
-        {current.category && (
-          <Link
-            href={`/products?category=${current.category.slug}`}
-            className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-background hover:text-foreground"
-          >
-            Read more
-          </Link>
-        )}
+        <Link
+          href={current.link_url}
+          className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-background hover:text-foreground"
+        >
+          Read more
+        </Link>
       </div>
 
       {slides.length > 1 && (

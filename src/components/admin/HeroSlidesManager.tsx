@@ -11,35 +11,16 @@ import { ImageUploadField } from "./ImageUploadField";
 
 interface Slide {
   id: string;
-  category_id: string;
   headline: string;
   description: string;
   image_url: string;
+  link_url: string;
   sort_order: number;
 }
 
-interface CategoryOption {
-  id: string;
-  name: string;
-}
-
-export function HeroSlidesManager({
-  slides,
-  categories,
-}: {
-  slides: Slide[];
-  categories: CategoryOption[];
-}) {
+export function HeroSlidesManager({ slides }: { slides: Slide[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
-
-  if (categories.length === 0) {
-    return (
-      <p className="mt-4 text-sm text-muted">
-        Add a category first (Categories page) before creating slides.
-      </p>
-    );
-  }
 
   return (
     <div className="mt-4 max-w-lg space-y-4">
@@ -51,7 +32,6 @@ export function HeroSlidesManager({
         editingId === slide.id ? (
           <SlideForm
             key={slide.id}
-            categories={categories}
             slide={slide}
             action={updateHeroSlide.bind(null, slide.id)}
             onCancel={() => setEditingId(null)}
@@ -68,7 +48,7 @@ export function HeroSlidesManager({
               <p className="truncate text-sm font-medium text-foreground">
                 {slide.headline}
               </p>
-              <p className="truncate text-xs text-muted">{slide.description}</p>
+              <p className="truncate text-xs text-muted">→ {slide.link_url}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <form action={moveHeroSlide.bind(null, slide.id, "up")}>
@@ -112,11 +92,7 @@ export function HeroSlidesManager({
       )}
 
       {adding ? (
-        <SlideForm
-          categories={categories}
-          action={createHeroSlide}
-          onCancel={() => setAdding(false)}
-        />
+        <SlideForm action={createHeroSlide} onCancel={() => setAdding(false)} />
       ) : (
         <button
           type="button"
@@ -132,36 +108,15 @@ export function HeroSlidesManager({
 
 function SlideForm({
   slide,
-  categories,
   action,
   onCancel,
 }: {
   slide?: Slide;
-  categories: CategoryOption[];
   action: (formData: FormData) => void;
   onCancel: () => void;
 }) {
   return (
     <form action={action} className="space-y-3 border border-line bg-surface p-4">
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs text-muted">Category</span>
-        <select
-          name="category_id"
-          defaultValue={slide?.category_id ?? ""}
-          required
-          className="border border-line bg-background px-3 py-2 text-sm"
-        >
-          <option value="" disabled>
-            Choose a category
-          </option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
       <label className="flex flex-col gap-1.5">
         <span className="text-xs text-muted">Headline</span>
         <input
@@ -178,6 +133,19 @@ function SlideForm({
           name="description"
           defaultValue={slide?.description}
           rows={2}
+          className="border border-line bg-background px-3 py-2 text-sm"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs text-muted">
+          Read more link (e.g. /products, /products?category=apparel, or a
+          future blog post URL)
+        </span>
+        <input
+          name="link_url"
+          defaultValue={slide?.link_url ?? "/products"}
+          required
           className="border border-line bg-background px-3 py-2 text-sm"
         />
       </label>

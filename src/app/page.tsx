@@ -6,7 +6,6 @@ import { BestSellers } from "@/components/BestSellers";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { SaleSection } from "@/components/SaleSection";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
-import { ProductMarquee } from "@/components/ProductMarquee";
 import { BrandBar } from "@/components/BrandBar";
 
 export default async function Home() {
@@ -24,7 +23,6 @@ export default async function Home() {
     sale: <SaleSection products={allProducts} />,
     best_sellers: <BestSellers products={allProducts} categories={categories} />,
     brand_bar: <BrandBar brands={brands} />,
-    product_marquee: <ProductMarquee products={allProducts} />,
   };
 
   return (
