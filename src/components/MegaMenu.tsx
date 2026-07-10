@@ -7,15 +7,26 @@ import type { MenuColumn as MenuColumnData } from "@/lib/menu";
 
 export function MegaMenu({
   categories,
+  categoriesLabel = "Categories",
   extraColumns = [],
 }: {
   categories: Category[];
+  categoriesLabel?: string;
   extraColumns?: MenuColumnData[];
 }) {
   const [openSlug, setOpenSlug] = useState<string | null>(null);
 
+  const topLevelCategories = categories.filter((c) => !c.parent_id);
+  const childrenByParent = new Map<string, Category[]>();
+  for (const c of categories) {
+    if (!c.parent_id) continue;
+    const siblings = childrenByParent.get(c.parent_id) ?? [];
+    siblings.push(c);
+    childrenByParent.set(c.parent_id, siblings);
+  }
+
   const items = [
-    ...categories.map((c) => ({ slug: c.slug, label: c.name })),
+    ...topLevelCategories.map((c) => ({ slug: c.slug, label: c.name })),
     { slug: "__shop-all", label: "Shop" },
   ];
 
@@ -59,15 +70,40 @@ export function MegaMenu({
               </span>
             </div>
 
-            <MenuColumn
-              title="Category"
-              links={items
-                .filter((i) => i.slug !== "__shop-all")
-                .map((i) => ({
-                  label: i.label,
-                  href: `/products?category=${i.slug}`,
-                }))}
-            />
+            <div>
+              <h3 className="font-display text-base font-bold normal-case tracking-normal text-foreground">
+                {categoriesLabel}
+              </h3>
+              <ul className="mt-3 space-y-3 normal-case tracking-normal text-muted">
+                {topLevelCategories.map((category) => {
+                  const children = childrenByParent.get(category.id) ?? [];
+                  return (
+                    <li key={category.id}>
+                      <Link
+                        href={`/products?category=${category.slug}`}
+                        className="font-medium text-foreground transition-colors hover:text-accent"
+                      >
+                        {category.name}
+                      </Link>
+                      {children.length > 0 && (
+                        <ul className="mt-1.5 space-y-1.5 border-l border-line pl-3">
+                          {children.map((child) => (
+                            <li key={child.id}>
+                              <Link
+                                href={`/products?category=${child.slug}`}
+                                className="transition-colors hover:text-foreground"
+                              >
+                                {child.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
             {extraColumns.map((column) => (
               <MenuColumn
                 key={column.id}

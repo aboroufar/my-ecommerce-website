@@ -180,6 +180,7 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          parent_id: string | null
           slug: string
         }
         Insert: {
@@ -187,6 +188,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          parent_id?: string | null
           slug: string
         }
         Update: {
@@ -194,6 +196,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          parent_id?: string | null
           slug?: string
         }
         Relationships: []
@@ -571,6 +574,7 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          categories_menu_label: string
           header_address: string
           header_email: string
           header_phone: string
@@ -579,6 +583,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          categories_menu_label?: string
           header_address?: string
           header_email?: string
           header_phone?: string
@@ -587,6 +592,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          categories_menu_label?: string
           header_address?: string
           header_email?: string
           header_phone?: string

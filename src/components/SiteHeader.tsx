@@ -87,9 +87,13 @@ export async function SiteHeader() {
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-8">
             <span className="hidden items-center gap-2 text-sm font-semibold uppercase tracking-wide text-foreground sm:flex">
-              <MenuIcon /> Categories
+              <MenuIcon /> {settings.categories_menu_label}
             </span>
-            <MegaMenu categories={categories} extraColumns={menuColumns} />
+            <MegaMenu
+              categories={categories}
+              categoriesLabel={settings.categories_menu_label}
+              extraColumns={menuColumns}
+            />
           </div>
           <Link
             href="/contact"
@@ -101,7 +105,7 @@ export async function SiteHeader() {
       </div>
 
       <nav className="flex items-center gap-6 overflow-x-auto border-t border-line px-6 py-3 text-xs font-medium uppercase tracking-wide text-foreground sm:hidden">
-        {categories.map((category) => (
+        {categories.filter((category) => !category.parent_id).map((category) => (
           <Link
             key={category.id}
             href={`/products?category=${category.slug}`}

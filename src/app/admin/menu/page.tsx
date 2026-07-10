@@ -1,21 +1,32 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MenuManager } from "@/components/admin/MenuManager";
+import { getSiteSettings } from "@/lib/siteSettings";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminMenuPage() {
+export default async function AdminMenuPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const supabase = createAdminClient();
-  const [{ data: columns }, { data: items }, { data: categories }] = await Promise.all([
-    supabase
-      .from("menu_columns")
-      .select("id, title, enabled, sort_order")
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("menu_items")
-      .select("id, column_id, label, href, sort_order")
-      .order("sort_order", { ascending: true }),
-    supabase.from("categories").select("id, name, slug").order("name", { ascending: true }),
-  ]);
+  const [{ data: columns }, { data: items }, { data: categories }, settings] =
+    await Promise.all([
+      supabase
+        .from("menu_columns")
+        .select("id, title, enabled, sort_order")
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("menu_items")
+        .select("id, column_id, label, href, sort_order")
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("categories")
+        .select("id, name, slug, parent_id")
+        .order("name", { ascending: true }),
+      getSiteSettings(),
+    ]);
 
   const columnsWithItems = (columns ?? []).map((column) => ({
     ...column,
@@ -28,12 +39,23 @@ export default async function AdminMenuPage() {
         Navigation menu
       </h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        The Category column is built automatically from your Categories
-        page. Add, edit, reorder, or remove extra columns and links below.
+        The category column is built automatically from your Categories
+        page (including any sub-categories). Add, edit, reorder, or remove
+        extra columns and links below.
       </p>
 
+      {error && (
+        <p className="mt-6 max-w-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
       <div className="mt-8">
-        <MenuManager columns={columnsWithItems} categories={categories ?? []} />
+        <MenuManager
+          columns={columnsWithItems}
+          categories={categories ?? []}
+          categoriesMenuLabel={settings.categories_menu_label}
+        />
       </div>
     </div>
   );

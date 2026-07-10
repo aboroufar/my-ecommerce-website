@@ -12,6 +12,7 @@ import {
   deleteMenuItem,
   moveMenuItem,
 } from "@/lib/actions/menu";
+import { updateCategoriesMenuLabel } from "@/lib/actions/siteSettings";
 
 interface MenuItem {
   id: string;
@@ -30,24 +31,70 @@ interface Category {
   id: string;
   name: string;
   slug: string;
+  parent_id: string | null;
 }
 
 export function MenuManager({
   columns,
   categories,
+  categoriesMenuLabel,
 }: {
   columns: MenuColumn[];
   categories: Category[];
+  categoriesMenuLabel: string;
 }) {
   const [addingColumn, setAddingColumn] = useState(false);
+  const [editingLabel, setEditingLabel] = useState(false);
 
   return (
     <div className="max-w-4xl">
+      {editingLabel ? (
+        <form
+          action={updateCategoriesMenuLabel}
+          className="mb-4 flex max-w-sm items-end gap-2"
+        >
+          <label className="flex flex-1 flex-col gap-1.5">
+            <span className="text-xs text-muted">Categories column label</span>
+            <input
+              name="categories_menu_label"
+              defaultValue={categoriesMenuLabel}
+              required
+              autoFocus
+              className="border border-line bg-surface px-3 py-2 text-sm"
+            />
+          </label>
+          <button
+            type="submit"
+            className="bg-accent px-4 py-2 text-xs font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditingLabel(false)}
+            className="px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted hover:text-foreground"
+          >
+            Cancel
+          </button>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setEditingLabel(true)}
+          className="mb-4 text-xs font-medium uppercase tracking-wide text-muted transition-colors hover:text-foreground"
+        >
+          Categories column label:{" "}
+          <span className="text-foreground underline underline-offset-4">
+            {categoriesMenuLabel}
+          </span>
+        </button>
+      )}
+
       <p className="mb-4 text-xs font-medium uppercase tracking-wide text-muted">
         This is how the header dropdown will look
       </p>
       <div className="flex flex-wrap items-start gap-6 border border-line bg-surface p-6">
-        <CategoryColumnPreview categories={categories} />
+        <CategoryColumnPreview categories={categories} label={categoriesMenuLabel} />
         {columns.map((column, i) => (
           <ColumnEditor
             key={column.id}
@@ -100,12 +147,27 @@ export function MenuManager({
   );
 }
 
-function CategoryColumnPreview({ categories }: { categories: Category[] }) {
+function CategoryColumnPreview({
+  categories,
+  label,
+}: {
+  categories: Category[];
+  label: string;
+}) {
+  const topLevel = categories.filter((c) => !c.parent_id);
+  const childrenByParent = new Map<string, Category[]>();
+  for (const c of categories) {
+    if (!c.parent_id) continue;
+    const siblings = childrenByParent.get(c.parent_id) ?? [];
+    siblings.push(c);
+    childrenByParent.set(c.parent_id, siblings);
+  }
+
   return (
     <div className="w-56 shrink-0 border border-line bg-background p-4">
       <div className="flex items-center justify-between">
         <h3 className="font-display text-sm font-bold text-foreground">
-          Category
+          {label}
         </h3>
         <span className="text-[10px] uppercase tracking-wide text-muted">
           Auto
@@ -114,11 +176,22 @@ function CategoryColumnPreview({ categories }: { categories: Category[] }) {
       <p className="mt-1 text-xs text-muted">
         Built automatically from your Categories page.
       </p>
-      <ul className="mt-3 space-y-1.5 text-sm text-muted">
-        {categories.length === 0 ? (
+      <ul className="mt-3 space-y-2 text-sm text-muted">
+        {topLevel.length === 0 ? (
           <li className="italic">No categories yet</li>
         ) : (
-          categories.map((c) => <li key={c.id}>{c.name}</li>)
+          topLevel.map((c) => (
+            <li key={c.id}>
+              <span className="text-foreground">{c.name}</span>
+              {(childrenByParent.get(c.id) ?? []).length > 0 && (
+                <ul className="mt-1 space-y-1 border-l border-line pl-3">
+                  {childrenByParent.get(c.id)!.map((child) => (
+                    <li key={child.id}>{child.name}</li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))
         )}
       </ul>
     </div>

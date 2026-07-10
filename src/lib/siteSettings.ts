@@ -5,6 +5,7 @@ export interface SiteSettings {
   header_email: string;
   header_phone: string;
   header_address: string;
+  categories_menu_label: string;
 }
 
 const defaults: SiteSettings = {
@@ -12,6 +13,7 @@ const defaults: SiteSettings = {
   header_email: "hello@storefront.example",
   header_phone: "",
   header_address: "",
+  categories_menu_label: "Categories",
 };
 
 /**
@@ -25,7 +27,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("site_settings")
-      .select("site_name, header_email, header_phone, header_address")
+      .select(
+        "site_name, header_email, header_phone, header_address, categories_menu_label"
+      )
       .eq("id", true)
       .maybeSingle();
 

@@ -12,16 +12,17 @@ export default async function AdminCategoriesPage({
   const supabase = createAdminClient();
   const { data: categories } = await supabase
     .from("categories")
-    .select("id, name, slug, image_url")
+    .select("id, name, slug, image_url, parent_id")
     .order("name", { ascending: true });
 
   return (
     <div>
       <h1 className="font-display text-2xl text-foreground">Categories</h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        The homepage category grid updates automatically when you add,
-        edit, or delete a category here -- just add a photo so it doesn&apos;t
-        fall back to a placeholder image.
+        The homepage category grid and header menu update automatically
+        when you add, edit, or delete a category here -- just add a photo
+        so it doesn&apos;t fall back to a placeholder image. Give a category
+        a parent to nest it as a sub-category in the header menu.
       </p>
 
       {error && (

@@ -13,6 +13,7 @@ const categorySchema = z.object({
     .min(1, "Slug is required")
     .regex(/^[a-z0-9-]+$/, "Slug: lowercase letters, numbers, hyphens only"),
   image_url: z.union([z.string().min(1), z.literal("")]).optional(),
+  parent_id: z.union([z.string().uuid(), z.literal("")]).optional(),
 });
 
 /**
@@ -40,6 +41,7 @@ export async function createCategory(formData: FormData) {
     name: parsed.data.name,
     slug: parsed.data.slug,
     image_url: parsed.data.image_url || null,
+    parent_id: parsed.data.parent_id || null,
   });
 
   if (error) {
@@ -64,6 +66,12 @@ export async function updateCategory(id: string, formData: FormData) {
     );
   }
 
+  if (parsed.data.parent_id === id) {
+    redirect(
+      `/admin/categories?error=${encodeURIComponent("A category can't be its own parent.")}`
+    );
+  }
+
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("categories")
@@ -71,6 +79,7 @@ export async function updateCategory(id: string, formData: FormData) {
       name: parsed.data.name,
       slug: parsed.data.slug,
       image_url: parsed.data.image_url || null,
+      parent_id: parsed.data.parent_id || null,
     })
     .eq("id", id);
 

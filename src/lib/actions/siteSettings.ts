@@ -13,6 +13,10 @@ const settingsSchema = z.object({
   header_address: z.string().default(""),
 });
 
+const categoriesMenuLabelSchema = z.object({
+  categories_menu_label: z.string().min(1, "Label is required"),
+});
+
 async function requireAdmin() {
   const user = await getAdminUser();
   if (!user) redirect("/admin");
@@ -43,4 +47,27 @@ export async function updateSiteSettings(formData: FormData) {
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   redirect("/admin/settings?saved=1");
+}
+
+export async function updateCategoriesMenuLabel(formData: FormData) {
+  await requireAdmin();
+
+  const parsed = categoriesMenuLabelSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(`/admin/menu?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("site_settings")
+    .update({ ...parsed.data, updated_at: new Date().toISOString() })
+    .eq("id", true);
+
+  if (error) {
+    redirect(`/admin/menu?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/menu");
+  redirect("/admin/menu");
 }
