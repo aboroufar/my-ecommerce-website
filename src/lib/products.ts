@@ -7,7 +7,7 @@ export interface ProductImage {
 }
 
 export interface ProductCategoryRef {
-  categories: { name: string; slug: string } | null;
+  categories: { name: string; slug: string; parent_id: string | null } | null;
 }
 
 export interface ProductSummary {
@@ -27,6 +27,44 @@ export interface ProductDetail extends ProductSummary {
   description: string | null;
   sku: string | null;
   stock_qty: number;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  parent_id: string | null;
+}
+
+/**
+ * Returns the slug set of the given category plus every descendant
+ * (children, grandchildren, ...), so filtering by a top-level or
+ * group-level category also picks up products tagged on the categories
+ * nested underneath it.
+ */
+function descendantSlugs(categories: Category[], rootSlug: string): Set<string> {
+  const root = categories.find((c) => c.slug === rootSlug);
+  if (!root) return new Set([rootSlug]);
+
+  const childrenByParent = new Map<string, Category[]>();
+  for (const c of categories) {
+    if (!c.parent_id) continue;
+    const siblings = childrenByParent.get(c.parent_id) ?? [];
+    siblings.push(c);
+    childrenByParent.set(c.parent_id, siblings);
+  }
+
+  const slugs = new Set<string>([root.slug]);
+  const stack = [root];
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    for (const child of childrenByParent.get(current.id) ?? []) {
+      slugs.add(child.slug);
+      stack.push(child);
+    }
+  }
+  return slugs;
 }
 
 export type ProductSort = "newest" | "price-asc" | "price-desc" | "name-asc";
@@ -55,7 +93,7 @@ export async function getActiveProducts(options?: {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id))"
       )
       .eq("status", "active")
       .order(column, { ascending });
@@ -68,29 +106,26 @@ export async function getActiveProducts(options?: {
     const products = data ?? [];
     if (!options?.categorySlug) return products;
 
-    // Filter by category client-side: with only two categories and a
-    // handful of products, this avoids the type-inference breakage that
-    // dynamic !inner select strings cause with postgrest-js (see
+    // Filtering by category needs to match not just the exact category but
+    // also its descendants -- picking "Skincare" (a group-level category)
+    // should also surface products tagged directly on "Face Cream Set" or
+    // "Matte Foundation" underneath it. Client-side filtering (rather than
+    // a dynamic !inner select string) avoids the type-inference breakage
+    // postgrest-js has with computed select strings (see
     // src/lib/supabase/types.ts notes on Insert/Update literal shapes --
     // the same "computed types silently collapse to never" trap applies
     // to select-string interpolation here).
+    const categories = await getCategories();
+    const matchSlugs = descendantSlugs(categories, options.categorySlug);
     return products.filter((p) =>
       p.product_categories.some(
-        (pc) => pc.categories?.slug === options.categorySlug
+        (pc) => pc.categories && matchSlugs.has(pc.categories.slug)
       )
     );
   } catch (err) {
     console.error("getActiveProducts failed (Supabase not configured?):", err);
     return [];
   }
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  image_url: string | null;
-  parent_id: string | null;
 }
 
 /**
@@ -123,7 +158,7 @@ export async function getCategories(): Promise<Category[]> {
  * configured yet.
  */
 const PRODUCT_SEARCH_SELECT =
-  "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))";
+  "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id))";
 
 export async function searchProducts(query: string): Promise<ProductSummary[]> {
   const trimmed = query.trim();
@@ -208,7 +243,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id))"
       )
       .eq("slug", slug)
       .eq("status", "active")

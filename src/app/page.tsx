@@ -9,13 +9,18 @@ import { HeroSlideshow } from "@/components/HeroSlideshow";
 import { BrandBar } from "@/components/BrandBar";
 
 export default async function Home() {
-  const [allProducts, categories, heroSlides, sections, brands] = await Promise.all([
+  const [allProducts, allCategories, heroSlides, sections, brands] = await Promise.all([
     getActiveProducts(),
     getCategories(),
     getHeroSlides(),
     getHomepageSections(),
     getBrands(),
   ]);
+
+  // The homepage category grid and bestseller filters are meant to
+  // showcase top-level departments (Skincare, Apparel, ...), not every
+  // group/product-line underneath them.
+  const categories = allCategories.filter((c) => !c.parent_id);
 
   const sectionComponents: Record<HomepageSectionKey, React.ReactNode> = {
     hero: <HeroSlideshow slides={heroSlides} />,

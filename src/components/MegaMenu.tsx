@@ -53,13 +53,12 @@ function CategoriesDropdown({
     topLevelCategories[0]?.id ?? null
   );
 
-  const activeChildren = activeId ? childrenByParent.get(activeId) ?? [] : [];
-  // Group the active category's children into columns of up to 4 items,
-  // approximating the reference design's grouped-column layout.
-  const columns: Category[][] = [];
-  for (let i = 0; i < activeChildren.length; i += 4) {
-    columns.push(activeChildren.slice(i, i + 4));
-  }
+  // The active top-level category's direct children are "groups" (e.g.
+  // "Face Cream Set"), each rendered as its own column headed by the
+  // group name, listing that group's own children (e.g. "Matte
+  // Foundation") underneath -- a true 3-level drill-down, not just a
+  // flat list chunked into columns.
+  const activeGroups = activeId ? childrenByParent.get(activeId) ?? [] : [];
 
   if (topLevelCategories.length === 0) return null;
 
@@ -100,25 +99,38 @@ function CategoriesDropdown({
           </ul>
 
           <div className="grid flex-1 grid-cols-3 gap-8 p-8">
-            {columns.length === 0 ? (
+            {activeGroups.length === 0 ? (
               <p className="col-span-3 text-sm text-muted">
                 No subcategories yet.
               </p>
             ) : (
-              columns.map((group, i) => (
-                <div key={i}>
-                  {group.map((child) => (
-                    <div key={child.id} className="mb-6 last:mb-0">
-                      <Link
-                        href={`/products?category=${child.slug}`}
-                        className="font-display text-base font-bold normal-case tracking-normal text-foreground transition-colors hover:text-accent"
-                      >
-                        {child.name}
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              ))
+              activeGroups.map((group) => {
+                const items = childrenByParent.get(group.id) ?? [];
+                return (
+                  <div key={group.id}>
+                    <Link
+                      href={`/products?category=${group.slug}`}
+                      className="font-display text-base font-bold normal-case tracking-normal text-foreground transition-colors hover:text-accent"
+                    >
+                      {group.name}
+                    </Link>
+                    {items.length > 0 && (
+                      <ul className="mt-3 space-y-2 normal-case tracking-normal text-muted">
+                        {items.map((item) => (
+                          <li key={item.id}>
+                            <Link
+                              href={`/products?category=${item.slug}`}
+                              className="transition-colors hover:text-foreground"
+                            >
+                              {item.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

@@ -147,6 +147,23 @@ export function MenuManager({
   );
 }
 
+function renderPreviewRow(
+  c: Category,
+  childrenByParent: Map<string, Category[]>
+) {
+  const children = childrenByParent.get(c.id) ?? [];
+  return (
+    <li key={c.id}>
+      <span className="text-foreground">{c.name}</span>
+      {children.length > 0 && (
+        <ul className="mt-1 space-y-1 border-l border-line pl-3">
+          {children.map((child) => renderPreviewRow(child, childrenByParent))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
 function CategoryColumnPreview({
   categories,
   label,
@@ -180,18 +197,7 @@ function CategoryColumnPreview({
         {topLevel.length === 0 ? (
           <li className="italic">No categories yet</li>
         ) : (
-          topLevel.map((c) => (
-            <li key={c.id}>
-              <span className="text-foreground">{c.name}</span>
-              {(childrenByParent.get(c.id) ?? []).length > 0 && (
-                <ul className="mt-1 space-y-1 border-l border-line pl-3">
-                  {childrenByParent.get(c.id)!.map((child) => (
-                    <li key={child.id}>{child.name}</li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))
+          topLevel.map((c) => renderPreviewRow(c, childrenByParent))
         )}
       </ul>
     </div>

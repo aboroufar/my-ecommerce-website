@@ -27,8 +27,18 @@ export function ProductForm({
   error?: string;
   submitLabel: string;
   extraAction?: React.ReactNode;
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; parent_id: string | null }[];
 }) {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const depthOf = (c: { parent_id: string | null }): number => {
+    let depth = 0;
+    let current: { parent_id: string | null } | undefined = c;
+    while (current?.parent_id) {
+      current = byId.get(current.parent_id);
+      depth += 1;
+    }
+    return depth;
+  };
   return (
     <form action={action} className="mt-8 flex max-w-lg flex-col gap-5">
       {error && (
@@ -133,7 +143,7 @@ export function ProductForm({
       </Field>
 
       {categories.length > 0 && (
-        <Field label="Categories">
+        <Field label="Categories" hint="Tag at whichever level fits -- a top category, a group, or a specific product line.">
           <div className="flex flex-wrap gap-x-4 gap-y-2">
             {categories.map((category) => (
               <label
@@ -146,6 +156,7 @@ export function ProductForm({
                   value={category.id}
                   defaultChecked={defaultValues?.categoryIds?.includes(category.id)}
                 />
+                {"— ".repeat(depthOf(category))}
                 {category.name}
               </label>
             ))}

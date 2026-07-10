@@ -23,7 +23,10 @@ export default async function EditProductPage({
       )
       .eq("id", id)
       .single(),
-    supabase.from("categories").select("id, name").order("name", { ascending: true }),
+    supabase
+      .from("categories")
+      .select("id, name, parent_id")
+      .order("name", { ascending: true }),
   ]);
 
   if (!product) notFound();

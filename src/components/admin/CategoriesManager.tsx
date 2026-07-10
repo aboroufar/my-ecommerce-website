@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   createCategory,
   updateCategory,
@@ -29,37 +29,32 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
     childrenByParent.set(c.parent_id, siblings);
   }
 
+  const renderRow = (category: Category, depth: number): ReactNode => (
+    <div key={category.id} className="space-y-2">
+      <CategoryRow
+        category={category}
+        categories={categories}
+        editing={editingId === category.id}
+        onEdit={() => setEditingId(category.id)}
+        onCancel={() => setEditingId(null)}
+      />
+      {(childrenByParent.get(category.id) ?? []).length > 0 && (
+        <div className="ml-6 space-y-2 border-l border-line pl-4">
+          {childrenByParent
+            .get(category.id)!
+            .map((child) => renderRow(child, depth + 1))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="max-w-lg space-y-4">
       {categories.length === 0 && !adding && (
         <p className="text-sm text-muted">No categories yet.</p>
       )}
 
-      {topLevel.map((category) => (
-        <div key={category.id} className="space-y-2">
-          <CategoryRow
-            category={category}
-            categories={categories}
-            editing={editingId === category.id}
-            onEdit={() => setEditingId(category.id)}
-            onCancel={() => setEditingId(null)}
-          />
-          {(childrenByParent.get(category.id) ?? []).length > 0 && (
-            <div className="ml-6 space-y-2 border-l border-line pl-4">
-              {childrenByParent.get(category.id)!.map((child) => (
-                <CategoryRow
-                  key={child.id}
-                  category={child}
-                  categories={categories}
-                  editing={editingId === child.id}
-                  onEdit={() => setEditingId(child.id)}
-                  onCancel={() => setEditingId(null)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+      {topLevel.map((category) => renderRow(category, 0))}
 
       {adding ? (
         <CategoryForm
@@ -156,11 +151,21 @@ function CategoryForm({
   action: (formData: FormData) => void;
   onCancel: () => void;
 }) {
-  // A category can't be its own parent, and (to keep the hierarchy to two
-  // levels) categories that already have a parent aren't offered as a
-  // parent option either.
+  // A category can't be its own parent, and (to keep the hierarchy to
+  // three levels) categories whose own parent already has a parent aren't
+  // offered as a parent option -- that would make a 4th level.
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const depthOf = (c: Category): number => {
+    let depth = 0;
+    let current: Category | undefined = c;
+    while (current?.parent_id) {
+      current = byId.get(current.parent_id);
+      depth += 1;
+    }
+    return depth;
+  };
   const parentOptions = categories.filter(
-    (c) => c.id !== category?.id && !c.parent_id
+    (c) => c.id !== category?.id && depthOf(c) < 2
   );
 
   return (
@@ -198,7 +203,7 @@ function CategoryForm({
           <option value="">None -- top-level category</option>
           {parentOptions.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name}
+              {c.parent_id ? `— ${c.name}` : c.name}
             </option>
           ))}
         </select>
