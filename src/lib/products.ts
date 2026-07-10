@@ -89,6 +89,7 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  image_url: string | null;
 }
 
 /**
@@ -101,7 +102,7 @@ export async function getCategories(): Promise<Category[]> {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("categories")
-      .select("id, name, slug")
+      .select("id, name, slug, image_url")
       .order("name", { ascending: true });
 
     if (error) {

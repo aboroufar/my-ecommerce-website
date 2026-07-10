@@ -1,7 +1,9 @@
 import { getSiteContent } from "@/lib/content";
 import { updateSiteContent } from "@/lib/actions/content";
+import { getHomepageSections } from "@/lib/homepageSections";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { HeroSlidesManager } from "@/components/admin/HeroSlidesManager";
+import { SectionsManager } from "@/components/admin/SectionsManager";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,10 @@ export default async function AdminContentPage({
   searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
   const { error, saved } = await searchParams;
-  const content = await getSiteContent();
+  const [content, sections] = await Promise.all([
+    getSiteContent(),
+    getHomepageSections(),
+  ]);
 
   const supabase = createAdminClient();
   const [{ data: slides }, { data: categories }] = await Promise.all([
@@ -28,8 +33,8 @@ export default async function AdminContentPage({
         Homepage content
       </h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        Manage the homepage hero slideshow and footer text. Changes go live
-        immediately.
+        Manage which homepage sections show, the hero slideshow, and footer
+        text. Changes go live immediately.
       </p>
 
       {error && (
@@ -44,6 +49,16 @@ export default async function AdminContentPage({
       )}
 
       <div className="mt-8">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
+          Homepage sections
+        </h2>
+        <p className="mt-2 max-w-lg text-sm text-muted">
+          Toggle sections on/off and reorder them.
+        </p>
+        <SectionsManager sections={sections} />
+      </div>
+
+      <div className="mt-14 border-t border-line pt-10">
         <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
           Hero slideshow
         </h2>

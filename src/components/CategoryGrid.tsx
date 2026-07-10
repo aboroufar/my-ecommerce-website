@@ -17,11 +17,11 @@ const placeholderImages = [
 ];
 
 /**
- * One card per real category, using the first product image found in that
- * category as the card art (no dedicated category-image field exists yet).
- * Falls back to a stock placeholder photo -- clearly labeled "Sample
- * image" -- when no product in that category has a real photo uploaded
- * yet, so this section isn't blank before /admin product photos exist.
+ * One card per real category. Prefers the admin-uploaded category photo
+ * (categories.image_url, set via /admin/categories); falls back to
+ * borrowing a product photo from that category, then to a labeled stock
+ * placeholder if neither exists -- so this section is never blank, but a
+ * real admin-provided photo always wins once one is set.
  */
 export function CategoryGrid({
   categories,
@@ -33,6 +33,15 @@ export function CategoryGrid({
   if (categories.length === 0) return null;
 
   const cards = categories.map((category, i) => {
+    if (category.image_url) {
+      return {
+        category,
+        url: category.image_url,
+        alt: category.name,
+        isPlaceholder: false,
+      };
+    }
+
     const match = products.find(
       (p) =>
         p.product_categories.some((pc) => pc.categories?.slug === category.slug) &&

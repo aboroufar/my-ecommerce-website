@@ -3,27 +3,39 @@ import { CartLink } from "./CartLink";
 import { AccountLink } from "./AccountLink";
 import { MegaMenu } from "./MegaMenu";
 import { getCategories } from "@/lib/products";
+import { getSiteSettings } from "@/lib/siteSettings";
+import { getMenuColumns } from "@/lib/menu";
 
 export async function SiteHeader() {
-  const categories = await getCategories();
+  const [categories, settings, menuColumns] = await Promise.all([
+    getCategories(),
+    getSiteSettings(),
+    getMenuColumns(),
+  ]);
 
   return (
     <header className="sticky top-0 z-40 bg-background">
       <div className="bg-accent px-6 py-2 text-xs text-background">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="hidden items-center gap-6 sm:flex">
-            <Link
-              href="mailto:hello@storefront.example"
-              className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
-            >
-              <MailIcon /> hello@storefront.example
-            </Link>
-            <span className="flex items-center gap-1.5">
-              <PhoneIcon /> 001 23 456 78 910
-            </span>
-            <span className="flex items-center gap-1.5">
-              <PinIcon /> 22ND ST EAST VILLAGE
-            </span>
+            {settings.header_email && (
+              <Link
+                href={`mailto:${settings.header_email}`}
+                className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
+              >
+                <MailIcon /> {settings.header_email}
+              </Link>
+            )}
+            {settings.header_phone && (
+              <span className="flex items-center gap-1.5">
+                <PhoneIcon /> {settings.header_phone}
+              </span>
+            )}
+            {settings.header_address && (
+              <span className="flex items-center gap-1.5">
+                <PinIcon /> {settings.header_address}
+              </span>
+            )}
           </div>
           <span className="flex items-center gap-1 text-xs font-medium">
             EN <ChevronIcon />
@@ -37,7 +49,7 @@ export async function SiteHeader() {
             href="/"
             className="shrink-0 font-display text-2xl font-bold uppercase tracking-wide text-foreground"
           >
-            Storefront
+            {settings.site_name}
           </Link>
 
           <Link
@@ -50,12 +62,14 @@ export async function SiteHeader() {
           </Link>
 
           <div className="flex shrink-0 items-center gap-5">
-            <Link
-              href="/account"
-              className="hidden text-sm text-foreground transition-opacity hover:opacity-70 lg:inline"
-            >
-              support@storefront.example
-            </Link>
+            {settings.header_email && (
+              <Link
+                href={`mailto:${settings.header_email}`}
+                className="hidden text-sm text-foreground transition-opacity hover:opacity-70 lg:inline"
+              >
+                {settings.header_email}
+              </Link>
+            )}
             <AccountLink />
             <Link
               href="/account"
@@ -75,7 +89,7 @@ export async function SiteHeader() {
             <span className="hidden items-center gap-2 text-sm font-semibold uppercase tracking-wide text-foreground sm:flex">
               <MenuIcon /> Categories
             </span>
-            <MegaMenu categories={categories} />
+            <MegaMenu categories={categories} extraColumns={menuColumns} />
           </div>
           <Link
             href="/contact"

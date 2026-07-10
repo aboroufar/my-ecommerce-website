@@ -5,8 +5,10 @@ import { uploadProductImage } from "@/lib/actions/upload";
 
 export function ImageUploadField({
   defaultValue = "",
+  fieldName = "image_url",
 }: {
   defaultValue?: string;
+  fieldName?: string;
 }) {
   const [url, setUrl] = useState(defaultValue);
   const [status, setStatus] = useState<"idle" | "uploading">("idle");
@@ -30,7 +32,7 @@ export function ImageUploadField({
 
   return (
     <div className="flex flex-col gap-2">
-      <input type="hidden" name="image_url" value={url} />
+      <input type="hidden" name={fieldName} value={url} />
 
       {url && (
         // eslint-disable-next-line @next/next/no-img-element -- admin-only

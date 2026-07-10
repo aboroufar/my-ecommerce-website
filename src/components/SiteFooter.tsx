@@ -2,9 +2,13 @@ import Link from "next/link";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { PaymentIcons } from "./PaymentIcons";
 import { getSiteContent } from "@/lib/content";
+import { getSiteSettings } from "@/lib/siteSettings";
 
 export async function SiteFooter() {
-  const content = await getSiteContent();
+  const [content, settings] = await Promise.all([
+    getSiteContent(),
+    getSiteSettings(),
+  ]);
 
   return (
     <footer className="bg-foreground text-background">
@@ -12,7 +16,7 @@ export async function SiteFooter() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <span className="font-display text-xl font-bold uppercase tracking-wide">
-              Storefront
+              {settings.site_name}
             </span>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-background/70">
               {content["footer.about_text"]}
@@ -87,7 +91,7 @@ export async function SiteFooter() {
         <div className="mt-14 border-t border-background/20 pt-6">
           <PaymentIcons />
           <div className="mt-4 flex flex-col items-center gap-2 text-xs uppercase tracking-wide text-background/70">
-            <p>© {new Date().getFullYear()} Storefront. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {settings.site_name}. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <Link href="/privacy" className="transition-colors hover:text-background">
                 Privacy Policy

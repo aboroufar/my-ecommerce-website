@@ -79,6 +79,33 @@ export type Database = {
         }
         Relationships: []
       }
+      brands: {
+        Row: {
+          created_at: string
+          id: string
+          link_url: string | null
+          logo_url: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link_url?: string | null
+          logo_url: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link_url?: string | null
+          logo_url?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           cart_id: string
@@ -151,18 +178,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string | null
           name: string
           slug: string
         }
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string | null
           name: string
           slug: string
         }
         Update: {
           created_at?: string
           id?: string
+          image_url?: string | null
           name?: string
           slug?: string
         }
@@ -223,6 +253,86 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homepage_sections: {
+        Row: {
+          enabled: boolean
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          enabled?: boolean
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      menu_columns: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      menu_items: {
+        Row: {
+          column_id: string
+          created_at: string
+          href: string
+          id: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          column_id: string
+          created_at?: string
+          href: string
+          id?: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          column_id?: string
+          created_at?: string
+          href?: string
+          id?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "menu_columns"
             referencedColumns: ["id"]
           },
         ]
@@ -453,6 +563,33 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          header_address: string
+          header_email: string
+          header_phone: string
+          id: boolean
+          site_name: string
+          updated_at: string
+        }
+        Insert: {
+          header_address?: string
+          header_email?: string
+          header_phone?: string
+          id?: boolean
+          site_name?: string
+          updated_at?: string
+        }
+        Update: {
+          header_address?: string
+          header_email?: string
+          header_phone?: string
+          id?: boolean
+          site_name?: string
+          updated_at?: string
         }
         Relationships: []
       }

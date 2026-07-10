@@ -12,6 +12,7 @@ const categorySchema = z.object({
     .string()
     .min(1, "Slug is required")
     .regex(/^[a-z0-9-]+$/, "Slug: lowercase letters, numbers, hyphens only"),
+  image_url: z.union([z.string().min(1), z.literal("")]).optional(),
 });
 
 /**
@@ -35,7 +36,11 @@ export async function createCategory(formData: FormData) {
   }
 
   const supabase = createAdminClient();
-  const { error } = await supabase.from("categories").insert(parsed.data);
+  const { error } = await supabase.from("categories").insert({
+    name: parsed.data.name,
+    slug: parsed.data.slug,
+    image_url: parsed.data.image_url || null,
+  });
 
   if (error) {
     const message =
@@ -62,7 +67,11 @@ export async function updateCategory(id: string, formData: FormData) {
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("categories")
-    .update(parsed.data)
+    .update({
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      image_url: parsed.data.image_url || null,
+    })
     .eq("id", id);
 
   if (error) {

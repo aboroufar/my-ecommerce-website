@@ -3,15 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Category } from "@/lib/products";
+import type { MenuColumn as MenuColumnData } from "@/lib/menu";
 
-// TODO: this store's schema only has a flat `categories` table (Category
-// column below). Concern/Product are presentational placeholders matching
-// the reference design's taxonomy -- wire these to real data (or drop them)
-// once/if this store needs that kind of faceted browsing.
-const placeholderConcerns = ["New arrivals", "Best sellers", "Gifting"];
-const placeholderProductTypes = ["Apparel", "Accessories", "Home"];
-
-export function MegaMenu({ categories }: { categories: Category[] }) {
+export function MegaMenu({
+  categories,
+  extraColumns = [],
+}: {
+  categories: Category[];
+  extraColumns?: MenuColumnData[];
+}) {
   const [openSlug, setOpenSlug] = useState<string | null>(null);
 
   const items = [
@@ -47,7 +47,12 @@ export function MegaMenu({ categories }: { categories: Category[] }) {
 
       {openItem && (
         <div className="absolute right-0 top-full z-50 w-[min(90vw,760px)] border border-line bg-background shadow-lg">
-          <div className="grid grid-cols-1 gap-8 p-8 sm:grid-cols-[220px_1fr_1fr_1fr]">
+          <div
+            className="grid grid-cols-1 gap-8 p-8"
+            style={{
+              gridTemplateColumns: `220px repeat(${1 + extraColumns.length}, 1fr)`,
+            }}
+          >
             <div className="relative flex aspect-[4/3] items-end bg-surface p-4">
               <span className="border border-background/80 px-4 py-2 text-[10px] font-medium uppercase tracking-wide text-background">
                 Find your routine
@@ -63,20 +68,16 @@ export function MegaMenu({ categories }: { categories: Category[] }) {
                   href: `/products?category=${i.slug}`,
                 }))}
             />
-            <MenuColumn
-              title="Concern"
-              links={placeholderConcerns.map((label) => ({
-                label,
-                href: "/products",
-              }))}
-            />
-            <MenuColumn
-              title="Product"
-              links={placeholderProductTypes.map((label) => ({
-                label,
-                href: "/products",
-              }))}
-            />
+            {extraColumns.map((column) => (
+              <MenuColumn
+                key={column.id}
+                title={column.title}
+                links={column.items.map((item) => ({
+                  label: item.label,
+                  href: item.href,
+                }))}
+              />
+            ))}
           </div>
         </div>
       )}

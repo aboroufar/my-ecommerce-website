@@ -38,8 +38,8 @@ export default async function AdminLayout({
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
-      <div className="mb-8 flex items-center justify-between border-b border-line pb-4">
-        <nav className="flex items-center gap-6">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-y-3 border-b border-line pb-4">
+        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <Link href="/admin/products" className="font-display text-lg text-foreground">
             Admin
           </Link>
@@ -66,6 +66,18 @@ export default async function AdminLayout({
             className="text-sm text-muted transition-colors hover:text-foreground"
           >
             Categories
+          </Link>
+          <Link
+            href="/admin/menu"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Menu
+          </Link>
+          <Link
+            href="/admin/brands"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Brands
           </Link>
           <Link
             href="/admin/content"
