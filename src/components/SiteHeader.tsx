@@ -85,16 +85,11 @@ export async function SiteHeader() {
 
       <div className="border-t border-line px-6 py-3">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-8">
-            <span className="hidden items-center gap-2 text-sm font-semibold uppercase tracking-wide text-foreground sm:flex">
-              <MenuIcon /> {settings.categories_menu_label}
-            </span>
-            <MegaMenu
-              categories={categories}
-              categoriesLabel={settings.categories_menu_label}
-              extraColumns={menuColumns}
-            />
-          </div>
+          <MegaMenu
+            categories={categories}
+            categoriesLabel={settings.categories_menu_label}
+            extraColumns={menuColumns}
+          />
           <Link
             href="/contact"
             className="hidden rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90 sm:inline-block"
@@ -177,14 +172,6 @@ function HeartIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  );
-}
-
-function MenuIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-      <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
