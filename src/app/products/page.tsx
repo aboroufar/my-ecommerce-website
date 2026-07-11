@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getActiveProducts, getCategories, type ProductSort } from "@/lib/products";
+import { getActiveProducts, getCategories, type Category, type ProductSort } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { SortDropdown } from "@/components/SortDropdown";
 import { ShopSidebar } from "@/components/ShopSidebar";
+import { CategoryHero } from "@/components/CategoryHero";
 
 export const revalidate = 60;
 
@@ -30,6 +31,15 @@ export default async function ProductsPage({
   ]);
 
   const activeCategory = categories.find((c) => c.slug === category);
+  const isTopLevelCategory = !!activeCategory && !activeCategory.parent_id;
+
+  // Scope the sidebar to just this category's own groups/items when
+  // viewing a top-level category page, rather than the entire site's
+  // category tree -- it reads as "filter within this category" instead
+  // of a full site nav duplicate.
+  const sidebarCategories = isTopLevelCategory
+    ? categorySubtree(categories, activeCategory)
+    : categories;
 
   return (
     <main className="w-full flex-1">
@@ -40,8 +50,17 @@ export default async function ProductsPage({
         </div>
       </div>
 
+      {isTopLevelCategory && (
+        <div className="mx-auto w-full max-w-6xl px-6 pt-6">
+          <CategoryHero
+            category={activeCategory}
+            groups={categories.filter((c) => c.parent_id === activeCategory.id)}
+          />
+        </div>
+      )}
+
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 lg:flex-row">
-        <ShopSidebar categories={categories} activeSlug={category} />
+        <ShopSidebar categories={sidebarCategories} activeSlug={category} />
 
         <div className="min-w-0 flex-1">
           <div className="mb-10">
@@ -66,6 +85,32 @@ export default async function ProductsPage({
       </div>
     </main>
   );
+}
+
+/**
+ * Returns the given top-level category plus every descendant (groups,
+ * items), so the sidebar can show just "this category's own tree" instead
+ * of every category on the site.
+ */
+function categorySubtree(categories: Category[], root: Category): Category[] {
+  const childrenByParent = new Map<string, Category[]>();
+  for (const c of categories) {
+    if (!c.parent_id) continue;
+    const siblings = childrenByParent.get(c.parent_id) ?? [];
+    siblings.push(c);
+    childrenByParent.set(c.parent_id, siblings);
+  }
+
+  const result: Category[] = [root];
+  const stack = [root];
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    for (const child of childrenByParent.get(current.id) ?? []) {
+      result.push(child);
+      stack.push(child);
+    }
+  }
+  return result;
 }
 
 function Breadcrumb({ categoryName }: { categoryName?: string }) {

@@ -14,6 +14,9 @@ interface Category {
   slug: string;
   image_url: string | null;
   parent_id: string | null;
+  hero_image_url?: string | null;
+  hero_headline?: string | null;
+  hero_eyebrow?: string | null;
 }
 
 export function CategoriesManager({ categories }: { categories: Category[] }) {
@@ -258,6 +261,43 @@ function CategoryForm({
         <span className="text-xs text-muted">Photo</span>
         <ImageUploadField defaultValue={category?.image_url ?? ""} />
       </div>
+
+      {resultingDepth === 0 && (
+        <div className="space-y-3 border-t border-line pt-3">
+          <p className="text-xs text-muted">
+            Category landing page (shown at the top of /products for this
+            category)
+          </p>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Hero photo</span>
+            <ImageUploadField
+              fieldName="hero_image_url"
+              defaultValue={category?.hero_image_url ?? ""}
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Hero headline</span>
+            <input
+              name="hero_headline"
+              defaultValue={category?.hero_headline ?? ""}
+              placeholder="BubbleBath Set"
+              className="border border-line bg-background px-3 py-2 text-sm"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Hero eyebrow</span>
+            <input
+              name="hero_eyebrow"
+              defaultValue={category?.hero_eyebrow ?? "Everything you may need"}
+              placeholder="Everything you may need"
+              className="border border-line bg-background px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
+      )}
 
       <div className="flex gap-2 pt-1">
         <button

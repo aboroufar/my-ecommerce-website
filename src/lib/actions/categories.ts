@@ -14,6 +14,9 @@ const categorySchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug: lowercase letters, numbers, hyphens only"),
   image_url: z.union([z.string().min(1), z.literal("")]).optional(),
   parent_id: z.union([z.string().uuid(), z.literal("")]).optional(),
+  hero_image_url: z.union([z.string().min(1), z.literal("")]).optional(),
+  hero_headline: z.string().optional(),
+  hero_eyebrow: z.string().optional(),
 });
 
 /**
@@ -42,6 +45,9 @@ export async function createCategory(formData: FormData) {
     slug: parsed.data.slug,
     image_url: parsed.data.image_url || null,
     parent_id: parsed.data.parent_id || null,
+    hero_image_url: parsed.data.hero_image_url || null,
+    hero_headline: parsed.data.hero_headline || null,
+    hero_eyebrow: parsed.data.hero_eyebrow || null,
   });
 
   if (error) {
@@ -80,6 +86,9 @@ export async function updateCategory(id: string, formData: FormData) {
       slug: parsed.data.slug,
       image_url: parsed.data.image_url || null,
       parent_id: parsed.data.parent_id || null,
+      hero_image_url: parsed.data.hero_image_url || null,
+      hero_headline: parsed.data.hero_headline || null,
+      hero_eyebrow: parsed.data.hero_eyebrow || null,
     })
     .eq("id", id);
 

@@ -12,7 +12,7 @@ export default async function AdminCategoriesPage({
   const supabase = createAdminClient();
   const { data: categories } = await supabase
     .from("categories")
-    .select("id, name, slug, image_url, parent_id")
+    .select("id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow")
     .order("name", { ascending: true });
 
   return (
@@ -22,7 +22,9 @@ export default async function AdminCategoriesPage({
         The homepage category grid and header menu update automatically
         when you add, edit, or delete a category here -- just add a photo
         so it doesn&apos;t fall back to a placeholder image. Give a category
-        a parent to nest it as a sub-category in the header menu.
+        a parent to nest it as a Group or Item under a top-level Category.
+        Top-level categories can also have a hero photo/headline shown at
+        the top of their /products page.
       </p>
 
       {error && (

@@ -177,6 +177,9 @@ export type Database = {
       categories: {
         Row: {
           created_at: string
+          hero_eyebrow: string | null
+          hero_headline: string | null
+          hero_image_url: string | null
           id: string
           image_url: string | null
           name: string
@@ -185,6 +188,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hero_eyebrow?: string | null
+          hero_headline?: string | null
+          hero_image_url?: string | null
           id?: string
           image_url?: string | null
           name: string
@@ -193,6 +199,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hero_eyebrow?: string | null
+          hero_headline?: string | null
+          hero_image_url?: string | null
           id?: string
           image_url?: string | null
           name?: string
