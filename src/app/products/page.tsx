@@ -32,13 +32,19 @@ export default async function ProductsPage({
 
   const activeCategory = categories.find((c) => c.slug === category);
   const isTopLevelCategory = !!activeCategory && !activeCategory.parent_id;
+  const topLevelAncestor = activeCategory
+    ? findTopLevelAncestor(categories, activeCategory)
+    : undefined;
 
-  // Scope the sidebar to just this category's own groups/items when
-  // viewing a top-level category page, rather than the entire site's
+  // Scope the sidebar to just the active category's top-level department
+  // (its full subtree of groups/items), rather than the entire site's
   // category tree -- it reads as "filter within this category" instead
-  // of a full site nav duplicate.
-  const sidebarCategories = isTopLevelCategory
-    ? categorySubtree(categories, activeCategory)
+  // of a full site nav duplicate. This applies whether the active filter
+  // is the top-level category itself (e.g. Skincare) or one of its
+  // groups/items (e.g. Sun Care), since both should show the same scoped
+  // Skincare subtree, not just fall back to everything.
+  const sidebarCategories = topLevelAncestor
+    ? categorySubtree(categories, topLevelAncestor)
     : categories;
 
   return (
@@ -85,6 +91,23 @@ export default async function ProductsPage({
       </div>
     </main>
   );
+}
+
+/**
+ * Walks up parent_id links from the given category to find its top-level
+ * ancestor (or itself, if it's already top-level) -- e.g. "Sun Care"
+ * (a group) resolves to "Skincare", so the sidebar can be scoped to the
+ * right department regardless of which tier of the tree is active.
+ */
+function findTopLevelAncestor(categories: Category[], category: Category): Category {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  let current = category;
+  while (current.parent_id) {
+    const parent = byId.get(current.parent_id);
+    if (!parent) break;
+    current = parent;
+  }
+  return current;
 }
 
 /**
