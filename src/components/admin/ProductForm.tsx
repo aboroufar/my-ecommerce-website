@@ -10,6 +10,7 @@ interface ProductFormValues {
   sku?: string | null;
   stock_qty?: number;
   status?: ProductStatus;
+  is_popular?: boolean;
   image_url?: string;
   categoryIds?: string[];
 }
@@ -134,6 +135,15 @@ export function ProductForm({
           </select>
         </Field>
       </div>
+
+      <label className="flex items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          name="is_popular"
+          defaultChecked={defaultValues?.is_popular ?? false}
+        />
+        Show a &quot;Popular&quot; badge on this product
+      </label>
 
       <Field
         label="Product image"

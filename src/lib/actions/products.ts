@@ -29,6 +29,9 @@ const productSchema = z.object({
     .union([z.string().url("Image URL must be a valid URL"), z.literal("")])
     .optional()
     .default(""),
+  // Checkboxes are only present in FormData when checked ("on"), so a
+  // missing key means unchecked/false rather than a validation failure.
+  is_popular: z.preprocess((v) => v === "on", z.boolean()),
 });
 
 /**

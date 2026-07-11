@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CartProvider } from "@/components/CartProvider";
+import { WishlistProvider } from "@/components/WishlistProvider";
 
 const geologica = Geologica({
   subsets: ["latin"],
@@ -33,9 +34,11 @@ export default function RootLayout({
     <html lang="en" className={`h-full antialiased ${geologica.variable} ${inter.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
         <CartProvider>
-          <SiteHeader />
-          <div className="flex flex-1 flex-col">{children}</div>
-          <SiteFooter />
+          <WishlistProvider>
+            <SiteHeader />
+            <div className="flex flex-1 flex-col">{children}</div>
+            <SiteFooter />
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

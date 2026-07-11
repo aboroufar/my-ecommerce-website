@@ -72,7 +72,7 @@ export async function SiteHeader() {
             )}
             <AccountLink />
             <Link
-              href="/account"
+              href="/account/wishlist"
               aria-label="Wishlist"
               className="text-foreground transition-opacity hover:opacity-70"
             >

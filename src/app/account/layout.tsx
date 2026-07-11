@@ -33,6 +33,12 @@ export default async function AccountLayout({
           >
             Addresses
           </Link>
+          <Link
+            href="/account/wishlist"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Wishlist
+          </Link>
         </nav>
         <div className="flex items-center gap-4 text-xs text-muted">
           <span>{user.email}</span>

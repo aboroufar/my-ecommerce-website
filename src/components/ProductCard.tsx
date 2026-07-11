@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { ProductSummary } from "@/lib/products";
 import { formatPrice, getSaleInfo } from "@/lib/format";
 import { useCart } from "./CartProvider";
+import { useWishlist } from "./WishlistProvider";
 
 export function ProductCard({ product }: { product: ProductSummary }) {
   const { addItem } = useCart();
+  const router = useRouter();
+  const wishlist = useWishlist();
+  const [pending, setPending] = useState(false);
+  const wishlisted = wishlist.ids.has(product.id);
   const image = [...product.product_images].sort(
     (a, b) => a.sort_order - b.sort_order
   )[0];
@@ -29,16 +36,33 @@ export function ProductCard({ product }: { product: ProductSummary }) {
     });
   }
 
+  async function handleToggleWishlist(e: React.MouseEvent) {
+    e.preventDefault();
+    if (pending) return;
+    setPending(true);
+    const result = await wishlist.toggle(product.id);
+    setPending(false);
+    if (!result.signedIn) {
+      router.push("/account");
+    }
+  }
+
   return (
     <div className="group relative">
       <div className="absolute right-3 top-3 z-10 flex flex-col gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-        <Link
-          href="/account"
-          aria-label="Add to wishlist"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background"
+        <button
+          type="button"
+          onClick={handleToggleWishlist}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={wishlisted}
+          className={`flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors ${
+            wishlisted
+              ? "bg-accent text-background"
+              : "bg-background text-foreground hover:bg-accent hover:text-background"
+          }`}
         >
-          <HeartIcon />
-        </Link>
+          <HeartIcon filled={wishlisted} />
+        </button>
         <Link
           href={`/products/${product.slug}`}
           aria-label="Quick view"
@@ -57,10 +81,19 @@ export function ProductCard({ product }: { product: ProductSummary }) {
 
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-lg border border-line bg-surface">
-          {sale.onSale && (
-            <span className="absolute left-3 top-3 z-10 rounded-full bg-sale px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-background">
-              Sale
-            </span>
+          {(sale.onSale || product.is_popular) && (
+            <div className="absolute left-3 top-3 z-10 flex gap-1.5">
+              {sale.onSale && (
+                <span className="rounded-full bg-sale px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-background">
+                  Sale
+                </span>
+              )}
+              {product.is_popular && (
+                <span className="rounded-full bg-accent px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-background">
+                  Popular
+                </span>
+              )}
+            </div>
           )}
           {image ? (
             <Image
@@ -181,9 +214,15 @@ function CompareIcon() {
   );
 }
 
-function HeartIcon() {
+function HeartIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4">
+    <svg
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.7"
+      className="h-4 w-4"
+    >
       <path
         d="M12 20s-7-4.4-9.5-8.8C1 8 2.5 4.5 6 4.5c2 0 3.5 1.2 4.5 2.8 1-1.6 2.5-2.8 4.5-2.8 3.5 0 5 3.5 3.5 6.7C19 15.6 12 20 12 20Z"
         strokeLinecap="round"

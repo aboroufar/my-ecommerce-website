@@ -19,7 +19,7 @@ export default async function EditProductPage({
     supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, product_images(url, sort_order), product_categories(category_id)"
+        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, product_images(url, sort_order), product_categories(category_id)"
       )
       .eq("id", id)
       .single(),
@@ -60,6 +60,7 @@ export default async function EditProductPage({
           sku: product.sku,
           stock_qty: product.stock_qty,
           status: product.status as ProductStatus,
+          is_popular: product.is_popular,
           image_url: image?.url ?? "",
           categoryIds,
         }}
