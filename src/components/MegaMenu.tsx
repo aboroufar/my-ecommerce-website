@@ -76,7 +76,7 @@ function CategoriesDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 flex w-[min(90vw,900px)] border border-line bg-background shadow-lg">
+        <div className="absolute left-0 top-full z-50 flex w-max max-w-[95vw] border border-line bg-background shadow-lg">
           <ul className="w-56 shrink-0 divide-y divide-line border-r border-line">
             {topLevelCategories.map((category) => {
               const hasChildren = (childrenByParent.get(category.id) ?? []).length > 0;
@@ -98,16 +98,14 @@ function CategoriesDropdown({
             })}
           </ul>
 
-          <div className="grid flex-1 grid-cols-3 gap-8 p-8">
+          <div className="flex flex-1 items-start gap-10 p-8">
             {activeGroups.length === 0 ? (
-              <p className="col-span-3 text-sm text-muted">
-                No subcategories yet.
-              </p>
+              <p className="text-sm text-muted">No subcategories yet.</p>
             ) : (
               activeGroups.map((group) => {
                 const items = childrenByParent.get(group.id) ?? [];
                 return (
-                  <div key={group.id}>
+                  <div key={group.id} className="w-40 shrink-0">
                     <Link
                       href={`/products?category=${group.slug}`}
                       className="font-display text-base font-bold normal-case tracking-normal text-foreground transition-colors hover:text-accent"

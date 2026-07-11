@@ -34,6 +34,7 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
       <CategoryRow
         category={category}
         categories={categories}
+        depth={depth}
         editing={editingId === category.id}
         onEdit={() => setEditingId(category.id)}
         onCancel={() => setEditingId(null)}
@@ -75,15 +76,34 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
   );
 }
 
+const TIER_LABELS = ["Category", "Group", "Item"] as const;
+const TIER_STYLES = [
+  "bg-foreground text-background",
+  "bg-accent/15 text-accent",
+  "bg-surface text-muted",
+] as const;
+
+function TierBadge({ depth }: { depth: number }) {
+  return (
+    <span
+      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${TIER_STYLES[depth] ?? TIER_STYLES[2]}`}
+    >
+      {TIER_LABELS[depth] ?? "Item"}
+    </span>
+  );
+}
+
 function CategoryRow({
   category,
   categories,
+  depth,
   editing,
   onEdit,
   onCancel,
 }: {
   category: Category;
   categories: Category[];
+  depth: number;
   editing: boolean;
   onEdit: () => void;
   onCancel: () => void;
@@ -93,6 +113,7 @@ function CategoryRow({
       <CategoryForm
         category={category}
         categories={categories}
+        depth={depth}
         action={updateCategory.bind(null, category.id)}
         onCancel={onCancel}
       />
@@ -114,9 +135,12 @@ function CategoryRow({
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
-          {category.name}
-        </p>
+        <div className="flex items-center gap-2">
+          <TierBadge depth={depth} />
+          <p className="truncate text-sm font-medium text-foreground">
+            {category.name}
+          </p>
+        </div>
         <p className="truncate text-xs text-muted">{category.slug}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
@@ -143,11 +167,13 @@ function CategoryRow({
 function CategoryForm({
   category,
   categories,
+  depth,
   action,
   onCancel,
 }: {
   category?: Category;
   categories: Category[];
+  depth?: number;
   action: (formData: FormData) => void;
   onCancel: () => void;
 }) {
@@ -156,20 +182,35 @@ function CategoryForm({
   // offered as a parent option -- that would make a 4th level.
   const byId = new Map(categories.map((c) => [c.id, c]));
   const depthOf = (c: Category): number => {
-    let depth = 0;
+    let d = 0;
     let current: Category | undefined = c;
     while (current?.parent_id) {
       current = byId.get(current.parent_id);
-      depth += 1;
+      d += 1;
     }
-    return depth;
+    return d;
   };
   const parentOptions = categories.filter(
     (c) => c.id !== category?.id && depthOf(c) < 2
   );
 
+  const [selectedParentId, setSelectedParentId] = useState(
+    category?.parent_id ?? ""
+  );
+  const resultingDepth = selectedParentId
+    ? depthOf(byId.get(selectedParentId)!) + 1
+    : 0;
+  const tierLabel = TIER_LABELS[resultingDepth] ?? "Item";
+
   return (
     <form action={action} className="space-y-3 border border-line bg-surface p-4">
+      <div className="flex items-center gap-2">
+        <TierBadge depth={depth ?? resultingDepth} />
+        <span className="text-xs text-muted">
+          {category ? `Editing this ${tierLabel.toLowerCase()}` : `New ${tierLabel.toLowerCase()}`}
+        </span>
+      </div>
+
       <label className="flex flex-col gap-1.5">
         <span className="text-xs text-muted">Name</span>
         <input
@@ -194,16 +235,20 @@ function CategoryForm({
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-xs text-muted">Parent category (optional)</span>
+        <span className="text-xs text-muted">
+          Parent (leave blank for a top-level Category)
+        </span>
         <select
           name="parent_id"
-          defaultValue={category?.parent_id ?? ""}
+          value={selectedParentId}
+          onChange={(e) => setSelectedParentId(e.target.value)}
           className="border border-line bg-background px-3 py-2 text-sm"
         >
-          <option value="">None -- top-level category</option>
+          <option value="">None -- top-level Category</option>
           {parentOptions.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.parent_id ? `— ${c.name}` : c.name}
+              {"— ".repeat(depthOf(c))}
+              {c.name} ({TIER_LABELS[depthOf(c)]})
             </option>
           ))}
         </select>
@@ -219,7 +264,7 @@ function CategoryForm({
           type="submit"
           className="bg-accent px-4 py-2 text-xs font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90"
         >
-          {category ? "Save" : "Add category"}
+          {category ? "Save" : `Add ${tierLabel.toLowerCase()}`}
         </button>
         <button
           type="button"
