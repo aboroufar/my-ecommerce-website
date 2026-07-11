@@ -13,6 +13,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   )[0];
   const categoryName = product.product_categories[0]?.categories?.name;
   const sale = getSaleInfo(product.price_cents, product.compare_at_price_cents);
+  const rating = ratingFor(product.id);
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
@@ -30,13 +31,29 @@ export function ProductCard({ product }: { product: ProductSummary }) {
 
   return (
     <div className="group relative">
-      <Link
-        href="/account"
-        aria-label="Add to wishlist"
-        className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background"
-      >
-        <HeartIcon />
-      </Link>
+      <div className="absolute right-3 top-3 z-10 flex flex-col gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <Link
+          href="/account"
+          aria-label="Add to wishlist"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background"
+        >
+          <HeartIcon />
+        </Link>
+        <Link
+          href={`/products/${product.slug}`}
+          aria-label="Quick view"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background"
+        >
+          <SearchIcon />
+        </Link>
+        <Link
+          href="/account"
+          aria-label="Compare"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background"
+        >
+          <CompareIcon />
+        </Link>
+      </div>
 
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-lg border border-line bg-surface">
@@ -69,6 +86,9 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           <h3 className="mt-1 font-display text-lg font-bold text-foreground">
             {product.name}
           </h3>
+
+          <StarRating rating={rating} />
+
           {product.description && (
             <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
               {product.description}
@@ -104,6 +124,60 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         </span>
       </div>
     </div>
+  );
+}
+
+/**
+ * Deterministic 3-5 star rating derived from the product id, so it's
+ * stable across renders/requests instead of flickering on every reload.
+ * Placeholder until a real review system exists.
+ */
+function ratingFor(productId: string): number {
+  let hash = 0;
+  for (let i = 0; i < productId.length; i++) {
+    hash = (hash * 31 + productId.charCodeAt(i)) | 0;
+  }
+  return 3 + (Math.abs(hash) % 3);
+}
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="mt-1 flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <StarIcon key={i} filled={i < rating} />
+      ))}
+    </div>
+  );
+}
+
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      className={`h-3.5 w-3.5 ${filled ? "fill-accent text-accent" : "fill-none text-line"}`}
+      stroke="currentColor"
+      strokeWidth="1"
+    >
+      <path d="m10 1.5 2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-3-5.3 3 1.1-6-4.4-4.2 6-.7Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CompareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+      <path d="M7 3v14M7 17 4 14M7 17l3-3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M17 21V7M17 7l3 3M17 7l-3 3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
