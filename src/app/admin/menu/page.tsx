@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MenuManager } from "@/components/admin/MenuManager";
 import { getSiteSettings } from "@/lib/siteSettings";
@@ -39,9 +40,12 @@ export default async function AdminMenuPage({
         Navigation menu
       </h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        The category column is built automatically from your Categories
-        page (including any sub-categories). Add, edit, reorder, or remove
-        extra columns and links below.
+        The category column is built automatically from your{" "}
+        <Link href="/admin/categories" className="text-accent underline underline-offset-4 hover:opacity-80">
+          Categories page
+        </Link>{" "}
+        (including groups and items) -- edit categories there, not here.
+        Add, edit, reorder, or remove extra columns and links below.
       </p>
 
       {error && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   createMenuColumn,
   updateMenuColumn,
@@ -191,7 +192,11 @@ function CategoryColumnPreview({
         </span>
       </div>
       <p className="mt-1 text-xs text-muted">
-        Built automatically from your Categories page.
+        Built automatically from your{" "}
+        <Link href="/admin/categories" className="text-accent underline underline-offset-4 hover:opacity-80">
+          Categories page
+        </Link>
+        .
       </p>
       <ul className="mt-3 space-y-2 text-sm text-muted">
         {topLevel.length === 0 ? (
