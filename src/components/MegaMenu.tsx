@@ -76,29 +76,40 @@ function CategoriesDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 flex w-max max-w-[95vw] border border-line bg-background shadow-lg">
-          <ul className="w-56 shrink-0 divide-y divide-line border-r border-line">
+        <div className="absolute left-0 top-full z-50 flex w-max max-w-[95vw] gap-8 rounded-sm bg-background p-6 shadow-xl ring-1 ring-line/60">
+          <ul className="w-52 shrink-0 space-y-0.5">
             {topLevelCategories.map((category) => {
               const hasChildren = (childrenByParent.get(category.id) ?? []).length > 0;
               const isActive = activeId === category.id;
               return (
-                <li key={category.id}>
+                <li key={category.id} className="relative">
+                  <span
+                    className={`absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent transition-all duration-200 ease-out ${
+                      isActive ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
                   <Link
                     href={`/products?category=${category.slug}`}
                     onMouseEnter={() => setActiveId(category.id)}
-                    className={`flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors hover:bg-surface hover:text-accent ${
-                      isActive ? "bg-surface text-accent" : "text-foreground"
+                    className={`flex items-center justify-between rounded-sm px-3 py-2 text-sm font-medium transition-all duration-200 ease-out ${
+                      isActive
+                        ? "translate-x-1.5 text-accent"
+                        : "text-foreground hover:translate-x-1.5 hover:text-accent"
                     }`}
                   >
                     {category.name}
-                    {hasChildren && <ChevronRightIcon />}
+                    {hasChildren && (
+                      <ChevronRightIcon
+                        className={`transition-transform duration-200 ease-out ${isActive ? "translate-x-0.5" : ""}`}
+                      />
+                    )}
                   </Link>
                 </li>
               );
             })}
           </ul>
 
-          <div className="flex flex-1 items-start gap-10 p-8">
+          <div className="flex flex-1 items-start gap-10 border-l border-line/50 pl-8">
             {activeGroups.length === 0 ? (
               <p className="text-sm text-muted">No subcategories yet.</p>
             ) : (
@@ -108,17 +119,17 @@ function CategoriesDropdown({
                   <div key={group.id} className="w-40 shrink-0">
                     <Link
                       href={`/products?category=${group.slug}`}
-                      className="font-display text-base font-bold normal-case tracking-normal text-foreground transition-colors hover:text-accent"
+                      className="font-display text-sm font-bold normal-case tracking-normal text-foreground transition-colors duration-200 hover:text-accent"
                     >
                       {group.name}
                     </Link>
                     {items.length > 0 && (
-                      <ul className="mt-3 space-y-2 normal-case tracking-normal text-muted">
+                      <ul className="mt-3 space-y-2.5 normal-case tracking-normal text-muted">
                         {items.map((item) => (
                           <li key={item.id}>
                             <Link
                               href={`/products?category=${item.slug}`}
-                              className="transition-colors hover:text-foreground"
+                              className="inline-block text-sm transition-all duration-200 ease-out hover:translate-x-1 hover:text-foreground"
                             >
                               {item.name}
                             </Link>
@@ -190,9 +201,9 @@ function ChevronDownIcon() {
   );
 }
 
-function ChevronRightIcon() {
+function ChevronRightIcon({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 text-muted">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`h-3.5 w-3.5 text-muted ${className}`}>
       <path d="m9 6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
