@@ -211,9 +211,34 @@ function CategoryForm({
     }
     return d;
   };
-  const parentOptions = categories.filter(
+
+  // categories comes back sorted alphabetically by name, which scrambles
+  // the tree in a flat <select> -- e.g. a top-level category and its own
+  // children can end up scattered far apart among unrelated categories,
+  // making it easy to pick the wrong parent by mistake (this caused a real
+  // product mis-categorization bug). Re-sort depth-first so every group of
+  // siblings is listed immediately after its parent, in tree order.
+  const childrenByParentId = new Map<string, Category[]>();
+  for (const c of categories) {
+    if (!c.parent_id) continue;
+    const siblings = childrenByParentId.get(c.parent_id) ?? [];
+    siblings.push(c);
+    childrenByParentId.set(c.parent_id, siblings);
+  }
+  const eligible = categories.filter(
     (c) => c.id !== category?.id && depthOf(c) < 2
   );
+  const eligibleIds = new Set(eligible.map((c) => c.id));
+  const parentOptions: Category[] = [];
+  function addInTreeOrder(c: Category) {
+    if (eligibleIds.has(c.id)) parentOptions.push(c);
+    for (const child of childrenByParentId.get(c.id) ?? []) {
+      addInTreeOrder(child);
+    }
+  }
+  for (const top of categories.filter((c) => !c.parent_id)) {
+    addInTreeOrder(top);
+  }
 
   const [selectedParentId, setSelectedParentId] = useState(
     category?.parent_id ?? ""
