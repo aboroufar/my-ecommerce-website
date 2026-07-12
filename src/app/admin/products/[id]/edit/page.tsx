@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProduct, deleteProduct } from "@/lib/actions/products";
 import { ProductForm } from "@/components/admin/ProductForm";
 import type { ProductOptionsDefaults } from "@/components/admin/ProductOptionsManager";
+import type { ProductHighlightsDefaults } from "@/components/admin/ProductHighlightsManager";
+import type { HighlightIconKey } from "@/components/highlightIcons";
 import type { ProductStatus } from "@/lib/supabase/types";
 
 export default async function EditProductPage({
@@ -20,7 +22,7 @@ export default async function EditProductPage({
     supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, product_images(url, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, product_images(url, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id)), product_highlights(id, label, icon, sort_order)"
       )
       .eq("id", id)
       .single(),
@@ -70,6 +72,10 @@ export default async function EditProductPage({
     }),
   };
 
+  const highlightsDefaults: ProductHighlightsDefaults = [...product.product_highlights]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((h) => ({ label: h.label, icon: h.icon as HighlightIconKey }));
+
   const updateWithId = updateProduct.bind(null, id);
   const deleteWithId = deleteProduct.bind(null, id);
 
@@ -98,6 +104,7 @@ export default async function EditProductPage({
           image_url: image?.url ?? "",
           categoryIds,
           options: optionsDefaults,
+          highlights: highlightsDefaults,
         }}
         extraAction={
           <form action={deleteWithId}>

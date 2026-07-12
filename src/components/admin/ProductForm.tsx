@@ -1,6 +1,10 @@
 import type { ProductStatus } from "@/lib/supabase/types";
 import { ImageUploadField } from "./ImageUploadField";
 import { ProductOptionsManager, type ProductOptionsDefaults } from "./ProductOptionsManager";
+import {
+  ProductHighlightsManager,
+  type ProductHighlightsDefaults,
+} from "./ProductHighlightsManager";
 
 interface CategoryOption {
   id: string;
@@ -85,6 +89,7 @@ interface ProductFormValues {
   image_url?: string;
   categoryIds?: string[];
   options?: ProductOptionsDefaults;
+  highlights?: ProductHighlightsDefaults;
 }
 
 export function ProductForm({
@@ -228,6 +233,13 @@ export function ProductForm({
         hint="Optional. Add option types like Size or Skin type to sell this product in priced/stocked variants instead of one fixed price. Each combination gets its own price, stock, weight and dimensions."
       >
         <ProductOptionsManager defaults={defaultValues?.options} />
+      </Field>
+
+      <Field
+        label="Highlight bullets"
+        hint="Shown on the product page above Add to cart, e.g. &quot;Cruelty free&quot;."
+      >
+        <ProductHighlightsManager defaults={defaultValues?.highlights} />
       </Field>
 
       <div className="mt-2 flex items-center gap-4">

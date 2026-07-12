@@ -62,6 +62,13 @@ export interface ProductReview {
   created_at: string;
 }
 
+export interface ProductHighlight {
+  id: string;
+  label: string;
+  icon: string;
+  sort_order: number;
+}
+
 export interface ProductDetail extends Omit<ProductSummary, "product_reviews"> {
   description: string | null;
   sku: string | null;
@@ -71,6 +78,7 @@ export interface ProductDetail extends Omit<ProductSummary, "product_reviews"> {
   product_option_types: ProductOptionType[];
   product_variants: ProductVariant[];
   product_reviews: ProductReview[];
+  product_highlights: ProductHighlight[];
 }
 
 /**
@@ -393,7 +401,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at)"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at), product_highlights(id, label, icon, sort_order)"
       )
       .eq("slug", slug)
       .eq("status", "active")

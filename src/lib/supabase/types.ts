@@ -761,6 +761,41 @@ export type Database = {
           },
         ]
       }
+      product_highlights: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          label: string
+          product_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          icon: string
+          id?: string
+          label: string
+          product_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          label?: string
+          product_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_highlights_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_content: {
         Row: {
           key: string

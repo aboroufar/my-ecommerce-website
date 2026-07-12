@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminUser } from "@/lib/auth";
 import { setProductCategories } from "@/lib/actions/categories";
 import { setProductOptions } from "@/lib/actions/productOptions";
+import { setProductHighlights } from "@/lib/actions/productHighlights";
 
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -86,6 +87,7 @@ export async function createProduct(formData: FormData) {
 
   await setProductCategories(product.id, formData.getAll("category_ids") as string[]);
   await setProductOptions(product.id, String(formData.get("options_json") ?? ""));
+  await setProductHighlights(product.id, String(formData.get("highlights_json") ?? ""));
 
   revalidatePath("/products");
   revalidatePath("/admin/products");
@@ -136,6 +138,7 @@ export async function updateProduct(id: string, formData: FormData) {
 
   await setProductCategories(id, formData.getAll("category_ids") as string[]);
   await setProductOptions(id, String(formData.get("options_json") ?? ""));
+  await setProductHighlights(id, String(formData.get("highlights_json") ?? ""));
 
   revalidatePath("/products");
   revalidatePath(`/products/${rest.slug}`);

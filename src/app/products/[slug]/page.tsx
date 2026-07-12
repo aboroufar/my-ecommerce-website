@@ -19,6 +19,7 @@ import { ViewingCounter } from "@/components/ViewingCounter";
 import { ProductInfoTabs } from "@/components/ProductInfoTabs";
 import { StarRating } from "@/components/StarRating";
 import { ReviewsTabContent } from "@/components/ReviewsTabContent";
+import { HighlightIcon } from "@/components/highlightIcons";
 
 export const revalidate = 60;
 export const dynamicParams = true; // render on-demand for slugs not in the list below
@@ -42,12 +43,6 @@ export async function generateMetadata({
   };
 }
 
-const featureBullets = [
-  { label: "Thoughtfully sourced materials", icon: <LeafIcon /> },
-  { label: "Cruelty free", icon: <RabbitIcon /> },
-  { label: "Eco-conscious packaging", icon: <RecycleIcon /> },
-];
-
 export default async function ProductDetailPage({
   params,
 }: {
@@ -68,6 +63,9 @@ export default async function ProductDetailPage({
   const recommended = await getRecommendedProducts(product.id, categorySlugs);
   const sale = getSaleInfo(product.price_cents, product.compare_at_price_cents);
   const reviewSummary = getReviewSummary(product.product_reviews);
+  const highlights = [...product.product_highlights].sort(
+    (a, b) => a.sort_order - b.sort_order
+  );
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
@@ -147,17 +145,21 @@ export default async function ProductDetailPage({
               </>
             )}
 
-            <ul className="mt-6 space-y-3 border-y border-line py-6">
-              {featureBullets.map((feature) => (
-                <li
-                  key={feature.label}
-                  className="flex items-center gap-3 text-sm text-foreground"
-                >
-                  <span className="text-accent">{feature.icon}</span>
-                  {feature.label}
-                </li>
-              ))}
-            </ul>
+            {highlights.length > 0 && (
+              <ul className="mt-6 space-y-3 border-y border-line py-6">
+                {highlights.map((highlight) => (
+                  <li
+                    key={highlight.id}
+                    className="flex items-center gap-3 text-sm text-foreground"
+                  >
+                    <span className="text-accent">
+                      <HighlightIcon icon={highlight.icon} />
+                    </span>
+                    {highlight.label}
+                  </li>
+                ))}
+              </ul>
+            )}
 
             <ViewingCounter />
 
@@ -203,28 +205,3 @@ export default async function ProductDetailPage({
   );
 }
 
-function LeafIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-      <path d="M12 2c-4 4-6 8-6 12a6 6 0 0 0 12 0c0-4-2-8-6-12Z" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function RabbitIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-      <circle cx="12" cy="13" r="7" />
-      <path d="M9 6c-1-2-1-4 0-5M15 6c1-2 1-4 0-5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function RecycleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-      <circle cx="12" cy="12" r="8" strokeDasharray="2 3" />
-      <circle cx="12" cy="12" r="2" />
-    </svg>
-  );
-}
