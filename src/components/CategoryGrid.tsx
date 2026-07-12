@@ -59,9 +59,23 @@ export function CategoryGrid({
     };
   });
 
+  // Column count adapts to how many category cards there actually are
+  // (capped at 5 per row) so a short list -- e.g. today's 4 top-level
+  // categories -- fills the row evenly instead of leaving a fixed 5th
+  // column empty on the right. Tailwind needs literal class names (no
+  // dynamic string interpolation), so this maps count -> a fixed set of
+  // known-safe classes rather than building "lg:grid-cols-${n}" at runtime.
+  const lgColsClass =
+    {
+      1: "lg:grid-cols-1",
+      2: "lg:grid-cols-2",
+      3: "lg:grid-cols-3",
+      4: "lg:grid-cols-4",
+    }[cards.length] ?? "lg:grid-cols-5";
+
   return (
     <section className="w-full px-2 pt-2 sm:px-4">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      <div className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${lgColsClass}`}>
         {cards.map(({ category, url, alt, isPlaceholder }) => (
           <Link
             key={category.id}
