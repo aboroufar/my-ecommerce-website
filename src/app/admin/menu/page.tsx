@@ -44,8 +44,10 @@ export default async function AdminMenuPage({
         <Link href="/admin/categories" className="text-accent underline underline-offset-4 hover:opacity-80">
           Categories page
         </Link>{" "}
-        (including groups and items) -- edit categories there, not here.
-        Add, edit, reorder, or remove extra columns and links below.
+        (including groups and items) -- edit categories there, not here. The
+        &quot;Home&quot; column also auto-adds a &quot;[Category] Home&quot; link for
+        every top-level category, so it never needs manual upkeep. Add, edit,
+        reorder, or remove any other columns and links below.
       </p>
 
       {error && (

@@ -102,6 +102,7 @@ export function MenuManager({
             column={column}
             index={i}
             total={columns.length}
+            categories={column.title === "Home" ? categories : undefined}
           />
         ))}
       </div>
@@ -213,14 +214,17 @@ function ColumnEditor({
   column,
   index,
   total,
+  categories,
 }: {
   column: MenuColumn;
   index: number;
   total: number;
+  categories?: Category[];
 }) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [addingItem, setAddingItem] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const topLevelCategories = categories?.filter((c) => !c.parent_id) ?? [];
 
   return (
     <div
@@ -355,6 +359,24 @@ function ColumnEditor({
           )
         )}
       </ul>
+
+      {categories !== undefined && (
+        <>
+          <p className="mt-3 text-[10px] font-medium uppercase tracking-wide text-muted">
+            Auto-added per category
+          </p>
+          <ul className="mt-1.5 space-y-1.5">
+            {topLevelCategories.map((category) => (
+              <li key={category.id} className="text-sm text-muted">
+                {category.name} Home
+                <span className="block text-[10px] text-muted/70">
+                  → /products?category={category.slug}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {addingItem ? (
         <div className="mt-3">

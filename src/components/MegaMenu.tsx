@@ -31,9 +31,27 @@ export function MegaMenu({
         childrenByParent={childrenByParent}
       />
       <nav className="hidden items-center gap-8 text-xs font-medium uppercase tracking-wide text-foreground sm:flex">
-        {extraColumns.map((column) => (
-          <ColumnDropdown key={column.id} column={column} />
-        ))}
+        {extraColumns.map((column) =>
+          column.title === "Home" ? (
+            <ColumnDropdown
+              key={column.id}
+              column={{
+                ...column,
+                items: [
+                  ...column.items,
+                  ...topLevelCategories.map((category, i) => ({
+                    id: `category-${category.id}`,
+                    label: `${category.name} Home`,
+                    href: `/products?category=${category.slug}`,
+                    sort_order: column.items.length + i,
+                  })),
+                ],
+              }}
+            />
+          ) : (
+            <ColumnDropdown key={column.id} column={column} />
+          )
+        )}
       </nav>
     </div>
   );
