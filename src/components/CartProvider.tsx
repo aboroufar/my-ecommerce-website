@@ -10,6 +10,9 @@ import {
 import { cartLineKey, type CartItem } from "@/lib/cart-types";
 
 const STORAGE_KEY = "storefront:cart";
+// Matches the checkout API's z.number().int().positive().max(99) -- the
+// only cap applied client-side; real stock is never checked until checkout.
+const MAX_QUANTITY = 99;
 
 interface CartState {
   items: CartItem[];
@@ -30,16 +33,12 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       const key = cartLineKey(action.item);
       const existing = state.items.find((i) => cartLineKey(i) === key);
       if (existing) {
-        // stockQty comes from the fresher add-to-cart click, so trust it
-        // over whatever was cached in the existing cart line.
-        const cap = action.item.stockQty;
         return {
           items: state.items.map((i) =>
             cartLineKey(i) === key
               ? {
                   ...i,
-                  quantity: Math.min(i.quantity + action.item.quantity, cap),
-                  stockQty: cap,
+                  quantity: Math.min(i.quantity + action.item.quantity, MAX_QUANTITY),
                 }
               : i
           ),
@@ -50,7 +49,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           ...state.items,
           {
             ...action.item,
-            quantity: Math.min(action.item.quantity, action.item.stockQty),
+            quantity: Math.min(action.item.quantity, MAX_QUANTITY),
           },
         ],
       };
@@ -64,7 +63,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         items: state.items
           .map((i) =>
             cartLineKey(i) === action.lineKey
-              ? { ...i, quantity: Math.min(action.quantity, i.stockQty) }
+              ? { ...i, quantity: Math.min(action.quantity, MAX_QUANTITY) }
               : i
           )
           .filter((i) => i.quantity > 0),
@@ -96,17 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const items = (JSON.parse(raw) as CartItem[]).map((item) => ({
-          // Carts saved before stockQty existed won't have it -- treat
-          // missing/invalid as "unknown, don't block" rather than NaN-ing
-          // every Math.min() call downstream.
-          ...item,
-          stockQty:
-            typeof item.stockQty === "number" && Number.isFinite(item.stockQty)
-              ? item.stockQty
-              : Infinity,
-        }));
-        dispatch({ type: "HYDRATE", items });
+        dispatch({ type: "HYDRATE", items: JSON.parse(raw) as CartItem[] });
       }
     } catch {
       // corrupt/unavailable storage -- start with an empty cart

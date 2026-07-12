@@ -10,6 +10,12 @@ export interface ProductCategoryRef {
   categories: { name: string; slug: string; parent_id: string | null } | null;
 }
 
+// Only the field needed to compute a rating summary -- the full review
+// (name/body/date) is fetched separately by getProductBySlug for the PDP.
+export interface ProductRatingRef {
+  rating: number;
+}
+
 export interface ProductSummary {
   id: string;
   name: string;
@@ -22,6 +28,7 @@ export interface ProductSummary {
   is_popular: boolean;
   product_images: ProductImage[];
   product_categories: ProductCategoryRef[];
+  product_reviews: ProductRatingRef[];
 }
 
 export interface ProductOptionValue {
@@ -47,7 +54,15 @@ export interface ProductVariant {
   product_variant_options: { option_value_id: string }[];
 }
 
-export interface ProductDetail extends ProductSummary {
+export interface ProductReview {
+  id: string;
+  reviewer_name: string;
+  rating: number;
+  body: string;
+  created_at: string;
+}
+
+export interface ProductDetail extends Omit<ProductSummary, "product_reviews"> {
   description: string | null;
   sku: string | null;
   stock_qty: number;
@@ -55,6 +70,21 @@ export interface ProductDetail extends ProductSummary {
   dimensions_text: string | null;
   product_option_types: ProductOptionType[];
   product_variants: ProductVariant[];
+  product_reviews: ProductReview[];
+}
+
+/**
+ * Rounds to the nearest integer for star display (0 when there are no
+ * reviews, so callers can hide the rating line/stars entirely rather than
+ * showing a fabricated "0 stars").
+ */
+export function getReviewSummary(reviews: { rating: number }[]): {
+  count: number;
+  average: number;
+} {
+  if (reviews.length === 0) return { count: 0, average: 0 };
+  const sum = reviews.reduce((total, r) => total + r.rating, 0);
+  return { count: reviews.length, average: Math.round(sum / reviews.length) };
 }
 
 
@@ -152,7 +182,7 @@ export async function getActiveProducts(options?: {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating)"
       )
       .eq("status", "active")
       .order(column, { ascending });
@@ -278,7 +308,7 @@ export async function getCategories(options?: {
  * configured yet.
  */
 const PRODUCT_SEARCH_SELECT =
-  "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id))";
+  "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating)";
 
 export async function searchProducts(query: string): Promise<ProductSummary[]> {
   const trimmed = query.trim();
@@ -363,7 +393,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at)"
       )
       .eq("slug", slug)
       .eq("status", "active")

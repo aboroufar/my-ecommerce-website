@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useCart } from "./CartProvider";
 import type { ProductDetail } from "@/lib/products";
 
+const MAX_QUANTITY = 99;
+
 interface VariantOverride {
   variantId: string;
   variantLabel: string;
   priceCents: number;
-  stockQty: number;
 }
 
 export function AddToCartButton({
@@ -19,7 +20,7 @@ export function AddToCartButton({
 }: {
   product: ProductDetail;
   // When the product has options, the PDP passes the currently-selected
-  // variant's price/stock/id here so the cart line reflects the exact
+  // variant's price/id here so the cart line reflects the exact
   // combination chosen -- undefined until a full valid selection is made.
   variant?: VariantOverride;
   // True when the product has options but the shopper hasn't finished
@@ -28,8 +29,7 @@ export function AddToCartButton({
 }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
-  const effectiveStock = variant?.stockQty ?? product.stock_qty;
-  const inStock = effectiveStock > 0;
+  const [quantity, setQuantity] = useState(1);
   const image = [...product.product_images].sort(
     (a, b) => a.sort_order - b.sort_order
   )[0];
@@ -42,8 +42,7 @@ export function AddToCartButton({
       priceCents: variant?.priceCents ?? product.price_cents,
       currency: product.currency,
       imageUrl: image?.url ?? null,
-      quantity: 1,
-      stockQty: effectiveStock,
+      quantity,
       variantId: variant?.variantId,
       variantLabel: variant?.variantLabel,
     });
@@ -51,35 +50,51 @@ export function AddToCartButton({
     setTimeout(() => setAdded(false), 1500);
   }
 
-  const isDisabled = disabled || !inStock;
-
   return (
     <div>
-      <button
-        onClick={handleAdd}
-        disabled={isDisabled}
-        className="mt-8 w-full bg-foreground px-6 py-4 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-100"
-      >
-        {disabled
-          ? "Select options"
-          : !inStock
-            ? "Out of stock"
-            : added
-              ? "Added ✓"
-              : "Add to cart"}
-      </button>
+      <div className="mt-8 flex items-stretch gap-3">
+        <div className="flex items-center border border-line">
+          <button
+            type="button"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            disabled={quantity <= 1}
+            aria-label="Decrease quantity"
+            className="flex h-full w-10 items-center justify-center text-sm text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            −
+          </button>
+          <span className="w-10 text-center text-sm text-foreground">
+            {quantity}
+          </span>
+          <button
+            type="button"
+            onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
+            disabled={quantity >= MAX_QUANTITY}
+            aria-label="Increase quantity"
+            className="flex h-full w-10 items-center justify-center text-sm text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            +
+          </button>
+        </div>
+
+        <button
+          onClick={handleAdd}
+          disabled={disabled}
+          className="flex-1 bg-foreground px-6 py-4 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-100"
+        >
+          {disabled ? "Select options" : added ? "Added ✓" : "Add to cart"}
+        </button>
+      </div>
       <p className="mt-2 text-xs text-muted">
         {disabled ? (
           "Choose an option for every dropdown above to continue."
-        ) : inStock ? (
+        ) : (
           <>
             Ships in 2–3 business days.{" "}
             <Link href="/shipping" className="underline underline-offset-4 hover:text-foreground">
               Shipping details
             </Link>
           </>
-        ) : (
-          "Check back soon — this item is currently unavailable."
         )}
       </p>
     </div>

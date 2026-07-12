@@ -4,10 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { ProductSummary } from "@/lib/products";
+import { getReviewSummary, type ProductSummary } from "@/lib/products";
 import { formatPrice, getSaleInfo } from "@/lib/format";
 import { useCart } from "./CartProvider";
 import { useWishlist } from "./WishlistProvider";
+import { StarRating } from "./StarRating";
 
 export function ProductCard({ product }: { product: ProductSummary }) {
   const { addItem } = useCart();
@@ -20,7 +21,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   )[0];
   const categoryName = product.product_categories[0]?.categories?.name;
   const sale = getSaleInfo(product.price_cents, product.compare_at_price_cents);
-  const rating = ratingFor(product.id);
+  const { count, average } = getReviewSummary(product.product_reviews);
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
@@ -32,7 +33,6 @@ export function ProductCard({ product }: { product: ProductSummary }) {
       currency: product.currency,
       imageUrl: image?.url ?? null,
       quantity: 1,
-      stockQty: product.stock_qty,
     });
   }
 
@@ -120,17 +120,15 @@ export function ProductCard({ product }: { product: ProductSummary }) {
             {product.name}
           </h3>
 
-          <StarRating rating={rating} />
+          {count > 0 && (
+            <div className="mt-1">
+              <StarRating rating={average} />
+            </div>
+          )}
 
           {product.description && (
             <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
               {product.description}
-            </p>
-          )}
-
-          {product.stock_qty > 0 && product.stock_qty <= 10 && (
-            <p className="mt-2 text-xs font-medium text-accent">
-              Only {product.stock_qty} left
             </p>
           )}
         </div>
@@ -157,42 +155,6 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         </span>
       </div>
     </div>
-  );
-}
-
-/**
- * Deterministic 3-5 star rating derived from the product id, so it's
- * stable across renders/requests instead of flickering on every reload.
- * Placeholder until a real review system exists.
- */
-function ratingFor(productId: string): number {
-  let hash = 0;
-  for (let i = 0; i < productId.length; i++) {
-    hash = (hash * 31 + productId.charCodeAt(i)) | 0;
-  }
-  return 3 + (Math.abs(hash) % 3);
-}
-
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="mt-1 flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
-      {Array.from({ length: 5 }, (_, i) => (
-        <StarIcon key={i} filled={i < rating} />
-      ))}
-    </div>
-  );
-}
-
-function StarIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      className={`h-3.5 w-3.5 ${filled ? "fill-accent text-accent" : "fill-none text-line"}`}
-      stroke="currentColor"
-      strokeWidth="1"
-    >
-      <path d="m10 1.5 2.6 5.6 6 .7-4.4 4.2 1.1 6-5.3-3-5.3 3 1.1-6-4.4-4.2 6-.7Z" strokeLinejoin="round" />
-    </svg>
   );
 }
 

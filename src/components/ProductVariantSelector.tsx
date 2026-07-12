@@ -68,16 +68,6 @@ export function ProductVariantSelector({
         })}
       </div>
 
-      {matchedVariant && (
-        <p className="mt-3 text-sm font-medium text-foreground">
-          {matchedVariant.stock_qty <= 0
-            ? "Out of stock"
-            : matchedVariant.stock_qty <= 10
-              ? `Only ${matchedVariant.stock_qty} left in stock`
-              : "In stock"}
-        </p>
-      )}
-
       <AddToCartButton
         product={product}
         disabled={!matchedVariant}
@@ -96,7 +86,6 @@ export function ProductVariantSelector({
                   .filter(Boolean)
                   .join(", "),
                 priceCents: matchedVariant.price_cents,
-                stockQty: matchedVariant.stock_qty,
               }
             : undefined
         }

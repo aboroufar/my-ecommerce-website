@@ -6,12 +6,10 @@ export interface CartItem {
   currency: string;
   imageUrl: string | null;
   quantity: number;
-  // Snapshot of stock_qty at the moment this was added -- used only to cap
-  // the quantity stepper in the cart UI. Like priceCents, this can go stale
-  // (someone else buys remaining stock later); the real check happens
-  // server-side in /api/checkout, which re-fetches stock_qty and rejects
-  // the order if it's no longer sufficient.
-  stockQty: number;
+  // Stock is intentionally never shown to the customer or capped
+  // client-side -- the real check happens server-side in /api/checkout,
+  // which re-fetches stock_qty and rejects the order at checkout time if
+  // it's no longer sufficient.
   // Set only for products with options -- identifies the exact
   // product_variants row (e.g. "Small/Oily") so two different variants of
   // the same product don't collapse into one cart line. variantLabel is

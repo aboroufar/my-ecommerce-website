@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getActiveProducts, getProductBySlug, getRecommendedProducts } from "@/lib/products";
+import {
+  getActiveProducts,
+  getProductBySlug,
+  getRecommendedProducts,
+  getReviewSummary,
+} from "@/lib/products";
 import { formatPrice, getSaleInfo } from "@/lib/format";
 import {
   ProductDetailProvider,
@@ -12,6 +17,8 @@ import {
 import { ProductCard } from "@/components/ProductCard";
 import { ViewingCounter } from "@/components/ViewingCounter";
 import { ProductInfoTabs } from "@/components/ProductInfoTabs";
+import { StarRating } from "@/components/StarRating";
+import { ReviewsTabContent } from "@/components/ReviewsTabContent";
 
 export const revalidate = 60;
 export const dynamicParams = true; // render on-demand for slugs not in the list below
@@ -54,13 +61,13 @@ export default async function ProductDetailPage({
   const images = [...product.product_images].sort(
     (a, b) => a.sort_order - b.sort_order
   );
-  const inStock = product.stock_qty > 0;
   const categorySlugs = product.product_categories
     .map((pc) => pc.categories?.slug)
     .filter((slug): slug is string => !!slug);
   const categoryName = product.product_categories[0]?.categories?.name;
   const recommended = await getRecommendedProducts(product.id, categorySlugs);
   const sale = getSaleInfo(product.price_cents, product.compare_at_price_cents);
+  const reviewSummary = getReviewSummary(product.product_reviews);
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
@@ -103,6 +110,15 @@ export default async function ProductDetailPage({
               {product.name}
             </h1>
 
+            {reviewSummary.count > 0 && (
+              <div className="mt-2 flex items-center gap-2">
+                <StarRating rating={reviewSummary.average} size="md" />
+                <span className="text-sm text-muted">
+                  ({reviewSummary.count} customer review{reviewSummary.count === 1 ? "" : "s"})
+                </span>
+              </div>
+            )}
+
             {product.sku && (
               <div className="mt-4 text-xs uppercase tracking-wide text-muted">
                 <span className="font-medium text-foreground">SKU</span>{" "}
@@ -128,15 +144,6 @@ export default async function ProductDetailPage({
                   )}
                 </div>
                 <p className="mt-1 text-xs text-muted">Tax included at checkout.</p>
-
-                <div className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
-                  {!inStock && <WarningIcon />}
-                  {!inStock
-                    ? "Out of stock"
-                    : product.stock_qty <= 10
-                      ? `Only ${product.stock_qty} left in stock`
-                      : "In stock"}
-                </div>
               </>
             )}
 
@@ -172,6 +179,10 @@ export default async function ProductDetailPage({
               label: "Additional information",
               content: <SelectedVariantInfo />,
             },
+            {
+              label: `Reviews (${reviewSummary.count})`,
+              content: <ReviewsTabContent product={product} />,
+            },
           ]}
         />
       </ProductDetailProvider>
@@ -189,15 +200,6 @@ export default async function ProductDetailPage({
         </section>
       )}
     </main>
-  );
-}
-
-function WarningIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-      <path d="M12 9v4M12 17h.01" strokeLinecap="round" />
-      <path d="M10.3 3.9 2.5 17.5a1.5 1.5 0 0 0 1.3 2.25h16.4a1.5 1.5 0 0 0 1.3-2.25L13.7 3.9a1.5 1.5 0 0 0-2.6 0Z" strokeLinejoin="round" />
-    </svg>
   );
 }
 

@@ -113,7 +113,6 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() => setQuantity(lineKey, item.quantity + 1)}
-                      disabled={item.quantity >= item.stockQty}
                       aria-label={`Increase quantity of ${item.name}`}
                       className="flex h-7 w-7 items-center justify-center text-sm text-foreground transition-opacity hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
                     >
@@ -127,11 +126,6 @@ export default function CartPage() {
                     Remove
                   </button>
                 </div>
-                {item.quantity >= item.stockQty && (
-                  <p className="mt-1.5 text-xs text-muted">
-                    Max available in stock
-                  </p>
-                )}
               </div>
 
               <p className="text-sm text-foreground">
