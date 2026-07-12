@@ -4,8 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getActiveProducts, getProductBySlug, getRecommendedProducts } from "@/lib/products";
 import { formatPrice, getSaleInfo } from "@/lib/format";
-import { AddToCartButton } from "@/components/AddToCartButton";
+import { ProductVariantSelector } from "@/components/ProductVariantSelector";
 import { ProductCard } from "@/components/ProductCard";
+import { ViewingCounter } from "@/components/ViewingCounter";
+import { ProductInfoTabs } from "@/components/ProductInfoTabs";
 
 export const revalidate = 60;
 export const dynamicParams = true; // render on-demand for slugs not in the list below
@@ -103,31 +105,35 @@ export default async function ProductDetailPage({
             </div>
           )}
 
-          <div className="mt-4 flex items-baseline gap-3">
-            <span className="text-2xl font-bold text-foreground">
-              {formatPrice(product.price_cents, product.currency)}
-            </span>
-            {sale.onSale && (
-              <>
-                <span className="text-lg text-muted line-through">
-                  {formatPrice(product.compare_at_price_cents!, product.currency)}
+          {product.product_option_types.length === 0 && (
+            <>
+              <div className="mt-4 flex items-baseline gap-3">
+                <span className="text-2xl font-bold text-foreground">
+                  {formatPrice(product.price_cents, product.currency)}
                 </span>
-                <span className="bg-accent px-2 py-1 text-xs font-medium text-background">
-                  −{sale.percentOff}%
-                </span>
-              </>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-muted">Tax included at checkout.</p>
+                {sale.onSale && (
+                  <>
+                    <span className="text-lg text-muted line-through">
+                      {formatPrice(product.compare_at_price_cents!, product.currency)}
+                    </span>
+                    <span className="bg-accent px-2 py-1 text-xs font-medium text-background">
+                      −{sale.percentOff}%
+                    </span>
+                  </>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-muted">Tax included at checkout.</p>
 
-          <div className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
-            {!inStock && <WarningIcon />}
-            {!inStock
-              ? "Out of stock"
-              : product.stock_qty <= 10
-                ? `Only ${product.stock_qty} left in stock`
-                : "In stock"}
-          </div>
+              <div className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
+                {!inStock && <WarningIcon />}
+                {!inStock
+                  ? "Out of stock"
+                  : product.stock_qty <= 10
+                    ? `Only ${product.stock_qty} left in stock`
+                    : "In stock"}
+              </div>
+            </>
+          )}
 
           <ul className="mt-6 space-y-3 border-y border-line py-6">
             {featureBullets.map((feature) => (
@@ -141,15 +147,48 @@ export default async function ProductDetailPage({
             ))}
           </ul>
 
-          {product.description && (
-            <p className="mt-6 max-w-md text-sm leading-relaxed text-muted">
-              {product.description}
-            </p>
-          )}
+          <ViewingCounter />
 
-          <AddToCartButton product={product} />
+          <ProductVariantSelector product={product} />
         </div>
       </div>
+
+      <ProductInfoTabs
+        tabs={[
+          {
+            label: "Description",
+            content: product.description ? (
+              <p>{product.description}</p>
+            ) : (
+              <p>No description yet.</p>
+            ),
+          },
+          {
+            label: "Additional information",
+            content:
+              product.weight_text || product.dimensions_text ? (
+                <table className="text-sm">
+                  <tbody>
+                    {product.weight_text && (
+                      <tr>
+                        <td className="py-1 pr-8 font-medium text-foreground">Weight</td>
+                        <td className="py-1">{product.weight_text}</td>
+                      </tr>
+                    )}
+                    {product.dimensions_text && (
+                      <tr>
+                        <td className="py-1 pr-8 font-medium text-foreground">Dimensions</td>
+                        <td className="py-1">{product.dimensions_text}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              ) : (
+                <p>No additional information yet.</p>
+              ),
+          },
+        ]}
+      />
 
       {recommended.length > 0 && (
         <section className="mt-20 border-t border-line pt-12">

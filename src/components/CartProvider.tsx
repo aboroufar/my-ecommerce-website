@@ -7,7 +7,7 @@ import {
   useMemo,
   useReducer,
 } from "react";
-import type { CartItem } from "@/lib/cart-types";
+import { cartLineKey, type CartItem } from "@/lib/cart-types";
 
 const STORAGE_KEY = "storefront:cart";
 
@@ -17,8 +17,8 @@ interface CartState {
 
 type CartAction =
   | { type: "ADD_ITEM"; item: CartItem }
-  | { type: "REMOVE_ITEM"; productId: string }
-  | { type: "SET_QUANTITY"; productId: string; quantity: number }
+  | { type: "REMOVE_ITEM"; lineKey: string }
+  | { type: "SET_QUANTITY"; lineKey: string; quantity: number }
   | { type: "CLEAR" }
   | { type: "HYDRATE"; items: CartItem[] };
 
@@ -27,16 +27,15 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "HYDRATE":
       return { items: action.items };
     case "ADD_ITEM": {
-      const existing = state.items.find(
-        (i) => i.productId === action.item.productId
-      );
+      const key = cartLineKey(action.item);
+      const existing = state.items.find((i) => cartLineKey(i) === key);
       if (existing) {
         // stockQty comes from the fresher add-to-cart click, so trust it
         // over whatever was cached in the existing cart line.
         const cap = action.item.stockQty;
         return {
           items: state.items.map((i) =>
-            i.productId === action.item.productId
+            cartLineKey(i) === key
               ? {
                   ...i,
                   quantity: Math.min(i.quantity + action.item.quantity, cap),
@@ -58,13 +57,13 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
     case "REMOVE_ITEM":
       return {
-        items: state.items.filter((i) => i.productId !== action.productId),
+        items: state.items.filter((i) => cartLineKey(i) !== action.lineKey),
       };
     case "SET_QUANTITY":
       return {
         items: state.items
           .map((i) =>
-            i.productId === action.productId
+            cartLineKey(i) === action.lineKey
               ? { ...i, quantity: Math.min(action.quantity, i.stockQty) }
               : i
           )
@@ -82,8 +81,8 @@ interface CartContextValue {
   itemCount: number;
   subtotalCents: number;
   addItem: (item: CartItem) => void;
-  removeItem: (productId: string) => void;
-  setQuantity: (productId: string, quantity: number) => void;
+  removeItem: (lineKey: string) => void;
+  setQuantity: (lineKey: string, quantity: number) => void;
   clear: () => void;
 }
 
@@ -135,9 +134,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       itemCount,
       subtotalCents,
       addItem: (item) => dispatch({ type: "ADD_ITEM", item }),
-      removeItem: (productId) => dispatch({ type: "REMOVE_ITEM", productId }),
-      setQuantity: (productId, quantity) =>
-        dispatch({ type: "SET_QUANTITY", productId, quantity }),
+      removeItem: (lineKey) => dispatch({ type: "REMOVE_ITEM", lineKey }),
+      setQuantity: (lineKey, quantity) =>
+        dispatch({ type: "SET_QUANTITY", lineKey, quantity }),
       clear: () => dispatch({ type: "CLEAR" }),
     };
   }, [state.items]);

@@ -5,10 +5,31 @@ import Link from "next/link";
 import { useCart } from "./CartProvider";
 import type { ProductDetail } from "@/lib/products";
 
-export function AddToCartButton({ product }: { product: ProductDetail }) {
+interface VariantOverride {
+  variantId: string;
+  variantLabel: string;
+  priceCents: number;
+  stockQty: number;
+}
+
+export function AddToCartButton({
+  product,
+  variant,
+  disabled,
+}: {
+  product: ProductDetail;
+  // When the product has options, the PDP passes the currently-selected
+  // variant's price/stock/id here so the cart line reflects the exact
+  // combination chosen -- undefined until a full valid selection is made.
+  variant?: VariantOverride;
+  // True when the product has options but the shopper hasn't finished
+  // selecting one value per option type yet.
+  disabled?: boolean;
+}) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
-  const inStock = product.stock_qty > 0;
+  const effectiveStock = variant?.stockQty ?? product.stock_qty;
+  const inStock = effectiveStock > 0;
   const image = [...product.product_images].sort(
     (a, b) => a.sort_order - b.sort_order
   )[0];
@@ -18,27 +39,39 @@ export function AddToCartButton({ product }: { product: ProductDetail }) {
       productId: product.id,
       name: product.name,
       slug: product.slug,
-      priceCents: product.price_cents,
+      priceCents: variant?.priceCents ?? product.price_cents,
       currency: product.currency,
       imageUrl: image?.url ?? null,
       quantity: 1,
-      stockQty: product.stock_qty,
+      stockQty: effectiveStock,
+      variantId: variant?.variantId,
+      variantLabel: variant?.variantLabel,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   }
 
+  const isDisabled = disabled || !inStock;
+
   return (
     <div>
       <button
         onClick={handleAdd}
-        disabled={!inStock}
+        disabled={isDisabled}
         className="mt-8 w-full bg-foreground px-6 py-4 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-100"
       >
-        {!inStock ? "Out of stock" : added ? "Added ✓" : "Add to cart"}
+        {disabled
+          ? "Select options"
+          : !inStock
+            ? "Out of stock"
+            : added
+              ? "Added ✓"
+              : "Add to cart"}
       </button>
       <p className="mt-2 text-xs text-muted">
-        {inStock ? (
+        {disabled ? (
+          "Choose an option for every dropdown above to continue."
+        ) : inStock ? (
           <>
             Ships in 2–3 business days.{" "}
             <Link href="/shipping" className="underline underline-offset-4 hover:text-foreground">

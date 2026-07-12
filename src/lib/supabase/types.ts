@@ -378,6 +378,8 @@ export type Database = {
           product_name: string
           quantity: number
           unit_price_cents: number
+          variant_id: string | null
+          variant_label: string | null
         }
         Insert: {
           id?: string
@@ -386,6 +388,8 @@ export type Database = {
           product_name: string
           quantity: number
           unit_price_cents: number
+          variant_id?: string | null
+          variant_label?: string | null
         }
         Update: {
           id?: string
@@ -394,6 +398,8 @@ export type Database = {
           product_name?: string
           quantity?: number
           unit_price_cents?: number
+          variant_id?: string | null
+          variant_label?: string | null
         }
         Relationships: [
           {
@@ -408,6 +414,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -524,6 +537,7 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          dimensions_text: string | null
           id: string
           is_popular: boolean
           name: string
@@ -533,12 +547,14 @@ export type Database = {
           status: string
           stock_qty: number
           updated_at: string
+          weight_text: string | null
         }
         Insert: {
           compare_at_price_cents?: number | null
           created_at?: string
           currency?: string
           description?: string | null
+          dimensions_text?: string | null
           id?: string
           is_popular?: boolean
           name: string
@@ -548,12 +564,14 @@ export type Database = {
           status?: string
           stock_qty?: number
           updated_at?: string
+          weight_text?: string | null
         }
         Update: {
           compare_at_price_cents?: number | null
           created_at?: string
           currency?: string
           description?: string | null
+          dimensions_text?: string | null
           id?: string
           is_popular?: boolean
           name?: string
@@ -563,8 +581,138 @@ export type Database = {
           status?: string
           stock_qty?: number
           updated_at?: string
+          weight_text?: string | null
         }
         Relationships: []
+      }
+      product_option_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          product_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          product_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          product_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_types_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_option_values: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          option_type_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          option_type_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          option_type_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_values_option_type_id_fkey"
+            columns: ["option_type_id"]
+            isOneToOne: false
+            referencedRelation: "product_option_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variants: {
+        Row: {
+          created_at: string
+          id: string
+          price_cents: number
+          product_id: string
+          sku: string | null
+          stock_qty: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price_cents: number
+          product_id: string
+          sku?: string | null
+          stock_qty?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price_cents?: number
+          product_id?: string
+          sku?: string | null
+          stock_qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variant_options: {
+        Row: {
+          option_value_id: string
+          variant_id: string
+        }
+        Insert: {
+          option_value_id: string
+          variant_id: string
+        }
+        Update: {
+          option_value_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variant_options_option_value_id_fkey"
+            columns: ["option_value_id"]
+            isOneToOne: false
+            referencedRelation: "product_option_values"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_variant_options_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_content: {
         Row: {
@@ -660,6 +808,10 @@ export type Database = {
     Functions: {
       decrement_stock: {
         Args: { item_product_id: string; item_quantity: number }
+        Returns: boolean
+      }
+      decrement_variant_stock: {
+        Args: { item_variant_id: string; item_quantity: number }
         Returns: boolean
       }
     }

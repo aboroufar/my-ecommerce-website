@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProduct, deleteProduct } from "@/lib/actions/products";
 import { ProductForm } from "@/components/admin/ProductForm";
+import type { ProductOptionsDefaults } from "@/components/admin/ProductOptionsManager";
 import type { ProductStatus } from "@/lib/supabase/types";
 
 export default async function EditProductPage({
@@ -19,7 +20,7 @@ export default async function EditProductPage({
     supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, product_images(url, sort_order), product_categories(category_id)"
+        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, weight_text, dimensions_text, product_images(url, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, product_variant_options(option_value_id))"
       )
       .eq("id", id)
       .single(),
@@ -35,6 +36,37 @@ export default async function EditProductPage({
     (a, b) => a.sort_order - b.sort_order
   )[0];
   const categoryIds = product.product_categories.map((pc) => pc.category_id);
+
+  // Translate the fetched option types/values/variants into the shape
+  // ProductOptionsManager works with (value indexes rather than DB ids,
+  // matching the format setProductOptions expects on save).
+  const sortedTypes = [...product.product_option_types].sort(
+    (a, b) => a.sort_order - b.sort_order
+  );
+  const valueIndexById = new Map<string, { typeIndex: number; valueIndex: number }>();
+  const optionsDefaults: ProductOptionsDefaults = {
+    optionTypes: sortedTypes.map((type, typeIndex) => {
+      const sortedValues = [...type.product_option_values].sort(
+        (a, b) => a.sort_order - b.sort_order
+      );
+      sortedValues.forEach((v, valueIndex) => {
+        valueIndexById.set(v.id, { typeIndex, valueIndex });
+      });
+      return { name: type.name, values: sortedValues.map((v) => ({ label: v.label })) };
+    }),
+    variants: product.product_variants.map((variant) => {
+      const positions = variant.product_variant_options
+        .map((o) => valueIndexById.get(o.option_value_id))
+        .filter((p): p is { typeIndex: number; valueIndex: number } => !!p)
+        .sort((a, b) => a.typeIndex - b.typeIndex);
+      return {
+        valueIndexes: positions.map((p) => p.valueIndex),
+        price: String(variant.price_cents / 100),
+        stock_qty: String(variant.stock_qty),
+        sku: variant.sku ?? "",
+      };
+    }),
+  };
 
   const updateWithId = updateProduct.bind(null, id);
   const deleteWithId = deleteProduct.bind(null, id);
@@ -63,6 +95,9 @@ export default async function EditProductPage({
           is_popular: product.is_popular,
           image_url: image?.url ?? "",
           categoryIds,
+          weight_text: product.weight_text,
+          dimensions_text: product.dimensions_text,
+          options: optionsDefaults,
         }}
         extraAction={
           <form action={deleteWithId}>

@@ -9,6 +9,7 @@ const requestSchema = z.object({
     .array(
       z.object({
         productId: z.string().uuid(),
+        variantId: z.string().uuid().optional(),
         quantity: z.number().int().positive().max(99),
       })
     )
@@ -36,7 +37,8 @@ export async function POST(req: NextRequest) {
   } = await authedSupabase.auth.getUser();
 
   // Re-fetch canonical product data server-side. Client-submitted prices
-  // are never trusted -- only productId + quantity come from the client.
+  // are never trusted -- only productId + variantId + quantity come from
+  // the client.
   const productIds = items.map((i) => i.productId);
   const { data: products, error: fetchError } = await supabase
     .from("products")
@@ -52,7 +54,45 @@ export async function POST(req: NextRequest) {
 
   const productMap = new Map((products ?? []).map((p) => [p.id, p]));
 
-  // Validate every line: product exists, is active, and has enough stock.
+  // Re-fetch canonical variant data too, joined back to its option
+  // types/values so a human-readable label can be snapshotted onto the
+  // order without trusting anything the client sent beyond the id.
+  const variantIds = items
+    .map((i) => i.variantId)
+    .filter((id): id is string => !!id);
+  const { data: variants, error: variantFetchError } =
+    variantIds.length > 0
+      ? await supabase
+          .from("product_variants")
+          .select(
+            "id, product_id, price_cents, stock_qty, product_variant_options(product_option_values(label, product_option_types(name)))"
+          )
+          .in("id", variantIds)
+      : { data: [], error: null };
+
+  if (variantFetchError) {
+    return NextResponse.json(
+      { error: "Could not load product options." },
+      { status: 500 }
+    );
+  }
+
+  const variantMap = new Map((variants ?? []).map((v) => [v.id, v]));
+
+  function variantLabel(variant: NonNullable<typeof variants>[number]): string {
+    return variant.product_variant_options
+      .map((o) => {
+        const value = o.product_option_values;
+        return value ? `${value.product_option_types?.name}: ${value.label}` : null;
+      })
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  // Validate every line: product exists and is active; if a variant is
+  // specified, it must belong to that same product (prevents a tampered
+  // client pairing a real variant id with an unrelated product id); stock
+  // is checked against the variant when present, otherwise the product.
   for (const item of items) {
     const product = productMap.get(item.productId);
     if (!product || product.status !== "active") {
@@ -61,7 +101,22 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
-    if (product.stock_qty < item.quantity) {
+
+    if (item.variantId) {
+      const variant = variantMap.get(item.variantId);
+      if (!variant || variant.product_id !== item.productId) {
+        return NextResponse.json(
+          { error: "One of the items in your cart is no longer available." },
+          { status: 409 }
+        );
+      }
+      if (variant.stock_qty < item.quantity) {
+        return NextResponse.json(
+          { error: `Not enough stock for "${product.name}".` },
+          { status: 409 }
+        );
+      }
+    } else if (product.stock_qty < item.quantity) {
       return NextResponse.json(
         { error: `Not enough stock for "${product.name}".` },
         { status: 409 }
@@ -72,7 +127,9 @@ export async function POST(req: NextRequest) {
   const currency = productMap.get(items[0].productId)!.currency;
   const totalCents = items.reduce((sum, item) => {
     const product = productMap.get(item.productId)!;
-    return sum + product.price_cents * item.quantity;
+    const variant = item.variantId ? variantMap.get(item.variantId) : undefined;
+    const unitPrice = variant?.price_cents ?? product.price_cents;
+    return sum + unitPrice * item.quantity;
   }, 0);
 
   // Create a pending order first so the webhook has something to update
@@ -98,12 +155,15 @@ export async function POST(req: NextRequest) {
 
   const orderItems = items.map((item) => {
     const product = productMap.get(item.productId)!;
+    const variant = item.variantId ? variantMap.get(item.variantId) : undefined;
     return {
       order_id: order.id,
       product_id: product.id,
       product_name: product.name,
       quantity: item.quantity,
-      unit_price_cents: product.price_cents,
+      unit_price_cents: variant?.price_cents ?? product.price_cents,
+      variant_id: variant?.id ?? null,
+      variant_label: variant ? variantLabel(variant) : null,
     };
   });
 
@@ -126,12 +186,16 @@ export async function POST(req: NextRequest) {
       mode: "payment",
       line_items: items.map((item) => {
         const product = productMap.get(item.productId)!;
+        const variant = item.variantId ? variantMap.get(item.variantId) : undefined;
+        const name = variant
+          ? `${product.name} — ${variantLabel(variant)}`
+          : product.name;
         return {
           quantity: item.quantity,
           price_data: {
             currency: product.currency,
-            unit_amount: product.price_cents,
-            product_data: { name: product.name },
+            unit_amount: variant?.price_cents ?? product.price_cents,
+            product_data: { name },
           },
         };
       }),

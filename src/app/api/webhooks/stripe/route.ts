@@ -74,13 +74,30 @@ export async function POST(req: NextRequest) {
       // Decrement stock atomically per item via a Postgres function, so
       // concurrent orders for the same product can't both read the same
       // stock_qty and oversell it (a plain read-then-write from here would
-      // have that race condition).
+      // have that race condition). Variant line items decrement the
+      // variant's own stock_qty via a separate function instead of the
+      // parent product's -- decrement_stock itself is untouched.
       const { data: orderItems } = await supabase
         .from("order_items")
-        .select("product_id, product_name, quantity, unit_price_cents")
+        .select("product_id, product_name, quantity, unit_price_cents, variant_id, variant_label")
         .eq("order_id", orderId);
 
       for (const item of orderItems ?? []) {
+        if (item.variant_id) {
+          const { data: ok, error: rpcError } = await supabase.rpc(
+            "decrement_variant_stock",
+            { item_variant_id: item.variant_id, item_quantity: item.quantity }
+          );
+          if (rpcError) {
+            console.error("decrement_variant_stock failed:", rpcError.message);
+          } else if (!ok) {
+            console.warn(
+              `Stock insufficient for variant ${item.variant_id} on order ${orderId} -- needs manual review.`
+            );
+          }
+          continue;
+        }
+
         if (!item.product_id) continue;
         const { data: ok, error: rpcError } = await supabase.rpc(
           "decrement_stock",
@@ -115,7 +132,9 @@ export async function POST(req: NextRequest) {
           to: customerEmail,
           orderId,
           items: (orderItems ?? []).map((item) => ({
-            name: item.product_name,
+            name: item.variant_label
+              ? `${item.product_name} — ${item.variant_label}`
+              : item.product_name,
             quantity: item.quantity,
             unitPriceCents: item.unit_price_cents,
           })),

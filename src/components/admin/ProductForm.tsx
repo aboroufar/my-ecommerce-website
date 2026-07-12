@@ -1,5 +1,6 @@
 import type { ProductStatus } from "@/lib/supabase/types";
 import { ImageUploadField } from "./ImageUploadField";
+import { ProductOptionsManager, type ProductOptionsDefaults } from "./ProductOptionsManager";
 
 interface CategoryOption {
   id: string;
@@ -83,6 +84,9 @@ interface ProductFormValues {
   is_popular?: boolean;
   image_url?: string;
   categoryIds?: string[];
+  weight_text?: string | null;
+  dimensions_text?: string | null;
+  options?: ProductOptionsDefaults;
 }
 
 export function ProductForm({
@@ -212,6 +216,25 @@ export function ProductForm({
         <ImageUploadField defaultValue={defaultValues?.image_url ?? ""} />
       </Field>
 
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Weight" hint="Optional, shown in Additional information">
+          <input
+            name="weight_text"
+            defaultValue={defaultValues?.weight_text ?? ""}
+            placeholder="0.5 kg"
+            className="border border-line bg-transparent px-3 py-2 text-sm"
+          />
+        </Field>
+        <Field label="Dimensions" hint="Optional, shown in Additional information">
+          <input
+            name="dimensions_text"
+            defaultValue={defaultValues?.dimensions_text ?? ""}
+            placeholder="1 × 2 × 3 cm"
+            className="border border-line bg-transparent px-3 py-2 text-sm"
+          />
+        </Field>
+      </div>
+
       {categories.length > 0 && (
         <Field
           label="Categories"
@@ -220,6 +243,13 @@ export function ProductForm({
           <CategoryTree categories={categories} checkedIds={defaultValues?.categoryIds} />
         </Field>
       )}
+
+      <Field
+        label="Options"
+        hint="Optional. Add option types like Size or Skin type to sell this product in priced/stocked variants instead of one fixed price."
+      >
+        <ProductOptionsManager defaults={defaultValues?.options} />
+      </Field>
 
       <div className="mt-2 flex items-center gap-4">
         <button

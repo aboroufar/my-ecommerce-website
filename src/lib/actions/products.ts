@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminUser } from "@/lib/auth";
 import { setProductCategories } from "@/lib/actions/categories";
+import { setProductOptions } from "@/lib/actions/productOptions";
 
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -29,6 +30,8 @@ const productSchema = z.object({
     .union([z.string().url("Image URL must be a valid URL"), z.literal("")])
     .optional()
     .default(""),
+  weight_text: z.string().optional().default(""),
+  dimensions_text: z.string().optional().default(""),
   // Checkboxes are only present in FormData when checked ("on"), so a
   // missing key means unchecked/false rather than a validation failure.
   is_popular: z.preprocess((v) => v === "on", z.boolean()),
@@ -54,7 +57,16 @@ export async function createProduct(formData: FormData) {
     );
   }
 
-  const { image_url, price, compare_at_price, description, sku, ...rest } = parsed.data;
+  const {
+    image_url,
+    price,
+    compare_at_price,
+    description,
+    sku,
+    weight_text,
+    dimensions_text,
+    ...rest
+  } = parsed.data;
   const supabase = createAdminClient();
 
   const { data: product, error } = await supabase
@@ -66,6 +78,8 @@ export async function createProduct(formData: FormData) {
         compare_at_price === "" ? null : Math.round(compare_at_price * 100),
       description: description || null,
       sku: sku || null,
+      weight_text: weight_text || null,
+      dimensions_text: dimensions_text || null,
     })
     .select("id")
     .single();
@@ -83,6 +97,7 @@ export async function createProduct(formData: FormData) {
   }
 
   await setProductCategories(product.id, formData.getAll("category_ids") as string[]);
+  await setProductOptions(product.id, String(formData.get("options_json") ?? ""));
 
   revalidatePath("/products");
   revalidatePath("/admin/products");
@@ -99,7 +114,16 @@ export async function updateProduct(id: string, formData: FormData) {
     );
   }
 
-  const { image_url, price, compare_at_price, description, sku, ...rest } = parsed.data;
+  const {
+    image_url,
+    price,
+    compare_at_price,
+    description,
+    sku,
+    weight_text,
+    dimensions_text,
+    ...rest
+  } = parsed.data;
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -111,6 +135,8 @@ export async function updateProduct(id: string, formData: FormData) {
         compare_at_price === "" ? null : Math.round(compare_at_price * 100),
       description: description || null,
       sku: sku || null,
+      weight_text: weight_text || null,
+      dimensions_text: dimensions_text || null,
     })
     .eq("id", id);
 
@@ -131,6 +157,7 @@ export async function updateProduct(id: string, formData: FormData) {
   }
 
   await setProductCategories(id, formData.getAll("category_ids") as string[]);
+  await setProductOptions(id, String(formData.get("options_json") ?? ""));
 
   revalidatePath("/products");
   revalidatePath(`/products/${rest.slug}`);
