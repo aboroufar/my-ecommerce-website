@@ -136,8 +136,19 @@ export async function getActiveProducts(options?: {
  * Fetches all categories for nav/mega-menu use.
  * Returns an empty array (rather than throwing) if Supabase isn't configured
  * yet or the request fails.
+ *
+ * By default, only returns categories that have at least one active product
+ * assigned -- directly, or on a descendant category -- so an empty
+ * subcategory (created but not yet assigned any products) doesn't show up
+ * as a dead end in the header menu, homepage grid, or /products filters.
+ * Pass `includeEmpty: true` for admin UI that needs to manage every
+ * category regardless of product count (the /admin/categories page already
+ * queries Supabase directly rather than calling this, but this option
+ * exists for any future admin consumer).
  */
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(options?: {
+  includeEmpty?: boolean;
+}): Promise<Category[]> {
   try {
     const supabase = createPublicClient();
     const { data, error } = await supabase
@@ -149,7 +160,37 @@ export async function getCategories(): Promise<Category[]> {
       console.error("getCategories error:", error.message);
       return [];
     }
-    return data ?? [];
+    const categories = data ?? [];
+    if (options?.includeEmpty) return categories;
+
+    const { data: productCategories, error: pcError } = await supabase
+      .from("product_categories")
+      .select("category_id, products!inner(status)")
+      .eq("products.status", "active");
+
+    if (pcError) {
+      console.error("getCategories product_categories error:", pcError.message);
+      return categories;
+    }
+
+    const categoriesWithProducts = new Set(
+      (productCategories ?? []).map((pc) => pc.category_id)
+    );
+
+    const childrenByParent = new Map<string, Category[]>();
+    for (const c of categories) {
+      if (!c.parent_id) continue;
+      const siblings = childrenByParent.get(c.parent_id) ?? [];
+      siblings.push(c);
+      childrenByParent.set(c.parent_id, siblings);
+    }
+
+    function hasProductsInSubtree(category: Category): boolean {
+      if (categoriesWithProducts.has(category.id)) return true;
+      return (childrenByParent.get(category.id) ?? []).some(hasProductsInSubtree);
+    }
+
+    return categories.filter(hasProductsInSubtree);
   } catch (err) {
     console.error("getCategories failed (Supabase not configured?):", err);
     return [];
