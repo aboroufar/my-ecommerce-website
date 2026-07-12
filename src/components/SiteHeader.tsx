@@ -47,8 +47,19 @@ export async function SiteHeader() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6">
           <Link
             href="/"
-            className="shrink-0 font-display text-2xl font-bold uppercase tracking-wide text-foreground"
+            className="flex shrink-0 items-center gap-2.5 font-display text-2xl font-bold uppercase tracking-wide text-foreground"
           >
+            {settings.site_logo_url && (
+              // eslint-disable-next-line @next/next/no-img-element -- brand
+              // logo comes from an admin-controlled external URL/Storage
+              // bucket; not worth routing through next/image for a single
+              // small header mark.
+              <img
+                src={settings.site_logo_url}
+                alt=""
+                className="h-9 w-9 shrink-0 rounded-full object-cover"
+              />
+            )}
             {settings.site_name}
           </Link>
 

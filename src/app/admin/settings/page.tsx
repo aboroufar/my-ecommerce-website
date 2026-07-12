@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addAdmin, removeAdmin } from "@/lib/actions/admins";
 import { getSiteSettings } from "@/lib/siteSettings";
 import { updateSiteSettings } from "@/lib/actions/siteSettings";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,16 @@ export default async function AdminSettingsPage({
               defaultValue={settings.site_name}
               required
               className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Brand logo</span>
+            <span className="text-xs text-muted/70">
+              Shown next to the site name in the header.
+            </span>
+            <ImageUploadField
+              defaultValue={settings.site_logo_url}
+              fieldName="site_logo_url"
             />
           </label>
           <label className="flex flex-col gap-1.5">

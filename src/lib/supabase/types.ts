@@ -591,6 +591,7 @@ export type Database = {
           header_email: string
           header_phone: string
           id: boolean
+          site_logo_url: string
           site_name: string
           updated_at: string
         }
@@ -600,6 +601,7 @@ export type Database = {
           header_email?: string
           header_phone?: string
           id?: boolean
+          site_logo_url?: string
           site_name?: string
           updated_at?: string
         }
@@ -609,6 +611,7 @@ export type Database = {
           header_email?: string
           header_phone?: string
           id?: boolean
+          site_logo_url?: string
           site_name?: string
           updated_at?: string
         }

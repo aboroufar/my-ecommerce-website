@@ -8,6 +8,7 @@ import { getAdminUser } from "@/lib/auth";
 
 const settingsSchema = z.object({
   site_name: z.string().min(1, "Site name is required"),
+  site_logo_url: z.string().default(""),
   header_email: z.string().default(""),
   header_phone: z.string().default(""),
   header_address: z.string().default(""),

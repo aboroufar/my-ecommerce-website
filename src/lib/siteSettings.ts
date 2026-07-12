@@ -2,6 +2,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 
 export interface SiteSettings {
   site_name: string;
+  site_logo_url: string;
   header_email: string;
   header_phone: string;
   header_address: string;
@@ -10,6 +11,7 @@ export interface SiteSettings {
 
 const defaults: SiteSettings = {
   site_name: "Storefront",
+  site_logo_url: "",
   header_email: "hello@storefront.example",
   header_phone: "",
   header_address: "",
@@ -28,7 +30,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const { data, error } = await supabase
       .from("site_settings")
       .select(
-        "site_name, header_email, header_phone, header_address, categories_menu_label"
+        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label"
       )
       .eq("id", true)
       .maybeSingle();
