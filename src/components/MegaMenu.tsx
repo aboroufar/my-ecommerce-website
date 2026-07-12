@@ -24,36 +24,47 @@ export function MegaMenu({
   }
 
   return (
-    <div className="flex items-center gap-8">
-      <CategoriesDropdown
-        label={categoriesLabel}
-        topLevelCategories={topLevelCategories}
-        childrenByParent={childrenByParent}
-      />
-      <nav className="hidden items-center gap-8 text-xs font-medium uppercase tracking-wide text-foreground sm:flex">
-        {extraColumns.map((column) =>
-          column.title === "Home" ? (
-            <ColumnDropdown
-              key={column.id}
-              column={{
-                ...column,
-                items: [
-                  ...column.items,
-                  ...topLevelCategories.map((category, i) => ({
-                    id: `category-${category.id}`,
-                    label: `${category.name} Home`,
-                    href: `/products?category=${category.slug}`,
-                    sort_order: column.items.length + i,
-                  })),
-                ],
-              }}
-            />
-          ) : (
-            <ColumnDropdown key={column.id} column={column} />
-          )
-        )}
-      </nav>
-    </div>
+    <CategoriesDropdown
+      label={categoriesLabel}
+      topLevelCategories={topLevelCategories}
+      childrenByParent={childrenByParent}
+    />
+  );
+}
+
+export function MegaMenuColumns({
+  categories,
+  extraColumns = [],
+}: {
+  categories: Category[];
+  extraColumns?: MenuColumnData[];
+}) {
+  const topLevelCategories = categories.filter((c) => !c.parent_id);
+
+  return (
+    <nav className="hidden items-center gap-8 text-xs font-medium uppercase tracking-wide text-foreground sm:flex">
+      {extraColumns.map((column) =>
+        column.title === "Home" ? (
+          <ColumnDropdown
+            key={column.id}
+            column={{
+              ...column,
+              items: [
+                ...column.items,
+                ...topLevelCategories.map((category, i) => ({
+                  id: `category-${category.id}`,
+                  label: `${category.name} Home`,
+                  href: `/products?category=${category.slug}`,
+                  sort_order: column.items.length + i,
+                })),
+              ],
+            }}
+          />
+        ) : (
+          <ColumnDropdown key={column.id} column={column} />
+        )
+      )}
+    </nav>
   );
 }
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CartLink } from "./CartLink";
 import { AccountLink } from "./AccountLink";
-import { MegaMenu } from "./MegaMenu";
+import { MegaMenu, MegaMenuColumns } from "./MegaMenu";
 import { getCategories } from "@/lib/products";
 import { getSiteSettings } from "@/lib/siteSettings";
 import { getMenuColumns } from "@/lib/menu";
@@ -84,18 +84,22 @@ export async function SiteHeader() {
       </div>
 
       <div className="border-t border-line px-6 py-3">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <MegaMenu
-            categories={categories}
-            categoriesLabel={settings.categories_menu_label}
-            extraColumns={menuColumns}
-          />
-          <Link
-            href="/contact"
-            className="hidden rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90 sm:inline-block"
-          >
-            Contact us
-          </Link>
+        <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-6">
+          <div className="flex justify-start">
+            <MegaMenu
+              categories={categories}
+              categoriesLabel={settings.categories_menu_label}
+            />
+          </div>
+          <MegaMenuColumns categories={categories} extraColumns={menuColumns} />
+          <div className="flex justify-end">
+            <Link
+              href="/contact"
+              className="hidden rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90 sm:inline-block"
+            >
+              Contact us
+            </Link>
+          </div>
         </div>
       </div>
 
