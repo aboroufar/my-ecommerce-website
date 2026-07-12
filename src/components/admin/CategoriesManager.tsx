@@ -19,9 +19,16 @@ interface Category {
   hero_eyebrow?: string | null;
 }
 
-export function CategoriesManager({ categories }: { categories: Category[] }) {
+export function CategoriesManager({
+  categories,
+  visibleIds,
+}: {
+  categories: Category[];
+  visibleIds?: string[];
+}) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const visibleIdSet = visibleIds ? new Set(visibleIds) : null;
 
   const topLevel = categories.filter((c) => !c.parent_id);
   const childrenByParent = new Map<string, Category[]>();
@@ -39,6 +46,7 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
         categories={categories}
         depth={depth}
         editing={editingId === category.id}
+        visible={visibleIdSet ? visibleIdSet.has(category.id) : true}
         onEdit={() => setEditingId(category.id)}
         onCancel={() => setEditingId(null)}
       />
@@ -101,6 +109,7 @@ function CategoryRow({
   categories,
   depth,
   editing,
+  visible,
   onEdit,
   onCancel,
 }: {
@@ -108,6 +117,7 @@ function CategoryRow({
   categories: Category[];
   depth: number;
   editing: boolean;
+  visible: boolean;
   onEdit: () => void;
   onCancel: () => void;
 }) {
@@ -140,6 +150,14 @@ function CategoryRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <TierBadge depth={depth} />
+          {!visible && (
+            <span
+              className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800"
+              title="No Active products in this category (or its groups/items) yet, so it's hidden from the header menu, homepage, and /products filters."
+            >
+              Not visible
+            </span>
+          )}
           <p className="truncate text-sm font-medium text-foreground">
             {category.name}
           </p>

@@ -113,7 +113,19 @@ export function ProductsBulkTable({ products }: { products: ProductRow[] }) {
                 />
               </td>
               <td className="py-3 text-foreground">{p.name}</td>
-              <td className="py-3 text-muted capitalize">{p.status}</td>
+              <td className="py-3">
+                <span
+                  className={`rounded px-1.5 py-0.5 text-xs font-medium capitalize ${
+                    p.status === "active"
+                      ? "text-muted"
+                      : p.status === "draft"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-surface text-muted"
+                  }`}
+                >
+                  {p.status}
+                </span>
+              </td>
               <td className="py-3 text-foreground">
                 {formatPrice(p.price_cents, p.currency)}
               </td>

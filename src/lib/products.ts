@@ -133,6 +133,52 @@ export async function getActiveProducts(options?: {
 }
 
 /**
+ * Given the full category list and a Supabase client, returns the set of
+ * category IDs that have at least one *active* product assigned -- either
+ * directly, or on a descendant category. Shared by getCategories() (which
+ * uses it to hide dead-end categories from the storefront) and the admin
+ * categories page (which uses it to flag categories that exist but aren't
+ * visible anywhere yet, e.g. because their only product is still a draft).
+ */
+export async function getCategoryIdsWithActiveProducts(
+  supabase: ReturnType<typeof createPublicClient>,
+  categories: Category[]
+): Promise<Set<string>> {
+  const { data: productCategories, error } = await supabase
+    .from("product_categories")
+    .select("category_id, products!inner(status)")
+    .eq("products.status", "active");
+
+  if (error) {
+    console.error("getCategoryIdsWithActiveProducts error:", error.message);
+    return new Set(categories.map((c) => c.id));
+  }
+
+  const directlyAssigned = new Set(
+    (productCategories ?? []).map((pc) => pc.category_id)
+  );
+
+  const childrenByParent = new Map<string, Category[]>();
+  for (const c of categories) {
+    if (!c.parent_id) continue;
+    const siblings = childrenByParent.get(c.parent_id) ?? [];
+    siblings.push(c);
+    childrenByParent.set(c.parent_id, siblings);
+  }
+
+  function hasProductsInSubtree(category: Category): boolean {
+    if (directlyAssigned.has(category.id)) return true;
+    return (childrenByParent.get(category.id) ?? []).some(hasProductsInSubtree);
+  }
+
+  const result = new Set<string>();
+  for (const c of categories) {
+    if (hasProductsInSubtree(c)) result.add(c.id);
+  }
+  return result;
+}
+
+/**
  * Fetches all categories for nav/mega-menu use.
  * Returns an empty array (rather than throwing) if Supabase isn't configured
  * yet or the request fails.
@@ -163,34 +209,8 @@ export async function getCategories(options?: {
     const categories = data ?? [];
     if (options?.includeEmpty) return categories;
 
-    const { data: productCategories, error: pcError } = await supabase
-      .from("product_categories")
-      .select("category_id, products!inner(status)")
-      .eq("products.status", "active");
-
-    if (pcError) {
-      console.error("getCategories product_categories error:", pcError.message);
-      return categories;
-    }
-
-    const categoriesWithProducts = new Set(
-      (productCategories ?? []).map((pc) => pc.category_id)
-    );
-
-    const childrenByParent = new Map<string, Category[]>();
-    for (const c of categories) {
-      if (!c.parent_id) continue;
-      const siblings = childrenByParent.get(c.parent_id) ?? [];
-      siblings.push(c);
-      childrenByParent.set(c.parent_id, siblings);
-    }
-
-    function hasProductsInSubtree(category: Category): boolean {
-      if (categoriesWithProducts.has(category.id)) return true;
-      return (childrenByParent.get(category.id) ?? []).some(hasProductsInSubtree);
-    }
-
-    return categories.filter(hasProductsInSubtree);
+    const visibleIds = await getCategoryIdsWithActiveProducts(supabase, categories);
+    return categories.filter((c) => visibleIds.has(c.id));
   } catch (err) {
     console.error("getCategories failed (Supabase not configured?):", err);
     return [];

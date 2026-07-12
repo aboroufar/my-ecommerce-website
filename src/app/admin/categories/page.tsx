@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CategoriesManager } from "@/components/admin/CategoriesManager";
+import { getCategoryIdsWithActiveProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,11 @@ export default async function AdminCategoriesPage({
     .select("id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow")
     .order("name", { ascending: true });
 
+  const visibleIds = await getCategoryIdsWithActiveProducts(
+    supabase,
+    categories ?? []
+  );
+
   return (
     <div>
       <h1 className="font-display text-2xl text-foreground">Categories</h1>
@@ -24,7 +30,10 @@ export default async function AdminCategoriesPage({
         so it doesn&apos;t fall back to a placeholder image. Give a category
         a parent to nest it as a Group or Item under a top-level Category.
         Top-level categories can also have a hero photo/headline shown at
-        the top of their /products page.
+        the top of their /products page. A category only appears on the
+        storefront once it (or one of its groups/items) has at least one
+        product set to Active -- categories marked &quot;Not visible&quot;
+        below are hidden until then.
       </p>
 
       {error && (
@@ -34,7 +43,10 @@ export default async function AdminCategoriesPage({
       )}
 
       <div className="mt-8">
-        <CategoriesManager categories={categories ?? []} />
+        <CategoriesManager
+          categories={categories ?? []}
+          visibleIds={[...visibleIds]}
+        />
       </div>
     </div>
   );
