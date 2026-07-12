@@ -1,6 +1,76 @@
 import type { ProductStatus } from "@/lib/supabase/types";
 import { ImageUploadField } from "./ImageUploadField";
 
+interface CategoryOption {
+  id: string;
+  name: string;
+  parent_id: string | null;
+}
+
+const TIER_LABELS = ["Category", "Group", "Item"] as const;
+const TIER_STYLES = [
+  "bg-foreground text-background",
+  "bg-accent/15 text-accent",
+  "bg-surface text-muted",
+] as const;
+
+function TierBadge({ depth }: { depth: number }) {
+  return (
+    <span
+      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${TIER_STYLES[depth] ?? TIER_STYLES[2]}`}
+    >
+      {TIER_LABELS[depth] ?? "Item"}
+    </span>
+  );
+}
+
+function CategoryTree({
+  categories,
+  checkedIds,
+}: {
+  categories: CategoryOption[];
+  checkedIds?: string[];
+}) {
+  const topLevel = categories.filter((c) => !c.parent_id);
+  const childrenByParent = new Map<string, CategoryOption[]>();
+  for (const c of categories) {
+    if (!c.parent_id) continue;
+    const siblings = childrenByParent.get(c.parent_id) ?? [];
+    siblings.push(c);
+    childrenByParent.set(c.parent_id, siblings);
+  }
+
+  const renderNode = (category: CategoryOption, depth: number): React.ReactNode => (
+    <div key={category.id} className={depth === 0 ? "space-y-1.5" : "mt-1.5 space-y-1.5"}>
+      <label className="flex items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          name="category_ids"
+          value={category.id}
+          defaultChecked={checkedIds?.includes(category.id)}
+        />
+        <TierBadge depth={depth} />
+        {category.name}
+      </label>
+      {(childrenByParent.get(category.id) ?? []).length > 0 && (
+        <div className="ml-6 space-y-1.5 border-l border-line pl-4">
+          {childrenByParent.get(category.id)!.map((child) => renderNode(child, depth + 1))}
+        </div>
+      )}
+    </div>
+  );
+
+  if (topLevel.length === 0) {
+    return <p className="text-sm text-muted">No categories yet.</p>;
+  }
+
+  return (
+    <div className="space-y-4 border border-line bg-surface p-4">
+      {topLevel.map((category) => renderNode(category, 0))}
+    </div>
+  );
+}
+
 interface ProductFormValues {
   name?: string;
   slug?: string;
@@ -28,18 +98,8 @@ export function ProductForm({
   error?: string;
   submitLabel: string;
   extraAction?: React.ReactNode;
-  categories: { id: string; name: string; parent_id: string | null }[];
+  categories: CategoryOption[];
 }) {
-  const byId = new Map(categories.map((c) => [c.id, c]));
-  const depthOf = (c: { parent_id: string | null }): number => {
-    let depth = 0;
-    let current: { parent_id: string | null } | undefined = c;
-    while (current?.parent_id) {
-      current = byId.get(current.parent_id);
-      depth += 1;
-    }
-    return depth;
-  };
   return (
     <form action={action} className="mt-8 flex max-w-lg flex-col gap-5">
       {error && (
@@ -153,24 +213,11 @@ export function ProductForm({
       </Field>
 
       {categories.length > 0 && (
-        <Field label="Categories" hint="Tag at whichever level fits -- a top category, a group, or a specific product line.">
-          <div className="flex flex-wrap gap-x-4 gap-y-2">
-            {categories.map((category) => (
-              <label
-                key={category.id}
-                className="flex items-center gap-2 text-sm text-foreground"
-              >
-                <input
-                  type="checkbox"
-                  name="category_ids"
-                  value={category.id}
-                  defaultChecked={defaultValues?.categoryIds?.includes(category.id)}
-                />
-                {"— ".repeat(depthOf(category))}
-                {category.name}
-              </label>
-            ))}
-          </div>
+        <Field
+          label="Categories"
+          hint="Tag at whichever level fits -- a top-level Category, a Group, or a specific Item underneath it."
+        >
+          <CategoryTree categories={categories} checkedIds={defaultValues?.categoryIds} />
         </Field>
       )}
 
