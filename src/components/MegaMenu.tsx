@@ -42,7 +42,7 @@ export function MegaMenuColumns({
   const topLevelCategories = categories.filter((c) => !c.parent_id);
 
   return (
-    <nav className="hidden items-center gap-8 text-xs font-medium uppercase tracking-wide text-foreground sm:flex">
+    <nav className="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide text-foreground sm:flex">
       {extraColumns.map((column) =>
         column.title === "Home" ? (
           <ColumnDropdown
@@ -188,7 +188,7 @@ function ColumnDropdown({ column }: { column: MenuColumnData }) {
     >
       <button
         type="button"
-        className="flex items-center gap-1 py-2 transition-colors hover:text-accent"
+        className="flex items-center gap-1 py-2 text-sm font-semibold uppercase tracking-wide transition-colors hover:text-accent"
       >
         {column.title}
         <ChevronDownIcon />
