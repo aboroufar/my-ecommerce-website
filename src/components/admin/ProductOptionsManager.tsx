@@ -16,6 +16,8 @@ interface VariantState {
   price: string;
   stock_qty: string;
   sku: string;
+  weight_text: string;
+  dimensions_text: string;
 }
 
 export interface ProductOptionsDefaults {
@@ -64,12 +66,17 @@ export function ProductOptionsManager({
   // variantPrices/Stock/Sku keyed by comboKey(valueIndexes) so edits
   // survive reordering/adding value lists without losing entered data.
   const initialVariantMap = useMemo(() => {
-    const map = new Map<string, { price: string; stock_qty: string; sku: string }>();
+    const map = new Map<
+      string,
+      { price: string; stock_qty: string; sku: string; weight_text: string; dimensions_text: string }
+    >();
     for (const v of defaults?.variants ?? []) {
       map.set(comboKey(v.valueIndexes), {
         price: v.price,
         stock_qty: v.stock_qty,
         sku: v.sku,
+        weight_text: v.weight_text,
+        dimensions_text: v.dimensions_text,
       });
     }
     return map;
@@ -127,13 +134,19 @@ export function ProductOptionsManager({
 
   function updateVariantField(
     indexes: number[],
-    field: "price" | "stock_qty" | "sku",
+    field: "price" | "stock_qty" | "sku" | "weight_text" | "dimensions_text",
     value: string
   ) {
     const key = comboKey(indexes);
     setVariantData((prev) => {
       const next = new Map(prev);
-      const existing = next.get(key) ?? { price: "", stock_qty: "0", sku: "" };
+      const existing = next.get(key) ?? {
+        price: "",
+        stock_qty: "0",
+        sku: "",
+        weight_text: "",
+        dimensions_text: "",
+      };
       next.set(key, { ...existing, [field]: value });
       return next;
     });
@@ -151,12 +164,16 @@ export function ProductOptionsManager({
         price: "0",
         stock_qty: "0",
         sku: "",
+        weight_text: "",
+        dimensions_text: "",
       };
       return {
         valueIndexes: indexes,
         price: data.price || "0",
         stock_qty: data.stock_qty || "0",
         sku: data.sku,
+        weight_text: data.weight_text,
+        dimensions_text: data.dimensions_text,
       };
     }),
   };
@@ -236,7 +253,7 @@ export function ProductOptionsManager({
       {combos.length > 0 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
-            Variants -- price and stock per combination
+            Variants -- price, stock, weight and dimensions per combination
           </p>
           <table className="mt-2 w-full text-left text-sm">
             <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
@@ -248,7 +265,9 @@ export function ProductOptionsManager({
                 ))}
                 <th className="py-1.5 pr-3 font-medium">Price (USD)</th>
                 <th className="py-1.5 pr-3 font-medium">Stock</th>
-                <th className="py-1.5 font-medium">SKU</th>
+                <th className="py-1.5 pr-3 font-medium">SKU</th>
+                <th className="py-1.5 pr-3 font-medium">Weight</th>
+                <th className="py-1.5 font-medium">Dimensions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -258,6 +277,8 @@ export function ProductOptionsManager({
                   price: "",
                   stock_qty: "0",
                   sku: "",
+                  weight_text: "",
+                  dimensions_text: "",
                 };
                 return (
                   <tr key={key}>
@@ -291,13 +312,33 @@ export function ProductOptionsManager({
                         className="w-20 border border-line bg-background px-2 py-1 text-xs"
                       />
                     </td>
-                    <td className="py-1.5">
+                    <td className="py-1.5 pr-3">
                       <input
                         value={data.sku}
                         onChange={(e) =>
                           updateVariantField(indexes, "sku", e.target.value)
                         }
                         placeholder="Optional"
+                        className="w-28 border border-line bg-background px-2 py-1 text-xs"
+                      />
+                    </td>
+                    <td className="py-1.5 pr-3">
+                      <input
+                        value={data.weight_text}
+                        onChange={(e) =>
+                          updateVariantField(indexes, "weight_text", e.target.value)
+                        }
+                        placeholder="0.5 kg"
+                        className="w-24 border border-line bg-background px-2 py-1 text-xs"
+                      />
+                    </td>
+                    <td className="py-1.5">
+                      <input
+                        value={data.dimensions_text}
+                        onChange={(e) =>
+                          updateVariantField(indexes, "dimensions_text", e.target.value)
+                        }
+                        placeholder="1 × 2 × 3 cm"
                         className="w-28 border border-line bg-background px-2 py-1 text-xs"
                       />
                     </td>

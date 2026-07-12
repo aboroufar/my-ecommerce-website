@@ -652,27 +652,33 @@ export type Database = {
       product_variants: {
         Row: {
           created_at: string
+          dimensions_text: string | null
           id: string
           price_cents: number
           product_id: string
           sku: string | null
           stock_qty: number
+          weight_text: string | null
         }
         Insert: {
           created_at?: string
+          dimensions_text?: string | null
           id?: string
           price_cents: number
           product_id: string
           sku?: string | null
           stock_qty?: number
+          weight_text?: string | null
         }
         Update: {
           created_at?: string
+          dimensions_text?: string | null
           id?: string
           price_cents?: number
           product_id?: string
           sku?: string | null
           stock_qty?: number
+          weight_text?: string | null
         }
         Relationships: [
           {

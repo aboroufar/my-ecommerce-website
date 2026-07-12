@@ -1,49 +1,42 @@
 "use client";
 
-import { useState } from "react";
 import { AddToCartButton } from "./AddToCartButton";
 import { formatPrice } from "@/lib/format";
-import {
-  findMatchingVariant,
-  getVariantPriceRange,
-  type ProductDetail,
-} from "@/lib/products";
+import type { ProductDetail, ProductVariant } from "@/lib/products";
 
 /**
- * Renders one <select> per option type (e.g. Size, Skin type), tracks the
- * shopper's selections, and resolves them to the single product_variants
- * row that matches the exact combination -- full combination pricing, not
- * "cheapest/priciest selected option wins". Shows a price range until
- * every option type has a selection, then the matched variant's own price
- * and stock message. Wraps AddToCartButton, passing down the resolved
- * variant (or leaving it disabled until the selection is complete).
+ * Renders one <select> per option type (e.g. Size, Skin type) and resolves
+ * the current selections to the single product_variants row that matches
+ * the exact combination -- full combination pricing, not "cheapest/priciest
+ * selected option wins". Selection state is owned by the parent
+ * (ProductDetailProvider in ProductDetailInteractive.tsx) rather than
+ * locally, so the PDP's Additional Information tab can show the same
+ * selected variant's weight/dimensions.
  */
-export function ProductVariantSelector({ product }: { product: ProductDetail }) {
-  const [selections, setSelections] = useState<Record<string, string>>({});
-
-  if (product.product_option_types.length === 0) {
-    return <AddToCartButton product={product} />;
-  }
-
+export function ProductVariantSelector({
+  product,
+  selections,
+  onSelect,
+  matchedVariant,
+}: {
+  product: ProductDetail;
+  selections: Record<string, string>;
+  onSelect: (typeId: string, valueId: string) => void;
+  matchedVariant: ProductVariant | undefined;
+}) {
   const sortedTypes = [...product.product_option_types].sort(
     (a, b) => a.sort_order - b.sort_order
   );
-  const matchedVariant = findMatchingVariant(product, selections);
-  const { min, max } = getVariantPriceRange(product);
 
   return (
     <div>
       <div className="mt-4 flex items-baseline gap-3">
-        {matchedVariant ? (
-          <span className="text-2xl font-bold text-foreground">
-            {formatPrice(matchedVariant.price_cents, product.currency)}
-          </span>
-        ) : (
-          <span className="text-2xl font-bold text-foreground">
-            {formatPrice(min, product.currency)}
-            {max !== min && <>–{formatPrice(max, product.currency)}</>}
-          </span>
-        )}
+        <span className="text-2xl font-bold text-foreground">
+          {formatPrice(
+            matchedVariant ? matchedVariant.price_cents : product.price_cents,
+            product.currency
+          )}
+        </span>
       </div>
 
       <div className="mt-4 space-y-3">
@@ -58,9 +51,7 @@ export function ProductVariantSelector({ product }: { product: ProductDetail }) 
               </span>
               <select
                 value={selections[type.id] ?? ""}
-                onChange={(e) =>
-                  setSelections((prev) => ({ ...prev, [type.id]: e.target.value }))
-                }
+                onChange={(e) => onSelect(type.id, e.target.value)}
                 className="border border-line bg-transparent px-3 py-2 text-sm"
               >
                 <option value="" disabled>
@@ -112,4 +103,22 @@ export function ProductVariantSelector({ product }: { product: ProductDetail }) 
       />
     </div>
   );
+}
+
+/**
+ * Resolves the default selections (first sorted value per option type) --
+ * shared by ProductDetailProvider so the price/variant shown on first
+ * render matches what the dropdowns visually display, instead of an empty
+ * placeholder state that silently blocked Add to Cart until every dropdown
+ * was manually touched.
+ */
+export function defaultSelections(product: ProductDetail): Record<string, string> {
+  const initial: Record<string, string> = {};
+  for (const type of product.product_option_types) {
+    const firstValue = [...type.product_option_values].sort(
+      (a, b) => a.sort_order - b.sort_order
+    )[0];
+    if (firstValue) initial[type.id] = firstValue.id;
+  }
+  return initial;
 }

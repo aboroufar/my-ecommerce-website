@@ -31,6 +31,8 @@ const optionsPayloadSchema = z.object({
       price: z.coerce.number().nonnegative(),
       stock_qty: z.coerce.number().int().nonnegative(),
       sku: z.string().optional().default(""),
+      weight_text: z.string().optional().default(""),
+      dimensions_text: z.string().optional().default(""),
     })
   ),
 });
@@ -112,6 +114,8 @@ export async function setProductOptions(productId: string, optionsJson: string) 
         price_cents: Math.round(v.price * 100),
         stock_qty: v.stock_qty,
         sku: v.sku || null,
+        weight_text: v.weight_text || null,
+        dimensions_text: v.dimensions_text || null,
       }))
     )
     .select("id");

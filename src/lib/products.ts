@@ -42,6 +42,8 @@ export interface ProductVariant {
   sku: string | null;
   price_cents: number;
   stock_qty: number;
+  weight_text: string | null;
+  dimensions_text: string | null;
   product_variant_options: { option_value_id: string }[];
 }
 
@@ -55,21 +57,6 @@ export interface ProductDetail extends ProductSummary {
   product_variants: ProductVariant[];
 }
 
-/**
- * Returns the min/max price across a product's variants (falling back to
- * the product's own price when it has no variants), for the "$30-$65"
- * style range shown before a shopper has picked a full set of options.
- */
-export function getVariantPriceRange(product: {
-  price_cents: number;
-  product_variants: ProductVariant[];
-}): { min: number; max: number } {
-  if (product.product_variants.length === 0) {
-    return { min: product.price_cents, max: product.price_cents };
-  }
-  const prices = product.product_variants.map((v) => v.price_cents);
-  return { min: Math.min(...prices), max: Math.max(...prices) };
-}
 
 /**
  * Given the option values currently selected (one per option type, keyed
@@ -376,7 +363,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, product_variant_options(option_value_id))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id))"
       )
       .eq("slug", slug)
       .eq("status", "active")

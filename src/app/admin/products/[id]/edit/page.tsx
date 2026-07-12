@@ -20,7 +20,7 @@ export default async function EditProductPage({
     supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, weight_text, dimensions_text, product_images(url, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, product_variant_options(option_value_id))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, product_images(url, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id))"
       )
       .eq("id", id)
       .single(),
@@ -64,6 +64,8 @@ export default async function EditProductPage({
         price: String(variant.price_cents / 100),
         stock_qty: String(variant.stock_qty),
         sku: variant.sku ?? "",
+        weight_text: variant.weight_text ?? "",
+        dimensions_text: variant.dimensions_text ?? "",
       };
     }),
   };
@@ -95,8 +97,6 @@ export default async function EditProductPage({
           is_popular: product.is_popular,
           image_url: image?.url ?? "",
           categoryIds,
-          weight_text: product.weight_text,
-          dimensions_text: product.dimensions_text,
           options: optionsDefaults,
         }}
         extraAction={
