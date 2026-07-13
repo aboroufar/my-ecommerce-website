@@ -79,6 +79,126 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          body_html: string
+          cover_image_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published_at: string | null
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_post_categories: {
+        Row: {
+          category_id: string
+          post_id: string
+        }
+        Insert: {
+          category_id: string
+          post_id: string
+        }
+        Update: {
+          category_id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_post_categories_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_post_tags: {
+        Row: {
+          post_id: string
+          tag_id: string
+        }
+        Insert: {
+          post_id: string
+          tag_id: string
+        }
+        Update: {
+          post_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_tags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_post_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           created_at: string
@@ -849,6 +969,12 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          blog_author_bio: string
+          blog_author_facebook_url: string
+          blog_author_linkedin_url: string
+          blog_author_name: string
+          blog_author_photo_url: string
+          blog_author_twitter_url: string
           categories_menu_label: string
           header_address: string
           header_email: string
@@ -860,6 +986,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          blog_author_bio?: string
+          blog_author_facebook_url?: string
+          blog_author_linkedin_url?: string
+          blog_author_name?: string
+          blog_author_photo_url?: string
+          blog_author_twitter_url?: string
           categories_menu_label?: string
           header_address?: string
           header_email?: string
@@ -871,6 +1003,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          blog_author_bio?: string
+          blog_author_facebook_url?: string
+          blog_author_linkedin_url?: string
+          blog_author_name?: string
+          blog_author_photo_url?: string
+          blog_author_twitter_url?: string
           categories_menu_label?: string
           header_address?: string
           header_email?: string

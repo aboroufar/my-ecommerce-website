@@ -80,6 +80,12 @@ export default async function AdminLayout({
             Tags
           </Link>
           <Link
+            href="/admin/blog"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Blog
+          </Link>
+          <Link
             href="/admin/menu"
             className="text-sm text-muted transition-colors hover:text-foreground"
           >

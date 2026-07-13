@@ -162,10 +162,9 @@ export default async function ProductDetailPage({
               </ul>
             )}
 
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <ProductAddToCart />
-              </div>
+            <ProductAddToCart />
+
+            <div className="mt-3">
               <WishlistButton productId={product.id} />
             </div>
 
