@@ -177,6 +177,7 @@ export type Database = {
       categories: {
         Row: {
           created_at: string
+          display_only: boolean
           hero_eyebrow: string | null
           hero_headline: string | null
           hero_image_url: string | null
@@ -188,6 +189,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          display_only?: boolean
           hero_eyebrow?: string | null
           hero_headline?: string | null
           hero_image_url?: string | null
@@ -199,6 +201,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          display_only?: boolean
           hero_eyebrow?: string | null
           hero_headline?: string | null
           hero_image_url?: string | null
@@ -821,6 +824,7 @@ export type Database = {
           header_email: string
           header_phone: string
           id: boolean
+          reviews_enabled: boolean
           site_logo_url: string
           site_name: string
           updated_at: string
@@ -831,6 +835,7 @@ export type Database = {
           header_email?: string
           header_phone?: string
           id?: boolean
+          reviews_enabled?: boolean
           site_logo_url?: string
           site_name?: string
           updated_at?: string
@@ -841,6 +846,7 @@ export type Database = {
           header_email?: string
           header_phone?: string
           id?: boolean
+          reviews_enabled?: boolean
           site_logo_url?: string
           site_name?: string
           updated_at?: string

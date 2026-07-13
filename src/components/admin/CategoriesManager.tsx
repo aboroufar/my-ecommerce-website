@@ -17,6 +17,7 @@ interface Category {
   hero_image_url?: string | null;
   hero_headline?: string | null;
   hero_eyebrow?: string | null;
+  display_only?: boolean;
 }
 
 export function CategoriesManager({
@@ -150,13 +151,22 @@ function CategoryRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <TierBadge depth={depth} />
-          {!visible && (
+          {category.display_only ? (
             <span
-              className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800"
-              title="No Active products in this category (or its groups/items) yet, so it's hidden from the header menu, homepage, and /products filters."
+              className="shrink-0 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-800"
+              title="Shown on the homepage category grid as a plain image tile -- not clickable, doesn't need any products, and doesn't appear in the header menu or /products filters."
             >
-              Not visible
+              Display only
             </span>
+          ) : (
+            !visible && (
+              <span
+                className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800"
+                title="No Active products in this category (or its groups/items) yet, so it's hidden from the header menu, homepage, and /products filters."
+              >
+                Not visible
+              </span>
+            )
           )}
           <p className="truncate text-sm font-medium text-foreground">
             {category.name}
@@ -304,6 +314,18 @@ function CategoryForm({
         <span className="text-xs text-muted">Photo</span>
         <ImageUploadField defaultValue={category?.image_url ?? ""} />
       </div>
+
+      {resultingDepth === 0 && (
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name="display_only"
+            defaultChecked={category?.display_only ?? false}
+          />
+          Display only -- show as a plain tile on the homepage grid, not
+          clickable, no products needed
+        </label>
+      )}
 
       {resultingDepth === 0 && (
         <div className="space-y-3 border-t border-line pt-3">

@@ -25,10 +25,13 @@ export default async function ProductsPage({
     ? (sort as ProductSort)
     : "newest";
 
-  const [products, categories] = await Promise.all([
+  const [products, allCategories] = await Promise.all([
     getActiveProducts({ categorySlug: category, sort: activeSort }),
     getCategories(),
   ]);
+  // Display-only categories are homepage-grid decoration, not real
+  // filters -- keep them out of the shop sidebar/category tree.
+  const categories = allCategories.filter((c) => !c.display_only);
 
   const activeCategory = categories.find((c) => c.slug === category);
   const isTopLevelCategory = !!activeCategory && !activeCategory.parent_id;

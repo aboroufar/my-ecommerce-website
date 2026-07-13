@@ -8,6 +8,7 @@ import {
   getRecommendedProducts,
   getReviewSummary,
 } from "@/lib/products";
+import { getSiteSettings } from "@/lib/siteSettings";
 import { formatPrice, getSaleInfo } from "@/lib/format";
 import {
   ProductDetailProvider,
@@ -49,7 +50,10 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const [product, siteSettings] = await Promise.all([
+    getProductBySlug(slug),
+    getSiteSettings(),
+  ]);
 
   if (!product) notFound();
 
@@ -62,6 +66,7 @@ export default async function ProductDetailPage({
   const categoryName = product.product_categories[0]?.categories?.name;
   const recommended = await getRecommendedProducts(product.id, categorySlugs);
   const sale = getSaleInfo(product.price_cents, product.compare_at_price_cents);
+  const reviewsEnabled = siteSettings.reviews_enabled;
   const reviewSummary = getReviewSummary(product.product_reviews);
   const highlights = [...product.product_highlights].sort(
     (a, b) => a.sort_order - b.sort_order
@@ -108,7 +113,7 @@ export default async function ProductDetailPage({
               {product.name}
             </h1>
 
-            {reviewSummary.count > 0 && (
+            {reviewsEnabled && reviewSummary.count > 0 && (
               <div className="mt-2 flex items-center gap-2">
                 <StarRating rating={reviewSummary.average} size="md" />
                 <span className="text-sm text-muted">
@@ -161,7 +166,7 @@ export default async function ProductDetailPage({
               </ul>
             )}
 
-            <ViewingCounter />
+            <ViewingCounter productId={product.id} />
 
             <ProductAddToCart />
           </div>
@@ -181,10 +186,14 @@ export default async function ProductDetailPage({
               label: "Additional information",
               content: <SelectedVariantInfo />,
             },
-            {
-              label: `Reviews (${reviewSummary.count})`,
-              content: <ReviewsTabContent product={product} />,
-            },
+            ...(reviewsEnabled
+              ? [
+                  {
+                    label: `Reviews (${reviewSummary.count})`,
+                    content: <ReviewsTabContent product={product} />,
+                  },
+                ]
+              : []),
           ]}
         />
       </ProductDetailProvider>

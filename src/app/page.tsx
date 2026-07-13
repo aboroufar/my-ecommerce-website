@@ -21,12 +21,18 @@ export default async function Home() {
   // showcase top-level departments (Skincare, Apparel, ...), not every
   // group/product-line underneath them.
   const categories = allCategories.filter((c) => !c.parent_id);
+  // Display-only categories are decorative image tiles for the grid --
+  // they never have products, so they'd only ever show "No products in
+  // this category yet." as a bestseller filter. Keep them out of that
+  // filter list; CategoryGrid still receives the full set since it's the
+  // one place they're meant to appear.
+  const filterableCategories = categories.filter((c) => !c.display_only);
 
   const sectionComponents: Record<HomepageSectionKey, React.ReactNode> = {
     hero: <HeroSlideshow slides={heroSlides} />,
     category_grid: <CategoryGrid categories={categories} products={allProducts} />,
     sale: <SaleSection products={allProducts} />,
-    best_sellers: <BestSellers products={allProducts} categories={categories} />,
+    best_sellers: <BestSellers products={allProducts} categories={filterableCategories} />,
     brand_bar: <BrandBar brands={brands} />,
   };
 

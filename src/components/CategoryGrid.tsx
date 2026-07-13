@@ -76,33 +76,57 @@ export function CategoryGrid({
   return (
     <section className="w-full px-2 pt-2 sm:px-4">
       <div className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${lgColsClass}`}>
-        {cards.map(({ category, url, alt, isPlaceholder }) => (
-          <Link
-            key={category.id}
-            href={`/products?category=${category.slug}`}
-            className="group relative aspect-square overflow-hidden rounded-xl"
-          >
-            <Image
-              src={url}
-              alt={alt}
-              fill
-              sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
-            {isPlaceholder && (
-              <span className="absolute right-2 top-2 rounded bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
-                Sample image
-              </span>
-            )}
-            <div className="absolute bottom-4 left-4 text-background">
-              <h3 className="text-lg font-bold">{category.name}</h3>
-              <span className="text-sm font-medium underline underline-offset-4">
-                View More
-              </span>
+        {cards.map(({ category, url, alt, isPlaceholder }) =>
+          category.display_only ? (
+            <div
+              key={category.id}
+              className="relative aspect-square cursor-default overflow-hidden rounded-xl"
+            >
+              <Image
+                src={url}
+                alt={alt}
+                fill
+                sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
+              {isPlaceholder && (
+                <span className="absolute right-2 top-2 rounded bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                  Sample image
+                </span>
+              )}
+              <div className="absolute bottom-4 left-4 text-background">
+                <h3 className="text-lg font-bold">{category.name}</h3>
+              </div>
             </div>
-          </Link>
-        ))}
+          ) : (
+            <Link
+              key={category.id}
+              href={`/products?category=${category.slug}`}
+              className="group relative aspect-square overflow-hidden rounded-xl"
+            >
+              <Image
+                src={url}
+                alt={alt}
+                fill
+                sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
+              {isPlaceholder && (
+                <span className="absolute right-2 top-2 rounded bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                  Sample image
+                </span>
+              )}
+              <div className="absolute bottom-4 left-4 text-background">
+                <h3 className="text-lg font-bold">{category.name}</h3>
+                <span className="text-sm font-medium underline underline-offset-4">
+                  View More
+                </span>
+              </div>
+            </Link>
+          )
+        )}
       </div>
     </section>
   );

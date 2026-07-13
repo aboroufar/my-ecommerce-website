@@ -7,11 +7,14 @@ import { getSiteSettings } from "@/lib/siteSettings";
 import { getMenuColumns } from "@/lib/menu";
 
 export async function SiteHeader() {
-  const [categories, settings, menuColumns] = await Promise.all([
+  const [allCategories, settings, menuColumns] = await Promise.all([
     getCategories(),
     getSiteSettings(),
     getMenuColumns(),
   ]);
+  // Display-only categories are homepage-grid decoration, not real
+  // navigation destinations -- keep them out of the menu/mobile nav.
+  const categories = allCategories.filter((c) => !c.display_only);
 
   return (
     <header className="sticky top-0 z-40 bg-background">

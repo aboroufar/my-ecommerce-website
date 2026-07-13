@@ -13,7 +13,9 @@ export default async function AdminCategoriesPage({
   const supabase = createAdminClient();
   const { data: categories } = await supabase
     .from("categories")
-    .select("id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow")
+    .select(
+      "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only"
+    )
     .order("name", { ascending: true });
 
   const visibleIds = await getCategoryIdsWithActiveProducts(
@@ -33,7 +35,11 @@ export default async function AdminCategoriesPage({
         the top of their /products page. A category only appears on the
         storefront once it (or one of its groups/items) has at least one
         product set to Active -- categories marked &quot;Not visible&quot;
-        below are hidden until then.
+        below are hidden until then. Mark a top-level category
+        &quot;Display only&quot; to show it as a plain image tile on the
+        homepage grid without a product requirement -- it won&apos;t be
+        clickable and won&apos;t appear in the header menu or /products
+        filters.
       </p>
 
       {error && (

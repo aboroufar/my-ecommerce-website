@@ -132,6 +132,7 @@ export interface Category {
   hero_image_url: string | null;
   hero_headline: string | null;
   hero_eyebrow: string | null;
+  display_only: boolean;
 }
 
 /**
@@ -280,10 +281,13 @@ export async function getCategoryIdsWithActiveProducts(
  * assigned -- directly, or on a descendant category -- so an empty
  * subcategory (created but not yet assigned any products) doesn't show up
  * as a dead end in the header menu, homepage grid, or /products filters.
- * Pass `includeEmpty: true` for admin UI that needs to manage every
- * category regardless of product count (the /admin/categories page already
- * queries Supabase directly rather than calling this, but this option
- * exists for any future admin consumer).
+ * Categories marked `display_only` are exempt from that product
+ * requirement -- they exist purely as a decorative homepage tile (see
+ * CategoryGrid, which renders them unlinked) and are never expected to
+ * have products assigned. Pass `includeEmpty: true` for admin UI that
+ * needs to manage every category regardless of product count (the
+ * /admin/categories page already queries Supabase directly rather than
+ * calling this, but this option exists for any future admin consumer).
  */
 export async function getCategories(options?: {
   includeEmpty?: boolean;
@@ -292,7 +296,9 @@ export async function getCategories(options?: {
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("categories")
-      .select("id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow")
+      .select(
+        "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only"
+      )
       .order("name", { ascending: true });
 
     if (error) {
@@ -303,7 +309,7 @@ export async function getCategories(options?: {
     if (options?.includeEmpty) return categories;
 
     const visibleIds = await getCategoryIdsWithActiveProducts(supabase, categories);
-    return categories.filter((c) => visibleIds.has(c.id));
+    return categories.filter((c) => c.display_only || visibleIds.has(c.id));
   } catch (err) {
     console.error("getCategories failed (Supabase not configured?):", err);
     return [];

@@ -94,6 +94,19 @@ export default async function AdminSettingsPage({
               className="border border-line bg-transparent px-3 py-2 text-sm"
             />
           </label>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              name="reviews_enabled"
+              defaultChecked={settings.reviews_enabled}
+            />
+            Show reviews on product pages
+          </label>
+          <p className="text-xs text-muted">
+            When off, the rating line and Reviews tab are hidden on every
+            product -- customers can&apos;t submit new reviews and existing
+            ones stay hidden, but nothing is deleted.
+          </p>
           <button
             type="submit"
             className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"

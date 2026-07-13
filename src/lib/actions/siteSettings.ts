@@ -12,6 +12,9 @@ const settingsSchema = z.object({
   header_email: z.string().default(""),
   header_phone: z.string().default(""),
   header_address: z.string().default(""),
+  // Checkboxes are only present in FormData when checked ("on"), so a
+  // missing key means unchecked/false rather than a validation failure.
+  reviews_enabled: z.preprocess((v) => v === "on", z.boolean()),
 });
 
 const categoriesMenuLabelSchema = z.object({

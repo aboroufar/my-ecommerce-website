@@ -17,6 +17,9 @@ const categorySchema = z.object({
   hero_image_url: z.union([z.string().min(1), z.literal("")]).optional(),
   hero_headline: z.string().optional(),
   hero_eyebrow: z.string().optional(),
+  // Checkboxes are only present in FormData when checked ("on"), so a
+  // missing key means unchecked/false rather than a validation failure.
+  display_only: z.preprocess((v) => v === "on", z.boolean()),
 });
 
 /**
@@ -48,6 +51,7 @@ export async function createCategory(formData: FormData) {
     hero_image_url: parsed.data.hero_image_url || null,
     hero_headline: parsed.data.hero_headline || null,
     hero_eyebrow: parsed.data.hero_eyebrow || null,
+    display_only: parsed.data.display_only,
   });
 
   if (error) {
@@ -89,6 +93,7 @@ export async function updateCategory(id: string, formData: FormData) {
       hero_image_url: parsed.data.hero_image_url || null,
       hero_headline: parsed.data.hero_headline || null,
       hero_eyebrow: parsed.data.hero_eyebrow || null,
+      display_only: parsed.data.display_only,
     })
     .eq("id", id);
 

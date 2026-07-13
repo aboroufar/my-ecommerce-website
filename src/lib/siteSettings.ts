@@ -7,6 +7,7 @@ export interface SiteSettings {
   header_phone: string;
   header_address: string;
   categories_menu_label: string;
+  reviews_enabled: boolean;
 }
 
 const defaults: SiteSettings = {
@@ -16,6 +17,7 @@ const defaults: SiteSettings = {
   header_phone: "",
   header_address: "",
   categories_menu_label: "Categories",
+  reviews_enabled: true,
 };
 
 /**
@@ -30,7 +32,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const { data, error } = await supabase
       .from("site_settings")
       .select(
-        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label"
+        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label, reviews_enabled"
       )
       .eq("id", true)
       .maybeSingle();

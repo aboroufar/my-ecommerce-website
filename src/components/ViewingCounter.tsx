@@ -1,16 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 /**
- * "N people are currently viewing this item" -- purely decorative social
- * proof, NOT a real visitor count. There is no tracking behind this
- * number; it's a random value in a plausible range, generated once per
- * page load (stable for the duration of the visit, not a live-ticking
- * counter pretending to update in real time).
+ * "N people are currently viewing this item" -- a real count, driven by
+ * Supabase Realtime Presence on a per-product channel. Each open tab on
+ * this PDP tracks itself with a random per-tab key, and the displayed
+ * count is the number of distinct presence keys currently synced on the
+ * channel. Hidden entirely below 2 viewers (i.e. don't show "1 person
+ * viewing" to the one person viewing it -- that's not useful social proof
+ * and just reveals the mechanism).
  */
-export function ViewingCounter({ min = 12, max = 90 }: { min?: number; max?: number }) {
-  const [count] = useState(() => Math.floor(Math.random() * (max - min + 1)) + min);
+export function ViewingCounter({ productId }: { productId: string }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase.channel(`viewing:${productId}`, {
+      config: { presence: { key: crypto.randomUUID() } },
+    });
+
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        setCount(Object.keys(state).length);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({ online_at: new Date().toISOString() });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [productId]);
+
+  if (count < 2) return null;
 
   return (
     <p className="mt-4 flex items-center gap-2 text-sm text-muted">
