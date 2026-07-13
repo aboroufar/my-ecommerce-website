@@ -89,6 +89,7 @@ export async function createProduct(formData: FormData) {
   await setProductOptions(product.id, String(formData.get("options_json") ?? ""));
   await setProductHighlights(product.id, String(formData.get("highlights_json") ?? ""));
 
+  revalidatePath("/");
   revalidatePath("/products");
   revalidatePath("/admin/products");
   redirect("/admin/products");
@@ -140,6 +141,7 @@ export async function updateProduct(id: string, formData: FormData) {
   await setProductOptions(id, String(formData.get("options_json") ?? ""));
   await setProductHighlights(id, String(formData.get("highlights_json") ?? ""));
 
+  revalidatePath("/");
   revalidatePath("/products");
   revalidatePath(`/products/${rest.slug}`);
   revalidatePath("/admin/products");
@@ -160,6 +162,7 @@ export async function deleteProduct(id: string) {
     );
   }
 
+  revalidatePath("/");
   revalidatePath("/products");
   revalidatePath("/admin/products");
   redirect("/admin/products");
@@ -188,6 +191,7 @@ export async function bulkUpdateProductStatus(formData: FormData) {
     redirect(`/admin/products?error=${encodeURIComponent(error.message)}`);
   }
 
+  revalidatePath("/");
   revalidatePath("/products");
   revalidatePath("/admin/products");
   redirect("/admin/products");
@@ -210,6 +214,7 @@ export async function bulkDeleteProducts(formData: FormData) {
     );
   }
 
+  revalidatePath("/");
   revalidatePath("/products");
   revalidatePath("/admin/products");
   redirect("/admin/products");
