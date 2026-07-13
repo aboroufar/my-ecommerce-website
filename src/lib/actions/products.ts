@@ -8,6 +8,7 @@ import { getAdminUser } from "@/lib/auth";
 import { setProductCategories } from "@/lib/actions/categories";
 import { setProductOptions } from "@/lib/actions/productOptions";
 import { setProductHighlights } from "@/lib/actions/productHighlights";
+import { setProductTags } from "@/lib/actions/tags";
 
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -88,6 +89,7 @@ export async function createProduct(formData: FormData) {
   await setProductCategories(product.id, formData.getAll("category_ids") as string[]);
   await setProductOptions(product.id, String(formData.get("options_json") ?? ""));
   await setProductHighlights(product.id, String(formData.get("highlights_json") ?? ""));
+  await setProductTags(product.id, formData.getAll("tag_ids") as string[]);
 
   revalidatePath("/");
   revalidatePath("/products");
@@ -140,6 +142,7 @@ export async function updateProduct(id: string, formData: FormData) {
   await setProductCategories(id, formData.getAll("category_ids") as string[]);
   await setProductOptions(id, String(formData.get("options_json") ?? ""));
   await setProductHighlights(id, String(formData.get("highlights_json") ?? ""));
+  await setProductTags(id, formData.getAll("tag_ids") as string[]);
 
   revalidatePath("/");
   revalidatePath("/products");

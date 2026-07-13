@@ -74,6 +74,12 @@ export default async function AdminLayout({
             Categories
           </Link>
           <Link
+            href="/admin/tags"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Tags
+          </Link>
+          <Link
             href="/admin/menu"
             className="text-sm text-muted transition-colors hover:text-foreground"
           >

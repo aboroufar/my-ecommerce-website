@@ -18,11 +18,11 @@ export default async function EditProductPage({
   const { error } = await searchParams;
 
   const supabase = createAdminClient();
-  const [{ data: product }, { data: categories }] = await Promise.all([
+  const [{ data: product }, { data: categories }, { data: tags }] = await Promise.all([
     supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, product_images(url, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id)), product_highlights(id, label, icon, sort_order)"
+        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, product_images(url, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id)), product_highlights(id, label, icon, sort_order), product_tags(tag_id)"
       )
       .eq("id", id)
       .single(),
@@ -30,6 +30,7 @@ export default async function EditProductPage({
       .from("categories")
       .select("id, name, parent_id")
       .order("name", { ascending: true }),
+    supabase.from("tags").select("id, name").order("name", { ascending: true }),
   ]);
 
   if (!product) notFound();
@@ -38,6 +39,7 @@ export default async function EditProductPage({
     (a, b) => a.sort_order - b.sort_order
   )[0];
   const categoryIds = product.product_categories.map((pc) => pc.category_id);
+  const tagIds = product.product_tags.map((pt) => pt.tag_id);
 
   // Translate the fetched option types/values/variants into the shape
   // ProductOptionsManager works with (value indexes rather than DB ids,
@@ -89,6 +91,7 @@ export default async function EditProductPage({
         error={error}
         submitLabel="Save changes"
         categories={categories ?? []}
+        tags={tags ?? []}
         defaultValues={{
           name: product.name,
           slug: product.slug,
@@ -103,6 +106,7 @@ export default async function EditProductPage({
           is_popular: product.is_popular,
           image_url: image?.url ?? "",
           categoryIds,
+          tagIds,
           options: optionsDefaults,
           highlights: highlightsDefaults,
         }}

@@ -12,6 +12,39 @@ interface CategoryOption {
   parent_id: string | null;
 }
 
+interface TagOption {
+  id: string;
+  name: string;
+}
+
+function TagChecklist({
+  tags,
+  checkedIds,
+}: {
+  tags: TagOption[];
+  checkedIds?: string[];
+}) {
+  if (tags.length === 0) {
+    return <p className="text-sm text-muted">No tags yet -- add some in Admin → Tags.</p>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-2 border border-line bg-surface p-4">
+      {tags.map((tag) => (
+        <label key={tag.id} className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name="tag_ids"
+            value={tag.id}
+            defaultChecked={checkedIds?.includes(tag.id)}
+          />
+          {tag.name}
+        </label>
+      ))}
+    </div>
+  );
+}
+
 const TIER_LABELS = ["Category", "Group", "Item"] as const;
 const TIER_STYLES = [
   "bg-foreground text-background",
@@ -88,6 +121,7 @@ interface ProductFormValues {
   is_popular?: boolean;
   image_url?: string;
   categoryIds?: string[];
+  tagIds?: string[];
   options?: ProductOptionsDefaults;
   highlights?: ProductHighlightsDefaults;
 }
@@ -99,6 +133,7 @@ export function ProductForm({
   submitLabel,
   extraAction,
   categories,
+  tags,
 }: {
   action: (formData: FormData) => void;
   defaultValues?: ProductFormValues;
@@ -106,6 +141,7 @@ export function ProductForm({
   submitLabel: string;
   extraAction?: React.ReactNode;
   categories: CategoryOption[];
+  tags: TagOption[];
 }) {
   return (
     <form action={action} className="mt-8 flex max-w-lg flex-col gap-5">
@@ -227,6 +263,13 @@ export function ProductForm({
           <CategoryTree categories={categories} checkedIds={defaultValues?.categoryIds} />
         </Field>
       )}
+
+      <Field
+        label="Tags"
+        hint="Shown as clickable labels on the product page. Manage the tag list from Admin → Tags."
+      >
+        <TagChecklist tags={tags} checkedIds={defaultValues?.tagIds} />
+      </Field>
 
       <Field
         label="Options"

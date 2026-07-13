@@ -16,11 +16,11 @@ import {
   SelectedVariantInfo,
 } from "@/components/ProductDetailInteractive";
 import { ProductCard } from "@/components/ProductCard";
-import { ViewingCounter } from "@/components/ViewingCounter";
 import { ProductInfoTabs } from "@/components/ProductInfoTabs";
 import { StarRating } from "@/components/StarRating";
 import { ReviewsTabContent } from "@/components/ReviewsTabContent";
 import { HighlightIcon } from "@/components/highlightIcons";
+import { WishlistButton } from "@/components/WishlistButton";
 
 export const revalidate = 60;
 export const dynamicParams = true; // render on-demand for slugs not in the list below
@@ -64,6 +64,9 @@ export default async function ProductDetailPage({
     .map((pc) => pc.categories?.slug)
     .filter((slug): slug is string => !!slug);
   const categoryName = product.product_categories[0]?.categories?.name;
+  const tags = product.product_tags
+    .map((pt) => pt.tags)
+    .filter((tag): tag is { name: string; slug: string } => !!tag);
   const recommended = await getRecommendedProducts(product.id, categorySlugs);
   const sale = getSaleInfo(product.price_cents, product.compare_at_price_cents);
   const reviewsEnabled = siteSettings.reviews_enabled;
@@ -122,13 +125,6 @@ export default async function ProductDetailPage({
               </div>
             )}
 
-            {product.sku && (
-              <div className="mt-4 text-xs uppercase tracking-wide text-muted">
-                <span className="font-medium text-foreground">SKU</span>{" "}
-                {product.sku}
-              </div>
-            )}
-
             {product.product_option_types.length === 0 && (
               <>
                 <div className="mt-4 flex items-baseline gap-3">
@@ -166,9 +162,50 @@ export default async function ProductDetailPage({
               </ul>
             )}
 
-            <ViewingCounter productId={product.id} />
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <ProductAddToCart />
+              </div>
+              <WishlistButton productId={product.id} />
+            </div>
 
-            <ProductAddToCart />
+            <dl className="mt-6 space-y-1.5 text-sm">
+              {categoryName && (
+                <div className="flex gap-2">
+                  <dt className="text-muted">Category:</dt>
+                  <dd>
+                    <Link
+                      href={`/products?category=${product.product_categories[0]?.categories?.slug}`}
+                      className="text-foreground underline-offset-4 hover:underline"
+                    >
+                      {categoryName}
+                    </Link>
+                  </dd>
+                </div>
+              )}
+              {tags.length > 0 && (
+                <div className="flex gap-2">
+                  <dt className="text-muted">Tags:</dt>
+                  <dd className="flex flex-wrap gap-x-2">
+                    {tags.map((tag) => (
+                      <Link
+                        key={tag.slug}
+                        href={`/products?tag=${tag.slug}`}
+                        className="text-foreground underline-offset-4 hover:underline"
+                      >
+                        {tag.name}
+                      </Link>
+                    ))}
+                  </dd>
+                </div>
+              )}
+              {product.sku && (
+                <div className="flex gap-2">
+                  <dt className="text-muted">SKU:</dt>
+                  <dd className="text-foreground">{product.sku}</dd>
+                </div>
+              )}
+            </dl>
           </div>
         </div>
 
@@ -201,7 +238,7 @@ export default async function ProductDetailPage({
       {recommended.length > 0 && (
         <section className="mt-20 border-t border-line pt-12">
           <h2 className="font-display text-2xl font-bold text-foreground">
-            You may also like
+            Related items
           </h2>
           <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
             {recommended.map((item) => (

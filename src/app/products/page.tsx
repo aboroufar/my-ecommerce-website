@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getActiveProducts, getCategories, type Category, type ProductSort } from "@/lib/products";
+import { getActiveProducts, getCategories, getTags, type Category, type ProductSort } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { SortDropdown } from "@/components/SortDropdown";
 import { ShopSidebar } from "@/components/ShopSidebar";
@@ -18,17 +18,19 @@ const validSorts: ProductSort[] = ["newest", "price-asc", "price-desc", "name-as
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; sort?: string }>;
+  searchParams: Promise<{ category?: string; tag?: string; sort?: string }>;
 }) {
-  const { category, sort } = await searchParams;
+  const { category, tag, sort } = await searchParams;
   const activeSort = validSorts.includes(sort as ProductSort)
     ? (sort as ProductSort)
     : "newest";
 
-  const [products, allCategories] = await Promise.all([
-    getActiveProducts({ categorySlug: category, sort: activeSort }),
+  const [products, allCategories, allTags] = await Promise.all([
+    getActiveProducts({ categorySlug: category, tagSlug: tag, sort: activeSort }),
     getCategories(),
+    tag ? getTags() : Promise.resolve([]),
   ]);
+  const activeTag = allTags.find((t) => t.slug === tag);
   // Display-only categories are homepage-grid decoration, not real
   // filters -- keep them out of the shop sidebar/category tree.
   const categories = allCategories.filter((c) => !c.display_only);
@@ -55,7 +57,7 @@ export default async function ProductsPage({
       <div className="border-b border-line bg-surface px-6 py-4">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <SortDropdown current={activeSort} />
-          <Breadcrumb categoryName={activeCategory?.name} />
+          <Breadcrumb categoryName={activeCategory?.name ?? activeTag?.name} />
         </div>
       </div>
 
@@ -77,12 +79,12 @@ export default async function ProductsPage({
               Catalog
             </span>
             <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
-              {activeCategory?.name ?? "Shop all"}
+              {activeCategory?.name ?? activeTag?.name ?? "Shop all"}
             </h1>
           </div>
 
           {products.length === 0 ? (
-            <EmptyState hasFilter={!!category} />
+            <EmptyState hasFilter={!!category || !!tag} />
           ) : (
             <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
               {products.map((product) => (

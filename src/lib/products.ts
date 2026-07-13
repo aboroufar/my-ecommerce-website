@@ -69,6 +69,10 @@ export interface ProductHighlight {
   sort_order: number;
 }
 
+export interface ProductTagRef {
+  tags: { name: string; slug: string } | null;
+}
+
 export interface ProductDetail extends Omit<ProductSummary, "product_reviews"> {
   description: string | null;
   sku: string | null;
@@ -79,6 +83,7 @@ export interface ProductDetail extends Omit<ProductSummary, "product_reviews"> {
   product_variants: ProductVariant[];
   product_reviews: ProductReview[];
   product_highlights: ProductHighlight[];
+  product_tags: ProductTagRef[];
 }
 
 /**
@@ -182,6 +187,7 @@ const sortColumns: Record<ProductSort, { column: string; ascending: boolean }> =
  */
 export async function getActiveProducts(options?: {
   categorySlug?: string;
+  tagSlug?: string;
   sort?: ProductSort;
 }): Promise<ProductSummary[]> {
   try {
@@ -191,7 +197,7 @@ export async function getActiveProducts(options?: {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating)"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating), product_tags(tags(slug))"
       )
       .eq("status", "active")
       .order(column, { ascending });
@@ -201,8 +207,19 @@ export async function getActiveProducts(options?: {
       return [];
     }
 
-    const products = data ?? [];
-    if (!options?.categorySlug) return products;
+    let products = data ?? [];
+
+    if (options?.tagSlug) {
+      products = products.filter((p) =>
+        p.product_tags.some((pt) => pt.tags?.slug === options.tagSlug)
+      );
+    }
+
+    // product_tags is only needed for the filter above -- ProductSummary
+    // doesn't carry tags, so strip it back off before returning.
+    const withoutTags = products.map(({ product_tags, ...rest }) => rest);
+
+    if (!options?.categorySlug) return withoutTags;
 
     // Filtering by category needs to match not just the exact category but
     // also its descendants -- picking "Skincare" (a group-level category)
@@ -215,7 +232,7 @@ export async function getActiveProducts(options?: {
     // to select-string interpolation here).
     const categories = await getCategories();
     const matchSlugs = descendantSlugs(categories, options.categorySlug);
-    return products.filter((p) =>
+    return withoutTags.filter((p) =>
       p.product_categories.some(
         (pc) => pc.categories && matchSlugs.has(pc.categories.slug)
       )
@@ -316,6 +333,37 @@ export async function getCategories(options?: {
   }
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+/**
+ * Fetches all tags, alphabetically -- used by the admin tag picker and by
+ * /products for tag-filter breadcrumbs. Unlike categories, tags have no
+ * "has active products" visibility rule; they're a flat, admin-managed
+ * list.
+ */
+export async function getTags(): Promise<Tag[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("tags")
+      .select("id, name, slug")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("getTags error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("getTags failed (Supabase not configured?):", err);
+    return [];
+  }
+}
+
 /**
  * Searches active products by name/description substring match.
  * Returns an empty array for a blank query, on error, or if Supabase isn't
@@ -407,7 +455,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at), product_highlights(id, label, icon, sort_order)"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at), product_highlights(id, label, icon, sort_order), product_tags(tags(name, slug))"
       )
       .eq("slug", slug)
       .eq("status", "active")
