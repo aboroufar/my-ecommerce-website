@@ -45,6 +45,26 @@ export function RichTextEditor({
     if (url) exec("createLink", url);
   }
 
+  function handlePaste(e: React.ClipboardEvent<HTMLDivElement>) {
+    e.preventDefault();
+
+    const html = e.clipboardData.getData("text/html");
+    const text = e.clipboardData.getData("text/plain");
+
+    if (html) {
+      const clean = sanitizePastedHtml(html);
+      document.execCommand("insertHTML", false, clean);
+    } else if (text) {
+      const paragraphs = text
+        .split(/\r?\n{2,}/)
+        .map((block) => `<p>${escapeHtml(block).replace(/\r?\n/g, "<br>")}</p>`)
+        .join("");
+      document.execCommand("insertHTML", false, paragraphs || escapeHtml(text));
+    }
+
+    syncHtml();
+  }
+
   async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -94,6 +114,7 @@ export function RichTextEditor({
         contentEditable
         onInput={syncHtml}
         onBlur={syncHtml}
+        onPaste={handlePaste}
         className="prose-blog min-h-[16rem] px-4 py-3 text-sm text-foreground focus:outline-none [&_blockquote]:border-l-2 [&_blockquote]:border-accent [&_blockquote]:pl-4 [&_blockquote]:italic [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-bold [&_h3]:font-display [&_h3]:text-lg [&_h3]:font-bold [&_img]:my-2 [&_img]:max-w-full [&_p]:my-2"
         suppressContentEditableWarning
       />
@@ -127,4 +148,67 @@ function ToolbarButton({
 
 function Divider() {
   return <span className="mx-1 h-4 w-px bg-line" />;
+}
+
+const ALLOWED_TAGS = new Set([
+  "P",
+  "H2",
+  "H3",
+  "BLOCKQUOTE",
+  "UL",
+  "OL",
+  "LI",
+  "B",
+  "STRONG",
+  "I",
+  "EM",
+  "A",
+  "BR",
+  "IMG",
+]);
+
+// Pasted HTML (from Word, Google Docs, other sites) carries inline styles,
+// classes, and tags this editor has no toolbar for -- strip it down to the
+// same vocabulary the toolbar produces so pasted content renders consistently.
+function sanitizePastedHtml(dirtyHtml: string): string {
+  const container = document.createElement("div");
+  container.innerHTML = dirtyHtml;
+
+  function clean(node: Node) {
+    for (const child of Array.from(node.childNodes)) {
+      if (child.nodeType === Node.TEXT_NODE) continue;
+
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        node.removeChild(child);
+        continue;
+      }
+
+      const el = child as HTMLElement;
+
+      if (!ALLOWED_TAGS.has(el.tagName)) {
+        if (el.tagName !== "SCRIPT" && el.tagName !== "STYLE") {
+          while (el.firstChild) node.insertBefore(el.firstChild, el);
+        }
+        node.removeChild(el);
+        continue;
+      }
+
+      for (const attr of Array.from(el.attributes)) {
+        if (el.tagName === "A" && attr.name === "href") continue;
+        if (el.tagName === "IMG" && (attr.name === "src" || attr.name === "alt")) continue;
+        el.removeAttribute(attr.name);
+      }
+
+      clean(el);
+    }
+  }
+
+  clean(container);
+  return container.innerHTML;
+}
+
+function escapeHtml(value: string): string {
+  const div = document.createElement("div");
+  div.textContent = value;
+  return div.innerHTML;
 }
