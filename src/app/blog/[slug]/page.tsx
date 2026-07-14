@@ -9,8 +9,11 @@ import {
   getRelatedPosts,
 } from "@/lib/blog";
 import { getTags } from "@/lib/products";
+import { getSiteSettings } from "@/lib/siteSettings";
 import { BlogPostCard } from "@/components/BlogPostCard";
 import { BlogSidebar } from "@/components/BlogSidebar";
+import { BlogShareRow } from "@/components/BlogShareRow";
+import { SocialIconLink } from "@/components/SocialIconLink";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -40,11 +43,12 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [post, categories, tags, recentPosts] = await Promise.all([
+  const [post, categories, tags, sidebarPosts, settings] = await Promise.all([
     getPostBySlug(slug),
     getBlogCategories(),
     getTags(),
     getPublishedPosts(),
+    getSiteSettings(),
   ]);
 
   if (!post) notFound();
@@ -121,22 +125,33 @@ export default async function BlogPostPage({
             dangerouslySetInnerHTML={{ __html: post.body_html }}
           />
 
-          {postTags.length > 0 && (
-            <div className="mt-10 flex flex-wrap items-center gap-2 border-t border-line pt-6">
-              <span className="text-xs font-medium uppercase tracking-wide text-muted">
-                Tags:
-              </span>
-              {postTags.map((tag) => (
-                <Link
-                  key={tag.slug}
-                  href={`/blog?tag=${tag.slug}`}
-                  className="rounded-full bg-surface px-3 py-1 text-xs text-foreground transition-colors hover:bg-line/60"
-                >
-                  {tag.name}
-                </Link>
-              ))}
-            </div>
-          )}
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
+            {postTags.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="text-sm font-semibold text-foreground">
+                  Tags:
+                </span>
+                {postTags.map((tag, i) => (
+                  <span key={tag.slug} className="flex items-center gap-2">
+                    <Link
+                      href={`/blog?tag=${tag.slug}`}
+                      className="text-sm text-muted underline underline-offset-4 transition-colors hover:text-foreground"
+                    >
+                      {tag.name}
+                    </Link>
+                    {i < postTags.length - 1 && (
+                      <span className="text-muted" aria-hidden>
+                        ,
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span />
+            )}
+            <BlogShareRow title={post.title} />
+          </div>
 
           {hasAuthor && (
             <div className="mt-10 flex gap-4 rounded-lg bg-surface p-6">
@@ -160,36 +175,27 @@ export default async function BlogPostPage({
                     {post.author_bio}
                   </p>
                 )}
-                <div className="mt-3 flex items-center gap-3">
+                <div className="mt-3 flex items-center gap-2">
                   {post.author_facebook_url && (
-                    <a
+                    <SocialIconLink
+                      platform="facebook"
+                      label={`${post.author_name} on Facebook`}
                       href={post.author_facebook_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-accent underline underline-offset-4"
-                    >
-                      Facebook
-                    </a>
+                    />
                   )}
                   {post.author_twitter_url && (
-                    <a
+                    <SocialIconLink
+                      platform="twitter"
+                      label={`${post.author_name} on Twitter`}
                       href={post.author_twitter_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-accent underline underline-offset-4"
-                    >
-                      Twitter
-                    </a>
+                    />
                   )}
                   {post.author_linkedin_url && (
-                    <a
+                    <SocialIconLink
+                      platform="linkedin"
+                      label={`${post.author_name} on LinkedIn`}
                       href={post.author_linkedin_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-accent underline underline-offset-4"
-                    >
-                      LinkedIn
-                    </a>
+                    />
                   )}
                 </div>
               </div>
@@ -210,7 +216,12 @@ export default async function BlogPostPage({
           )}
         </article>
 
-        <BlogSidebar categories={categories} tags={tags} recentPosts={recentPosts.slice(0, 4)} />
+        <BlogSidebar
+          categories={categories}
+          tags={tags}
+          relatedPosts={sidebarPosts.slice(0, 4)}
+          settings={settings}
+        />
       </div>
     </main>
   );

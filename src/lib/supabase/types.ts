@@ -1001,6 +1001,10 @@ export type Database = {
           reviews_enabled: boolean
           site_logo_url: string
           site_name: string
+          social_facebook_url: string
+          social_instagram_url: string
+          social_linkedin_url: string
+          social_twitter_url: string
           updated_at: string
         }
         Insert: {
@@ -1018,6 +1022,10 @@ export type Database = {
           reviews_enabled?: boolean
           site_logo_url?: string
           site_name?: string
+          social_facebook_url?: string
+          social_instagram_url?: string
+          social_linkedin_url?: string
+          social_twitter_url?: string
           updated_at?: string
         }
         Update: {
@@ -1035,6 +1043,10 @@ export type Database = {
           reviews_enabled?: boolean
           site_logo_url?: string
           site_name?: string
+          social_facebook_url?: string
+          social_instagram_url?: string
+          social_linkedin_url?: string
+          social_twitter_url?: string
           updated_at?: string
         }
         Relationships: []

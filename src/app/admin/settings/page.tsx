@@ -107,6 +107,54 @@ export default async function AdminSettingsPage({
             product -- customers can&apos;t submit new reviews and existing
             ones stay hidden, but nothing is deleted.
           </p>
+          <div>
+            <span className="text-xs text-muted">Social links</span>
+            <p className="mt-1 text-xs text-muted/70">
+              Shown in the blog sidebar&apos;s &quot;Follow Us&quot; row.
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-4">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Facebook URL</span>
+                <input
+                  name="social_facebook_url"
+                  type="url"
+                  defaultValue={settings.social_facebook_url}
+                  placeholder="https://facebook.com/..."
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Twitter/X URL</span>
+                <input
+                  name="social_twitter_url"
+                  type="url"
+                  defaultValue={settings.social_twitter_url}
+                  placeholder="https://x.com/..."
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">LinkedIn URL</span>
+                <input
+                  name="social_linkedin_url"
+                  type="url"
+                  defaultValue={settings.social_linkedin_url}
+                  placeholder="https://linkedin.com/..."
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Instagram URL</span>
+                <input
+                  name="social_instagram_url"
+                  type="url"
+                  defaultValue={settings.social_instagram_url}
+                  placeholder="https://instagram.com/..."
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+          </div>
           <button
             type="submit"
             className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"

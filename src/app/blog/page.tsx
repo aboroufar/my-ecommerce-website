@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getPublishedPosts, getBlogCategories, searchPosts } from "@/lib/blog";
 import { getTags } from "@/lib/products";
+import { getSiteSettings } from "@/lib/siteSettings";
 import { BlogPostCard } from "@/components/BlogPostCard";
 import { BlogSidebar } from "@/components/BlogSidebar";
 
@@ -20,13 +21,14 @@ export default async function BlogPage({
   const { category, tag, q } = await searchParams;
   const trimmedQuery = q?.trim() ?? "";
 
-  const [posts, categories, tags, recentPosts] = await Promise.all([
+  const [posts, categories, tags, relatedPosts, settings] = await Promise.all([
     trimmedQuery
       ? searchPosts(trimmedQuery)
       : getPublishedPosts({ categorySlug: category, tagSlug: tag }),
     getBlogCategories(),
     getTags(),
     getPublishedPosts(),
+    getSiteSettings(),
   ]);
 
   const activeCategory = categories.find((c) => c.slug === category);
@@ -73,7 +75,8 @@ export default async function BlogPage({
         <BlogSidebar
           categories={categories}
           tags={tags}
-          recentPosts={recentPosts.slice(0, 4)}
+          relatedPosts={relatedPosts.slice(0, 4)}
+          settings={settings}
           activeCategorySlug={category}
           activeTagSlug={tag}
         />
