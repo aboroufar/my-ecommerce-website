@@ -53,7 +53,7 @@ export function AddToCartButton({
   return (
     <div>
       <div className="mt-8 flex items-stretch gap-3">
-        <div className="flex items-center border border-line">
+        <div className="flex items-center rounded-full border border-line">
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -80,7 +80,7 @@ export function AddToCartButton({
         <button
           onClick={handleAdd}
           disabled={disabled}
-          className="flex-1 bg-foreground px-6 py-4 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-100"
+          className="flex-1 rounded-full bg-foreground px-6 py-4 text-sm font-medium uppercase tracking-wide text-background transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-100 disabled:hover:translate-y-0 disabled:hover:shadow-none"
         >
           {disabled ? "Select options" : added ? "Added ✓" : "Add to cart"}
         </button>

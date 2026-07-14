@@ -56,7 +56,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
         )}
         <Link
           href={current.link_url}
-          className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-background hover:text-foreground"
+          className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:bg-background hover:text-foreground hover:shadow-md"
         >
           Read more
         </Link>

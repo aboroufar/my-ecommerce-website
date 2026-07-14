@@ -48,7 +48,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   }
 
   return (
-    <div className="group relative">
+    <div className="group relative transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-1">
       <div className="absolute right-3 top-3 z-10 flex flex-col gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <button
           type="button"
@@ -80,7 +80,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
       </div>
 
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden rounded-lg border border-line bg-surface">
+        <div className="relative aspect-square overflow-hidden rounded-lg border border-line bg-surface shadow-sm transition-shadow duration-300 group-hover:shadow-md">
           {(sale.onSale || product.is_popular) && (
             <div className="absolute left-3 top-3 z-10 flex gap-1.5">
               {sale.onSale && (
@@ -139,7 +139,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           type="button"
           onClick={handleAddToCart}
           aria-label={`Add ${product.name} to cart`}
-          className="flex h-8 w-8 shrink-0 items-center justify-center border border-accent text-accent transition-colors hover:bg-accent hover:text-background"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent text-accent transition-colors hover:bg-accent hover:text-background"
         >
           <CartPlusIcon />
         </button>

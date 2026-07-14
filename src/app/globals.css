@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FFFFFF;
-  --foreground: #10235E;
-  --accent: #FE9A31;
-  --accent-soft: #FDE6CC;
-  --surface: #F5F7FA;
-  --muted: #6B7A99;
-  --line: #E3E8F0;
-  --sale: #4A7FE0;
+  --background: #FAF8F4;
+  --foreground: #222222;
+  --accent: #B48A63;
+  --accent-soft: #F4EFE8;
+  --secondary-accent: #7A9D8C;
+  --surface: #FFFFFF;
+  --muted: #666666;
+  --line: #E8E2DB;
+  --sale: #C4694F;
 }
 
 @theme inline {
@@ -16,13 +17,14 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-secondary-accent: var(--secondary-accent);
   --color-surface: var(--surface);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-sale: var(--sale);
   --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --font-display: var(--font-geologica), var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-playfair), var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 body {

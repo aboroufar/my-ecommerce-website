@@ -68,7 +68,7 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={status === "loading"}
-        className="self-start rounded-full bg-accent px-8 py-3 text-sm font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="self-start rounded-full bg-accent px-8 py-3 text-sm font-semibold uppercase tracking-wide text-background transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
       >
         {status === "loading" ? "Sending…" : "Submit"}
       </button>

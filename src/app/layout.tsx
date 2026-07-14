@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Geologica, Inter } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CartProvider } from "@/components/CartProvider";
 import { WishlistProvider } from "@/components/WishlistProvider";
 
-const geologica = Geologica({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-geologica",
+  variable: "--font-playfair",
 });
 
 const inter = Inter({
@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${geologica.variable} ${inter.variable}`}>
+    <html lang="en" className={`h-full antialiased ${playfair.variable} ${inter.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
         <CartProvider>
           <WishlistProvider>

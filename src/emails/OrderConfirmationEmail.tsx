@@ -14,11 +14,11 @@ import {
 } from "react-email";
 
 const colors = {
-  background: "#FAFAF8",
-  foreground: "#1C1E1B",
-  accent: "#2F4538",
-  muted: "#6B6F68",
-  line: "#DEDCD2",
+  background: "#FAF8F4",
+  foreground: "#222222",
+  accent: "#B48A63",
+  muted: "#666666",
+  line: "#E8E2DB",
 };
 
 function formatPrice(cents: number, currency: string) {
