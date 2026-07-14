@@ -102,6 +102,12 @@ export type Database = {
       }
       blog_posts: {
         Row: {
+          author_bio: string
+          author_facebook_url: string
+          author_linkedin_url: string
+          author_name: string
+          author_photo_url: string
+          author_twitter_url: string
           body_html: string
           cover_image_url: string | null
           created_at: string
@@ -114,6 +120,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          author_bio?: string
+          author_facebook_url?: string
+          author_linkedin_url?: string
+          author_name?: string
+          author_photo_url?: string
+          author_twitter_url?: string
           body_html?: string
           cover_image_url?: string | null
           created_at?: string
@@ -126,6 +138,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          author_bio?: string
+          author_facebook_url?: string
+          author_linkedin_url?: string
+          author_name?: string
+          author_photo_url?: string
+          author_twitter_url?: string
           body_html?: string
           cover_image_url?: string | null
           created_at?: string

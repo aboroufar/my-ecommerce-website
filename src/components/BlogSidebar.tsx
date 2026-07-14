@@ -1,15 +1,20 @@
 import Link from "next/link";
 import type { BlogCategory, BlogPostSummary } from "@/lib/blog";
+import type { Tag } from "@/lib/products";
 import { BlogSearchBox } from "./BlogSearchBox";
 
 export function BlogSidebar({
   categories,
+  tags,
   recentPosts,
   activeCategorySlug,
+  activeTagSlug,
 }: {
   categories: BlogCategory[];
+  tags: Tag[];
   recentPosts: BlogPostSummary[];
   activeCategorySlug?: string;
+  activeTagSlug?: string;
 }) {
   return (
     <aside className="w-full shrink-0 space-y-8 lg:w-72">
@@ -48,6 +53,29 @@ export function BlogSidebar({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {tags.length > 0 && (
+        <div className="rounded-lg bg-surface p-6">
+          <h2 className="font-display text-base font-bold text-foreground">
+            Tags
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <Link
+                key={tag.id}
+                href={`/blog?tag=${tag.slug}`}
+                className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                  activeTagSlug === tag.slug
+                    ? "bg-foreground text-background"
+                    : "bg-background text-foreground hover:bg-line/60"
+                }`}
+              >
+                {tag.name}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

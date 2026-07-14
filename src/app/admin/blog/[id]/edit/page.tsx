@@ -18,7 +18,7 @@ export default async function EditPostPage({
     supabase
       .from("blog_posts")
       .select(
-        "id, title, slug, excerpt, cover_image_url, body_html, status, blog_post_categories(category_id), blog_post_tags(tag_id)"
+        "id, title, slug, excerpt, cover_image_url, body_html, status, author_name, author_photo_url, author_bio, author_facebook_url, author_twitter_url, author_linkedin_url, blog_post_categories(category_id), blog_post_tags(tag_id)"
       )
       .eq("id", id)
       .single(),
@@ -52,6 +52,12 @@ export default async function EditPostPage({
           status: post.status as "draft" | "published",
           categoryIds,
           tagIds,
+          author_name: post.author_name,
+          author_photo_url: post.author_photo_url,
+          author_bio: post.author_bio,
+          author_facebook_url: post.author_facebook_url,
+          author_twitter_url: post.author_twitter_url,
+          author_linkedin_url: post.author_linkedin_url,
         }}
         extraAction={
           <form action={deleteWithId}>

@@ -8,7 +8,7 @@ import {
   getBlogCategories,
   getRelatedPosts,
 } from "@/lib/blog";
-import { getSiteSettings } from "@/lib/siteSettings";
+import { getTags } from "@/lib/products";
 import { BlogPostCard } from "@/components/BlogPostCard";
 import { BlogSidebar } from "@/components/BlogSidebar";
 
@@ -40,10 +40,10 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [post, categories, settings, recentPosts] = await Promise.all([
+  const [post, categories, tags, recentPosts] = await Promise.all([
     getPostBySlug(slug),
     getBlogCategories(),
-    getSiteSettings(),
+    getTags(),
     getPublishedPosts(),
   ]);
 
@@ -61,7 +61,7 @@ export default async function BlogPostPage({
     postCategories.map((c) => c.slug)
   );
 
-  const hasAuthor = !!settings.blog_author_name;
+  const hasAuthor = !!post.author_name;
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
@@ -140,11 +140,11 @@ export default async function BlogPostPage({
 
           {hasAuthor && (
             <div className="mt-10 flex gap-4 rounded-lg bg-surface p-6">
-              {settings.blog_author_photo_url && (
+              {post.author_photo_url && (
                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full">
                   <Image
-                    src={settings.blog_author_photo_url}
-                    alt={settings.blog_author_name}
+                    src={post.author_photo_url}
+                    alt={post.author_name}
                     fill
                     sizes="80px"
                     className="object-cover"
@@ -153,17 +153,17 @@ export default async function BlogPostPage({
               )}
               <div>
                 <h2 className="font-display text-lg font-bold text-foreground">
-                  {settings.blog_author_name}
+                  {post.author_name}
                 </h2>
-                {settings.blog_author_bio && (
+                {post.author_bio && (
                   <p className="mt-1 text-sm leading-relaxed text-muted">
-                    {settings.blog_author_bio}
+                    {post.author_bio}
                   </p>
                 )}
                 <div className="mt-3 flex items-center gap-3">
-                  {settings.blog_author_facebook_url && (
+                  {post.author_facebook_url && (
                     <a
-                      href={settings.blog_author_facebook_url}
+                      href={post.author_facebook_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-accent underline underline-offset-4"
@@ -171,9 +171,9 @@ export default async function BlogPostPage({
                       Facebook
                     </a>
                   )}
-                  {settings.blog_author_twitter_url && (
+                  {post.author_twitter_url && (
                     <a
-                      href={settings.blog_author_twitter_url}
+                      href={post.author_twitter_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-accent underline underline-offset-4"
@@ -181,9 +181,9 @@ export default async function BlogPostPage({
                       Twitter
                     </a>
                   )}
-                  {settings.blog_author_linkedin_url && (
+                  {post.author_linkedin_url && (
                     <a
-                      href={settings.blog_author_linkedin_url}
+                      href={post.author_linkedin_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-accent underline underline-offset-4"
@@ -210,7 +210,7 @@ export default async function BlogPostPage({
           )}
         </article>
 
-        <BlogSidebar categories={categories} recentPosts={recentPosts.slice(0, 4)} />
+        <BlogSidebar categories={categories} tags={tags} recentPosts={recentPosts.slice(0, 4)} />
       </div>
     </main>
   );

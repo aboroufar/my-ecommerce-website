@@ -30,6 +30,12 @@ const postSchema = z.object({
   cover_image_url: z.union([z.string().min(1), z.literal("")]).optional(),
   body_html: z.string().optional().default(""),
   status: z.enum(["draft", "published"]),
+  author_name: z.string().optional().default(""),
+  author_photo_url: z.string().optional().default(""),
+  author_bio: z.string().optional().default(""),
+  author_facebook_url: z.string().optional().default(""),
+  author_twitter_url: z.string().optional().default(""),
+  author_linkedin_url: z.string().optional().default(""),
 });
 
 async function setPostCategories(postId: string, categoryIds: string[]) {
@@ -210,36 +216,4 @@ export async function deleteBlogCategory(id: string) {
   revalidatePath("/admin/blog/categories");
   revalidatePath("/blog", "layout");
   redirect("/admin/blog/categories");
-}
-
-const authorSchema = z.object({
-  blog_author_name: z.string().optional().default(""),
-  blog_author_photo_url: z.string().optional().default(""),
-  blog_author_bio: z.string().optional().default(""),
-  blog_author_facebook_url: z.string().optional().default(""),
-  blog_author_twitter_url: z.string().optional().default(""),
-  blog_author_linkedin_url: z.string().optional().default(""),
-});
-
-export async function updateBlogAuthor(formData: FormData) {
-  await requireAdmin();
-
-  const parsed = authorSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) {
-    redirect(`/admin/settings?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
-  }
-
-  const supabase = createAdminClient();
-  const { error } = await supabase
-    .from("site_settings")
-    .update({ ...parsed.data, updated_at: new Date().toISOString() })
-    .eq("id", true);
-
-  if (error) {
-    redirect(`/admin/settings?error=${encodeURIComponent(error.message)}`);
-  }
-
-  revalidatePath("/blog", "layout");
-  revalidatePath("/admin/settings");
-  redirect("/admin/settings?saved=1");
 }

@@ -2,7 +2,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addAdmin, removeAdmin } from "@/lib/actions/admins";
 import { getSiteSettings } from "@/lib/siteSettings";
 import { updateSiteSettings } from "@/lib/actions/siteSettings";
-import { updateBlogAuthor } from "@/lib/actions/blog";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 
 export const dynamic = "force-dynamic";
@@ -113,81 +112,6 @@ export default async function AdminSettingsPage({
             className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
           >
             Save site information
-          </button>
-        </form>
-      </div>
-
-      <div className="mt-14 border-t border-line pt-10">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
-          Blog author
-        </h2>
-        <p className="mt-2 max-w-lg text-sm text-muted">
-          Shown at the bottom of every blog post -- one profile shared
-          across all posts.
-        </p>
-
-        <form action={updateBlogAuthor} className="mt-6 max-w-lg space-y-4">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted">Name</span>
-            <input
-              name="blog_author_name"
-              defaultValue={settings.blog_author_name}
-              className="border border-line bg-transparent px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted">Photo</span>
-            <ImageUploadField
-              defaultValue={settings.blog_author_photo_url}
-              fieldName="blog_author_photo_url"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted">Bio</span>
-            <textarea
-              name="blog_author_bio"
-              rows={3}
-              defaultValue={settings.blog_author_bio}
-              className="border border-line bg-transparent px-3 py-2 text-sm"
-            />
-          </label>
-          <div className="grid grid-cols-3 gap-4">
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted">Facebook URL</span>
-              <input
-                name="blog_author_facebook_url"
-                type="url"
-                defaultValue={settings.blog_author_facebook_url}
-                placeholder="https://facebook.com/..."
-                className="border border-line bg-transparent px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted">Twitter/X URL</span>
-              <input
-                name="blog_author_twitter_url"
-                type="url"
-                defaultValue={settings.blog_author_twitter_url}
-                placeholder="https://x.com/..."
-                className="border border-line bg-transparent px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted">LinkedIn URL</span>
-              <input
-                name="blog_author_linkedin_url"
-                type="url"
-                defaultValue={settings.blog_author_linkedin_url}
-                placeholder="https://linkedin.com/..."
-                className="border border-line bg-transparent px-3 py-2 text-sm"
-              />
-            </label>
-          </div>
-          <button
-            type="submit"
-            className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
-          >
-            Save author profile
           </button>
         </form>
       </div>

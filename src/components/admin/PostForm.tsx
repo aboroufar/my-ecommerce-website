@@ -22,6 +22,12 @@ interface PostFormValues {
   status?: "draft" | "published";
   categoryIds?: string[];
   tagIds?: string[];
+  author_name?: string;
+  author_photo_url?: string;
+  author_bio?: string;
+  author_facebook_url?: string;
+  author_twitter_url?: string;
+  author_linkedin_url?: string;
 }
 
 export function PostForm({
@@ -142,6 +148,68 @@ export function PostForm({
           <option value="published">Published</option>
         </select>
       </Field>
+
+      <div className="mt-4 border-t border-line pt-5">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted">
+          Author
+        </span>
+        <p className="mt-1 text-xs text-muted">
+          Shown at the end of this post. Leave blank to hide the author box.
+        </p>
+
+        <div className="mt-4 flex flex-col gap-4">
+          <Field label="Name">
+            <input
+              name="author_name"
+              defaultValue={defaultValues?.author_name ?? ""}
+              className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </Field>
+          <Field label="Photo">
+            <ImageUploadField
+              defaultValue={defaultValues?.author_photo_url ?? ""}
+              fieldName="author_photo_url"
+            />
+          </Field>
+          <Field label="Bio">
+            <textarea
+              name="author_bio"
+              rows={3}
+              defaultValue={defaultValues?.author_bio ?? ""}
+              className="border border-line bg-transparent px-3 py-2 text-sm"
+            />
+          </Field>
+          <div className="grid grid-cols-3 gap-4">
+            <Field label="Facebook URL">
+              <input
+                name="author_facebook_url"
+                type="url"
+                defaultValue={defaultValues?.author_facebook_url ?? ""}
+                placeholder="https://facebook.com/..."
+                className="border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label="Twitter/X URL">
+              <input
+                name="author_twitter_url"
+                type="url"
+                defaultValue={defaultValues?.author_twitter_url ?? ""}
+                placeholder="https://x.com/..."
+                className="border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label="LinkedIn URL">
+              <input
+                name="author_linkedin_url"
+                type="url"
+                defaultValue={defaultValues?.author_linkedin_url ?? ""}
+                placeholder="https://linkedin.com/..."
+                className="border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </Field>
+          </div>
+        </div>
+      </div>
 
       <div className="mt-2 flex items-center gap-4">
         <button

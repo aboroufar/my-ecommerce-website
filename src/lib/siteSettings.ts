@@ -8,12 +8,6 @@ export interface SiteSettings {
   header_address: string;
   categories_menu_label: string;
   reviews_enabled: boolean;
-  blog_author_name: string;
-  blog_author_photo_url: string;
-  blog_author_bio: string;
-  blog_author_facebook_url: string;
-  blog_author_twitter_url: string;
-  blog_author_linkedin_url: string;
 }
 
 const defaults: SiteSettings = {
@@ -24,12 +18,6 @@ const defaults: SiteSettings = {
   header_address: "",
   categories_menu_label: "Categories",
   reviews_enabled: true,
-  blog_author_name: "",
-  blog_author_photo_url: "",
-  blog_author_bio: "",
-  blog_author_facebook_url: "",
-  blog_author_twitter_url: "",
-  blog_author_linkedin_url: "",
 };
 
 /**
@@ -44,7 +32,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const { data, error } = await supabase
       .from("site_settings")
       .select(
-        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label, reviews_enabled, blog_author_name, blog_author_photo_url, blog_author_bio, blog_author_facebook_url, blog_author_twitter_url, blog_author_linkedin_url"
+        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label, reviews_enabled"
       )
       .eq("id", true)
       .maybeSingle();

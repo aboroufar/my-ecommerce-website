@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPublishedPosts, getBlogCategories, searchPosts } from "@/lib/blog";
+import { getTags } from "@/lib/products";
 import { BlogPostCard } from "@/components/BlogPostCard";
 import { BlogSidebar } from "@/components/BlogSidebar";
 
@@ -14,20 +15,22 @@ export const metadata: Metadata = {
 export default async function BlogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; q?: string }>;
+  searchParams: Promise<{ category?: string; tag?: string; q?: string }>;
 }) {
-  const { category, q } = await searchParams;
+  const { category, tag, q } = await searchParams;
   const trimmedQuery = q?.trim() ?? "";
 
-  const [posts, categories, recentPosts] = await Promise.all([
+  const [posts, categories, tags, recentPosts] = await Promise.all([
     trimmedQuery
       ? searchPosts(trimmedQuery)
-      : getPublishedPosts({ categorySlug: category }),
+      : getPublishedPosts({ categorySlug: category, tagSlug: tag }),
     getBlogCategories(),
+    getTags(),
     getPublishedPosts(),
   ]);
 
   const activeCategory = categories.find((c) => c.slug === category);
+  const activeTag = tags.find((t) => t.slug === tag);
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
@@ -38,7 +41,7 @@ export default async function BlogPage({
         <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
           {trimmedQuery
             ? `Results for "${trimmedQuery}"`
-            : (activeCategory?.name ?? "All posts")}
+            : (activeCategory?.name ?? activeTag?.name ?? "All posts")}
         </h1>
       </div>
 
@@ -49,7 +52,7 @@ export default async function BlogPage({
               <p className="font-display text-lg text-foreground">
                 {trimmedQuery ? "No posts match your search." : "No posts yet."}
               </p>
-              {(trimmedQuery || category) && (
+              {(trimmedQuery || category || tag) && (
                 <Link
                   href="/blog"
                   className="mt-3 inline-block text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4"
@@ -69,8 +72,10 @@ export default async function BlogPage({
 
         <BlogSidebar
           categories={categories}
+          tags={tags}
           recentPosts={recentPosts.slice(0, 4)}
           activeCategorySlug={category}
+          activeTagSlug={tag}
         />
       </div>
     </main>

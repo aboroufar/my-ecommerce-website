@@ -27,6 +27,12 @@ export interface BlogPostSummary {
 export interface BlogPostDetail extends BlogPostSummary {
   body_html: string;
   blog_post_tags: BlogTagRef[];
+  author_name: string;
+  author_photo_url: string;
+  author_bio: string;
+  author_facebook_url: string;
+  author_twitter_url: string;
+  author_linkedin_url: string;
 }
 
 const POST_SUMMARY_SELECT =
@@ -129,7 +135,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPostDetail | null
     const { data, error } = await supabase
       .from("blog_posts")
       .select(
-        "id, title, slug, excerpt, cover_image_url, body_html, published_at, blog_post_categories(blog_categories(name, slug)), blog_post_tags(tags(name, slug))"
+        "id, title, slug, excerpt, cover_image_url, body_html, published_at, author_name, author_photo_url, author_bio, author_facebook_url, author_twitter_url, author_linkedin_url, blog_post_categories(blog_categories(name, slug)), blog_post_tags(tags(name, slug))"
       )
       .eq("slug", slug)
       .eq("status", "published")
