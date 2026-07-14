@@ -87,9 +87,12 @@ export function PostForm({
         />
       </Field>
 
-      <Field label="Body">
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted">
+          Body
+        </span>
         <RichTextEditor defaultValue={defaultValues?.body_html ?? ""} />
-      </Field>
+      </div>
 
       {categories.length > 0 && (
         <Field label="Categories">
