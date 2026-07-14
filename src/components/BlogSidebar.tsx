@@ -109,23 +109,6 @@ export function BlogSidebar({
         </div>
       )}
 
-      <Link
-        href="/products"
-        className="group relative block aspect-[4/3] overflow-hidden rounded-lg"
-      >
-        <Image
-          src="https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80"
-          alt="Shop skincare"
-          fill
-          sizes="288px"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent p-5 text-background">
-          <span className="font-display text-3xl font-bold">$37</span>
-          <span className="mt-1 text-sm font-medium">Best skin care</span>
-        </div>
-      </Link>
-
       {tags.length > 0 && (
         <div>
           <h2 className="font-display text-base font-bold text-foreground">
