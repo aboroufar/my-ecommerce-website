@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleButton } from "./SignInForm";
 
 export function SignUpForm() {
   const [email, setEmail] = useState("");
@@ -30,18 +31,38 @@ export function SignUpForm() {
     setStatus("sent");
   }
 
+  async function handleGoogleSignIn() {
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/account`,
+      },
+    });
+    if (error) setError(error.message);
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-20">
       <h1 className="font-display text-2xl font-bold text-foreground">
         Create account
       </h1>
 
+      <GoogleButton onClick={handleGoogleSignIn} />
+
+      <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-wide text-muted">
+        <span className="h-px flex-1 bg-line" />
+        or
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
       {status === "sent" ? (
-        <p className="mt-6 text-sm text-foreground">
+        <p className="text-sm text-foreground">
           Check your email to confirm your account.
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <label className="flex flex-col gap-2">
             <span className="text-xs font-medium uppercase tracking-wide text-foreground">
               Email*
