@@ -15,6 +15,7 @@ const requestSchema = z.object({
       })
     )
     .min(1, "Cart is empty"),
+  discountCode: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const { items } = parsed.data;
+  const { items, discountCode } = parsed.data;
 
   const supabase = createAdminClient();
 
@@ -162,12 +163,43 @@ export async function POST(req: NextRequest) {
   }
 
   const currency = productMap.get(items[0].productId)!.currency;
-  const totalCents = items.reduce((sum, item) => {
+  const subtotalCents = items.reduce((sum, item) => {
     const product = productMap.get(item.productId)!;
     const variant = item.variantId ? variantMap.get(item.variantId) : undefined;
     const unitPrice = variant?.price_cents ?? product.price_cents;
     return sum + unitPrice * item.quantity;
   }, 0);
+
+  // Re-validate the discount code server-side, exactly like the
+  // /api/discount-codes/validate endpoint -- duplicated rather than
+  // called internally so this runs in the same server-trusted context as
+  // the rest of checkout (prices are always re-derived from Supabase,
+  // never trusted from the client). If the code is invalid/expired by
+  // now, checkout still proceeds without a discount rather than failing.
+  let appliedDiscount: { code: string; type: string; value: number; discountCents: number } | null = null;
+  if (discountCode) {
+    const { data: discount } = await supabase
+      .from("discount_codes")
+      .select("code, type, value, active, expires_at")
+      .eq("code", discountCode.trim().toUpperCase())
+      .maybeSingle();
+
+    const isValid =
+      discount &&
+      discount.active &&
+      (!discount.expires_at || new Date(discount.expires_at) >= new Date());
+
+    if (isValid && discount) {
+      const discountCents =
+        discount.type === "percent"
+          ? Math.round((subtotalCents * discount.value) / 100)
+          : Math.min(discount.value, subtotalCents);
+      appliedDiscount = { code: discount.code, type: discount.type, value: discount.value, discountCents };
+    }
+  }
+
+  const discountCents = appliedDiscount?.discountCents ?? 0;
+  const totalCents = Math.max(0, subtotalCents - discountCents);
 
   // Create a pending order first so the webhook has something to update
   // once Stripe confirms payment -- avoids trusting anything from the
@@ -179,6 +211,8 @@ export async function POST(req: NextRequest) {
       total_cents: totalCents,
       currency,
       customer_id: user?.id ?? null,
+      discount_code: appliedDiscount?.code ?? null,
+      discount_cents: discountCents,
     })
     .select("id")
     .single();
@@ -255,6 +289,21 @@ export async function POST(req: NextRequest) {
 
   try {
     const stripe = getStripe();
+
+    // A fresh one-time Stripe Coupon is created per checkout attempt
+    // (rather than syncing a persistent Coupon per discount_codes row) so
+    // discount_codes stays the single source of truth -- no Stripe
+    // Dashboard object to keep in sync when a code is edited/deleted.
+    let couponId: string | undefined;
+    if (appliedDiscount) {
+      const coupon = await stripe.coupons.create(
+        appliedDiscount.type === "percent"
+          ? { duration: "once", percent_off: appliedDiscount.value }
+          : { duration: "once", amount_off: appliedDiscount.discountCents, currency }
+      );
+      couponId = coupon.id;
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: items.map((item) => {
@@ -274,6 +323,7 @@ export async function POST(req: NextRequest) {
       }),
       shipping_address_collection: { allowed_countries: ["IT"] },
       payment_method_types: ["card", "klarna", "satispay", "paypal"],
+      ...(couponId ? { discounts: [{ coupon: couponId }] } : {}),
       ...(stripeCustomerId
         ? { customer: stripeCustomerId, customer_update: { shipping: "auto" } }
         : { customer_email: user?.email ?? undefined }),

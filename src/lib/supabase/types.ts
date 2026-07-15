@@ -390,6 +390,36 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          type: string
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          type: string
+          value: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          type?: string
+          value?: number
+        }
+        Relationships: []
+      }
       help_categories: {
         Row: {
           created_at: string
@@ -651,6 +681,8 @@ export type Database = {
           created_at: string
           currency: string
           customer_id: string | null
+          discount_cents: number
+          discount_code: string | null
           id: string
           shipping_address: Json | null
           status: string
@@ -662,6 +694,8 @@ export type Database = {
           created_at?: string
           currency?: string
           customer_id?: string | null
+          discount_cents?: number
+          discount_code?: string | null
           id?: string
           shipping_address?: Json | null
           status?: string
@@ -673,6 +707,8 @@ export type Database = {
           created_at?: string
           currency?: string
           customer_id?: string | null
+          discount_cents?: number
+          discount_code?: string | null
           id?: string
           shipping_address?: Json | null
           status?: string

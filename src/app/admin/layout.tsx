@@ -110,6 +110,12 @@ export default async function AdminLayout({
             Help
           </Link>
           <Link
+            href="/admin/discounts"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Discounts
+          </Link>
+          <Link
             href="/admin/settings"
             className="text-sm text-muted transition-colors hover:text-foreground"
           >

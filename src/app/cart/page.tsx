@@ -13,6 +13,45 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
 
+  const [discountInput, setDiscountInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; discountCents: number } | null>(null);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
+
+  const currency = items[0]?.currency ?? "eur";
+  const discountCents = appliedDiscount?.discountCents ?? 0;
+  const totalCents = Math.max(0, subtotalCents - discountCents);
+
+  async function handleApplyDiscount() {
+    if (!discountInput.trim()) return;
+    setDiscountError(null);
+    setIsValidatingDiscount(true);
+    try {
+      const res = await fetch("/api/discount-codes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: discountInput.trim(), subtotalCents }),
+      });
+      const body = await res.json();
+      if (!body.valid) {
+        setDiscountError(body.error ?? "This code isn't valid.");
+        setAppliedDiscount(null);
+        return;
+      }
+      setAppliedDiscount({ code: body.code, discountCents: body.discountCents });
+    } catch {
+      setDiscountError("Could not check that code. Please try again.");
+    } finally {
+      setIsValidatingDiscount(false);
+    }
+  }
+
+  function handleRemoveDiscount() {
+    setAppliedDiscount(null);
+    setDiscountInput("");
+    setDiscountError(null);
+  }
+
   async function handleCheckout() {
     setError(null);
     setProfileIncomplete(false);
@@ -27,6 +66,7 @@ export default function CartPage() {
             variantId: i.variantId,
             quantity: i.quantity,
           })),
+          discountCode: appliedDiscount?.code,
         }),
       });
 
@@ -141,15 +181,80 @@ export default function CartPage() {
         })}
       </ul>
 
-      <div className="mt-8 flex items-center justify-between border-t border-line pt-6">
-        <span className="text-sm text-muted">Subtotal</span>
-        <span className="font-display text-xl text-foreground">
-          {formatPrice(subtotalCents, items[0]?.currency ?? "eur")}
-        </span>
+      <div className="mt-8 border-t border-line pt-6">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted">Subtotal</span>
+          <span className="text-sm text-foreground">
+            {formatPrice(subtotalCents, currency)}
+          </span>
+        </div>
+
+        {appliedDiscount && (
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-sm text-muted">
+              Discount ({appliedDiscount.code})
+            </span>
+            <span className="text-sm text-foreground">
+              −{formatPrice(discountCents, currency)}
+            </span>
+          </div>
+        )}
+
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-sm text-muted">Shipping</span>
+          <span className="text-sm text-foreground">Calculated at checkout</span>
+        </div>
+
+        <div className="mt-4 flex items-end justify-between border-t border-line pt-4">
+          <span className="text-sm text-foreground">Total</span>
+          <span className="font-display text-xl text-foreground">
+            {formatPrice(totalCents, currency)}
+          </span>
+        </div>
+        <p className="mt-1 text-right text-xs text-muted">VAT included</p>
       </div>
-      <p className="mt-1 text-xs text-muted">
-        Shipping and taxes calculated at checkout.
-      </p>
+
+      <details className="mt-6 border border-line">
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-foreground marker:content-none">
+          Discount code
+        </summary>
+        <div className="border-t border-line p-4">
+          {appliedDiscount ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-foreground">
+                <span className="font-medium">{appliedDiscount.code}</span> applied
+              </span>
+              <button
+                type="button"
+                onClick={handleRemoveDiscount}
+                className="text-xs text-muted underline underline-offset-4 hover:text-foreground"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                value={discountInput}
+                onChange={(e) => setDiscountInput(e.target.value)}
+                placeholder="Enter code"
+                className="flex-1 border border-line bg-transparent px-3 py-2 text-sm uppercase"
+              />
+              <button
+                type="button"
+                onClick={handleApplyDiscount}
+                disabled={isValidatingDiscount || !discountInput.trim()}
+                className="border border-line px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isValidatingDiscount ? "Checking…" : "Apply"}
+              </button>
+            </div>
+          )}
+          {discountError && (
+            <p className="mt-2 text-xs text-red-700">{discountError}</p>
+          )}
+        </div>
+      </details>
 
       {error && (
         <p className="mt-4 text-sm text-red-700">
