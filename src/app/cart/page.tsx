@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { formatPrice } from "@/lib/format";
 import { cartLineKey } from "@/lib/cart-types";
+import { createClient } from "@/lib/supabase/client";
+import { OrderSummary } from "@/components/OrderSummary";
+
+const DISCOUNT_STORAGE_KEY = "storefront:checkout-discount";
 
 export default function CartPage() {
+  const router = useRouter();
   const { items, subtotalCents, removeItem, setQuantity } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
 
   const [discountInput, setDiscountInput] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; discountCents: number } | null>(null);
@@ -20,7 +27,11 @@ export default function CartPage() {
 
   const currency = items[0]?.currency ?? "eur";
   const discountCents = appliedDiscount?.discountCents ?? 0;
-  const totalCents = Math.max(0, subtotalCents - discountCents);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setSignedIn(!!data.user));
+  }, []);
 
   async function handleApplyDiscount() {
     if (!discountInput.trim()) return;
@@ -53,6 +64,19 @@ export default function CartPage() {
   }
 
   async function handleCheckout() {
+    // Signed-in shoppers see a review step (billing address + order
+    // summary) before paying; guests have no saved billing address to
+    // show there, so they keep going straight to Stripe as before.
+    if (signedIn) {
+      if (appliedDiscount) {
+        sessionStorage.setItem(DISCOUNT_STORAGE_KEY, JSON.stringify(appliedDiscount));
+      } else {
+        sessionStorage.removeItem(DISCOUNT_STORAGE_KEY);
+      }
+      router.push("/checkout/review");
+      return;
+    }
+
     setError(null);
     setProfileIncomplete(false);
     setIsCheckingOut(true);
@@ -181,37 +205,13 @@ export default function CartPage() {
         })}
       </ul>
 
-      <div className="mt-8 border-t border-line pt-6">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted">Subtotal</span>
-          <span className="text-sm text-foreground">
-            {formatPrice(subtotalCents, currency)}
-          </span>
-        </div>
-
-        {appliedDiscount && (
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-sm text-muted">
-              Discount ({appliedDiscount.code})
-            </span>
-            <span className="text-sm text-foreground">
-              −{formatPrice(discountCents, currency)}
-            </span>
-          </div>
-        )}
-
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-sm text-muted">Shipping</span>
-          <span className="text-sm text-foreground">Calculated at checkout</span>
-        </div>
-
-        <div className="mt-4 flex items-end justify-between border-t border-line pt-4">
-          <span className="text-sm text-foreground">Total</span>
-          <span className="font-display text-xl text-foreground">
-            {formatPrice(totalCents, currency)}
-          </span>
-        </div>
-        <p className="mt-1 text-right text-xs text-muted">VAT included</p>
+      <div className="mt-8">
+        <OrderSummary
+          subtotalCents={subtotalCents}
+          discountCents={discountCents}
+          discountCode={appliedDiscount?.code ?? null}
+          currency={currency}
+        />
       </div>
 
       <details className="mt-6 border border-line">
