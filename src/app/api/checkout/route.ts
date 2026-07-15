@@ -273,6 +273,11 @@ export async function POST(req: NextRequest) {
         };
       }),
       shipping_address_collection: { allowed_countries: ["IT"] },
+      // payment_method_types is intentionally omitted: Checkout Sessions
+      // auto-select from whatever payment methods are enabled in the
+      // Stripe Dashboard and relevant to the session's currency/locale
+      // (SEPA Direct Debit, iDEAL, Bancontact, Klarna, etc.) when this is
+      // left unset -- no per-method code needed on our end.
       ...(stripeCustomerId
         ? { customer: stripeCustomerId, customer_update: { shipping: "auto" } }
         : { customer_email: user?.email ?? undefined }),

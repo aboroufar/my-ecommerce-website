@@ -4,7 +4,9 @@ export function PaymentIcons() {
       <VisaIcon />
       <MastercardIcon />
       <AmexIcon />
-      <DiscoverIcon />
+      <SepaIcon />
+      <IdealIcon />
+      <BancontactIcon />
     </div>
   );
 }
@@ -62,22 +64,50 @@ function AmexIcon() {
   );
 }
 
-function DiscoverIcon() {
+function SepaIcon() {
   return (
-    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Discover">
+    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="SEPA Direct Debit">
       <rect width="48" height="32" rx="4" fill="#f4f4f4" />
       <text
-        x="20"
+        x="24"
         y="20"
         textAnchor="middle"
         fontFamily="Arial, sans-serif"
-        fontSize="7.5"
+        fontSize="10"
         fontWeight="bold"
-        fill="#1a1a1a"
+        fill="#003399"
       >
-        DISCOVER
+        SEPA
       </text>
-      <circle cx="41" cy="16" r="5" fill="#F58020" opacity="0.9" />
+    </svg>
+  );
+}
+
+function IdealIcon() {
+  return (
+    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="iDEAL">
+      <rect width="48" height="32" rx="4" fill="#cc0066" />
+      <text
+        x="24"
+        y="20"
+        textAnchor="middle"
+        fontFamily="Arial, sans-serif"
+        fontSize="10"
+        fontWeight="bold"
+        fill="#ffffff"
+      >
+        iDEAL
+      </text>
+    </svg>
+  );
+}
+
+function BancontactIcon() {
+  return (
+    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Bancontact">
+      <rect width="48" height="32" rx="4" fill="#f4f4f4" />
+      <circle cx="19" cy="16" r="8" fill="#005498" />
+      <circle cx="29" cy="16" r="8" fill="#FFD800" />
     </svg>
   );
 }
