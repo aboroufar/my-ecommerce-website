@@ -28,7 +28,7 @@ const faqs: { question: string; answer: React.ReactNode }[] = [
     question: "Where do you ship?",
     answer: (
       <>
-        The United States, Canada, the United Kingdom, and Italy. See{" "}
+        Italy only, for now. See{" "}
         <Link href="/shipping" className="text-foreground underline underline-offset-4">
           Shipping &amp; Delivery
         </Link>{" "}
@@ -39,7 +39,7 @@ const faqs: { question: string; answer: React.ReactNode }[] = [
   {
     question: "How long does shipping take?",
     answer:
-      "Orders ship within 2–3 business days. Shipping is free on orders over $75.",
+      "Orders ship within 2–3 business days. Shipping is free on orders over €75.",
   },
   {
     question: "Do I need an account to check out?",

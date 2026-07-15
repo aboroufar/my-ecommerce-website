@@ -15,6 +15,7 @@ const settingsSchema = z.object({
   // Checkboxes are only present in FormData when checked ("on"), so a
   // missing key means unchecked/false rather than a validation failure.
   reviews_enabled: z.preprocess((v) => v === "on", z.boolean()),
+  help_page_enabled: z.preprocess((v) => v === "on", z.boolean()),
   social_facebook_url: z.string().optional().default(""),
   social_twitter_url: z.string().optional().default(""),
   social_linkedin_url: z.string().optional().default(""),

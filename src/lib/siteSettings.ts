@@ -8,6 +8,7 @@ export interface SiteSettings {
   header_address: string;
   categories_menu_label: string;
   reviews_enabled: boolean;
+  help_page_enabled: boolean;
   social_facebook_url: string;
   social_twitter_url: string;
   social_linkedin_url: string;
@@ -22,6 +23,7 @@ const defaults: SiteSettings = {
   header_address: "",
   categories_menu_label: "Categories",
   reviews_enabled: true,
+  help_page_enabled: true,
   social_facebook_url: "",
   social_twitter_url: "",
   social_linkedin_url: "",
@@ -40,7 +42,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const { data, error } = await supabase
       .from("site_settings")
       .select(
-        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label, reviews_enabled, social_facebook_url, social_twitter_url, social_linkedin_url, social_instagram_url"
+        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label, reviews_enabled, help_page_enabled, social_facebook_url, social_twitter_url, social_linkedin_url, social_instagram_url"
       )
       .eq("id", true)
       .maybeSingle();

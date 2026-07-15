@@ -353,24 +353,95 @@ export type Database = {
       }
       customers: {
         Row: {
+          client_id: string
           created_at: string
           email: string
           id: string
           name: string | null
+          phone: string | null
+          stripe_customer_id: string | null
         }
         Insert: {
+          client_id?: string
           created_at?: string
           email: string
           id: string
           name?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
         }
         Update: {
+          client_id?: string
           created_at?: string
           email?: string
           id?: string
           name?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
         }
         Relationships: []
+      }
+      help_categories: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      help_topics: {
+        Row: {
+          body_html: string
+          category_id: string
+          created_at: string
+          id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          body_html?: string
+          category_id: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          body_html?: string
+          category_id?: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_topics_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "help_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hero_slides: {
         Row: {
@@ -997,6 +1068,7 @@ export type Database = {
           header_address: string
           header_email: string
           header_phone: string
+          help_page_enabled: boolean
           id: boolean
           reviews_enabled: boolean
           site_logo_url: string
@@ -1018,6 +1090,7 @@ export type Database = {
           header_address?: string
           header_email?: string
           header_phone?: string
+          help_page_enabled?: boolean
           id?: boolean
           reviews_enabled?: boolean
           site_logo_url?: string
@@ -1039,6 +1112,7 @@ export type Database = {
           header_address?: string
           header_email?: string
           header_phone?: string
+          help_page_enabled?: boolean
           id?: boolean
           reviews_enabled?: boolean
           site_logo_url?: string

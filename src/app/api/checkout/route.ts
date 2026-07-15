@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
+import { getOrCreateStripeCustomer } from "@/lib/stripeCustomer";
 
 const requestSchema = z.object({
   items: z
@@ -180,6 +181,42 @@ export async function POST(req: NextRequest) {
 
   const origin = req.headers.get("origin") ?? new URL(req.url).origin;
 
+  // For a signed-in shopper, reuse (or create) a Stripe Customer and, if
+  // they have a default saved address, push it onto that Customer so
+  // Stripe's hosted Checkout page pre-fills the shipping fields -- Checkout
+  // has no "pass an address into session.create" param, pre-fill only works
+  // via customer.shipping. Guest checkout is untouched (customer_email path).
+  let stripeCustomerId: string | null = null;
+  if (user) {
+    stripeCustomerId = await getOrCreateStripeCustomer(supabase, user.id, user.email);
+
+    const { data: defaultAddress } = await supabase
+      .from("addresses")
+      .select("line1, line2, city, region, postal_code, country")
+      .eq("customer_id", user.id)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (defaultAddress) {
+      await getStripe().customers.update(stripeCustomerId, {
+        name: user.user_metadata?.name as string | undefined,
+        shipping: {
+          name: (user.user_metadata?.name as string | undefined) ?? user.email ?? "",
+          address: {
+            line1: defaultAddress.line1,
+            line2: defaultAddress.line2 ?? undefined,
+            city: defaultAddress.city,
+            state: defaultAddress.region ?? undefined,
+            postal_code: defaultAddress.postal_code,
+            country: defaultAddress.country,
+          },
+        },
+      });
+    }
+  }
+
   try {
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
@@ -199,8 +236,10 @@ export async function POST(req: NextRequest) {
           },
         };
       }),
-      shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "IT"] },
-      customer_email: user?.email ?? undefined,
+      shipping_address_collection: { allowed_countries: ["IT"] },
+      ...(stripeCustomerId
+        ? { customer: stripeCustomerId, customer_update: { shipping: "auto" } }
+        : { customer_email: user?.email ?? undefined }),
       success_url: `${origin}/checkout/success?order_id=${order.id}`,
       cancel_url: `${origin}/cart`,
       metadata: { order_id: order.id },

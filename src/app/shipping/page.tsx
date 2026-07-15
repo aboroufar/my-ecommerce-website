@@ -31,9 +31,9 @@ export default function ShippingPage() {
             Where we ship
           </h2>
           <p className="mt-2">
-            We currently ship to the United States, Canada, the United
-            Kingdom, and Italy. If your country isn&apos;t listed, checkout
-            won&apos;t be able to collect a shipping address for it yet.
+            We currently ship to Italy only. If your address is outside
+            Italy, checkout won&apos;t be able to collect a shipping address
+            for it yet.
           </p>
         </section>
 
@@ -42,7 +42,7 @@ export default function ShippingPage() {
             Shipping cost
           </h2>
           <p className="mt-2">
-            Free shipping on orders over $75. Standard shipping rates apply
+            Free shipping on orders over €75. Standard shipping rates apply
             below that threshold, calculated at checkout based on your
             address and order weight.
           </p>

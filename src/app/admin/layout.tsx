@@ -104,6 +104,12 @@ export default async function AdminLayout({
             Content
           </Link>
           <Link
+            href="/admin/help"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Help
+          </Link>
+          <Link
             href="/admin/settings"
             className="text-sm text-muted transition-colors hover:text-foreground"
           >

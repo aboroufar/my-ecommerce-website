@@ -48,6 +48,67 @@ export async function addAddress(formData: FormData) {
   redirect("/account/addresses");
 }
 
+export async function updateAddress(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/account");
+
+  const parsed = addressSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(
+      `/account/addresses?edit=${id}&error=${encodeURIComponent(parsed.error.issues[0].message)}`
+    );
+  }
+
+  const { line2, region, ...rest } = parsed.data;
+
+  const { error } = await supabase
+    .from("addresses")
+    .update({
+      ...rest,
+      line2: line2 || null,
+      region: region || null,
+    })
+    .eq("id", id)
+    .eq("customer_id", user.id);
+
+  if (error) {
+    redirect(
+      `/account/addresses?edit=${id}&error=${encodeURIComponent(error.message)}`
+    );
+  }
+
+  revalidatePath("/account/addresses");
+  redirect("/account/addresses");
+}
+
+export async function setDefaultAddress(id: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/account");
+
+  // Only one address per customer should be marked default -- clear the
+  // existing default (if any) before setting the new one, both scoped to
+  // the caller's own rows via RLS regardless.
+  await supabase
+    .from("addresses")
+    .update({ is_default: false })
+    .eq("customer_id", user.id);
+
+  await supabase
+    .from("addresses")
+    .update({ is_default: true })
+    .eq("id", id)
+    .eq("customer_id", user.id);
+
+  revalidatePath("/account/addresses");
+  redirect("/account/addresses");
+}
+
 export async function deleteAddress(id: string) {
   const supabase = await createClient();
   const {

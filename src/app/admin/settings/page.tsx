@@ -107,6 +107,27 @@ export default async function AdminSettingsPage({
             product -- customers can&apos;t submit new reviews and existing
             ones stay hidden, but nothing is deleted.
           </p>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              name="help_page_enabled"
+              defaultChecked={settings.help_page_enabled}
+            />
+            Show the Help page
+          </label>
+          <p className="text-xs text-muted">
+            When off, /help returns a 404. Manage its categories and topics
+            from{" "}
+            <a href="/admin/help" className="text-accent underline underline-offset-4 hover:opacity-80">
+              Admin → Help
+            </a>
+            . Note: a Pages-menu link to /help will still show even when the
+            page itself is disabled -- remove the link separately from{" "}
+            <a href="/admin/menu" className="text-accent underline underline-offset-4 hover:opacity-80">
+              Admin → Menu
+            </a>{" "}
+            if needed.
+          </p>
           <div>
             <span className="text-xs text-muted">Social links</span>
             <p className="mt-1 text-xs text-muted/70">

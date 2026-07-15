@@ -139,7 +139,7 @@ export default function CartPage() {
       <div className="mt-8 flex items-center justify-between border-t border-line pt-6">
         <span className="text-sm text-muted">Subtotal</span>
         <span className="font-display text-xl text-foreground">
-          {formatPrice(subtotalCents, items[0]?.currency ?? "usd")}
+          {formatPrice(subtotalCents, items[0]?.currency ?? "eur")}
         </span>
       </div>
       <p className="mt-1 text-xs text-muted">
