@@ -125,6 +125,42 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Signed-in shoppers must have a complete profile (name, phone, DOB,
+  // gender, and a designated billing address) before checking out. Guests
+  // have no customer row at all, so this only applies when user is set.
+  if (user) {
+    const { data: profile } = await supabase
+      .from("customers")
+      .select("name, phone, date_of_birth, gender")
+      .eq("id", user.id)
+      .single();
+
+    const { data: billingAddress } = await supabase
+      .from("addresses")
+      .select("id")
+      .eq("customer_id", user.id)
+      .eq("is_billing", true)
+      .maybeSingle();
+
+    const profileComplete =
+      !!profile?.name &&
+      !!profile?.phone &&
+      !!profile?.date_of_birth &&
+      !!profile?.gender &&
+      !!billingAddress;
+
+    if (!profileComplete) {
+      return NextResponse.json(
+        {
+          error:
+            "Please complete your profile (name, phone, date of birth, gender, and a billing address) before checking out.",
+          code: "PROFILE_INCOMPLETE",
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const currency = productMap.get(items[0].productId)!.currency;
   const totalCents = items.reduce((sum, item) => {
     const product = productMap.get(item.productId)!;

@@ -4,6 +4,7 @@ import {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
+  setBillingAddress,
 } from "@/lib/actions/addresses";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ interface Address {
   postal_code: string;
   country: string;
   is_default: boolean;
+  is_billing: boolean;
 }
 
 export default async function AddressesPage({
@@ -34,7 +36,9 @@ export default async function AddressesPage({
   const supabase = await createClient();
   const { data: addresses } = await supabase
     .from("addresses")
-    .select("id, line1, line2, city, region, postal_code, country, is_default")
+    .select(
+      "id, line1, line2, city, region, postal_code, country, is_default, is_billing"
+    )
     .order("created_at", { ascending: false });
 
   const editing = edit ? (addresses ?? []).find((a) => a.id === edit) : null;
@@ -66,11 +70,18 @@ export default async function AddressesPage({
             ) : (
               <li key={a.id} className="flex items-start justify-between gap-4 py-4">
                 <div>
-                  {a.is_default && (
-                    <span className="mb-1 inline-block bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-background">
-                      Default
-                    </span>
-                  )}
+                  <div className="mb-1 flex gap-1.5">
+                    {a.is_default && (
+                      <span className="inline-block bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-background">
+                        Default
+                      </span>
+                    )}
+                    {a.is_billing && (
+                      <span className="inline-block bg-foreground px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-background">
+                        Billing
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-foreground">
                     {a.line1}
                     {a.line2 ? `, ${a.line2}` : ""}
@@ -95,6 +106,16 @@ export default async function AddressesPage({
                         className="text-foreground underline underline-offset-4 hover:text-accent"
                       >
                         Set as default
+                      </button>
+                    </form>
+                  )}
+                  {!a.is_billing && (
+                    <form action={setBillingAddress.bind(null, a.id)}>
+                      <button
+                        type="submit"
+                        className="text-foreground underline underline-offset-4 hover:text-accent"
+                      >
+                        Set as billing
                       </button>
                     </form>
                   )}
@@ -187,6 +208,14 @@ function AddressForm({
           ))}
         </select>
       </div>
+      <label className="flex items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          name="is_billing"
+          defaultChecked={address?.is_billing ?? false}
+        />
+        Use as billing address
+      </label>
       <div className="mt-2 flex items-center gap-4">
         <button
           type="submit"

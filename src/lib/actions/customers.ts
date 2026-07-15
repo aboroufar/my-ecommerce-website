@@ -7,7 +7,11 @@ import { createClient } from "@/lib/supabase/server";
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  phone: z.string().optional().default(""),
+  phone: z.string().min(1, "Phone is required"),
+  date_of_birth: z.string().min(1, "Date of birth is required"),
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say"], {
+    message: "Gender is required",
+  }),
 });
 
 export async function updateProfile(formData: FormData) {
@@ -22,14 +26,14 @@ export async function updateProfile(formData: FormData) {
     redirect(`/account?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
   }
 
-  const { name, phone } = parsed.data;
+  const { name, phone, date_of_birth, gender } = parsed.data;
 
   // Uses the logged-in user's own session (not the admin client) -- RLS
   // requires id = auth.uid() for updates, so this simply fails for anyone
   // trying to write another customer's row.
   const { error } = await supabase
     .from("customers")
-    .update({ name, phone: phone || null })
+    .update({ name, phone, date_of_birth, gender })
     .eq("id", user.id);
 
   if (error) {

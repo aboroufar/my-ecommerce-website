@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
+          is_billing: boolean
           is_default: boolean
           line1: string
           line2: string | null
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
+          is_billing?: boolean
           is_default?: boolean
           line1: string
           line2?: string | null
@@ -45,6 +47,7 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
+          is_billing?: boolean
           is_default?: boolean
           line1?: string
           line2?: string | null
@@ -355,7 +358,9 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          date_of_birth: string | null
           email: string
+          gender: string | null
           id: string
           name: string | null
           phone: string | null
@@ -364,7 +369,9 @@ export type Database = {
         Insert: {
           client_id?: string
           created_at?: string
+          date_of_birth?: string | null
           email: string
+          gender?: string | null
           id: string
           name?: string | null
           phone?: string | null
@@ -373,7 +380,9 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string
+          date_of_birth?: string | null
           email?: string
+          gender?: string | null
           id?: string
           name?: string | null
           phone?: string | null

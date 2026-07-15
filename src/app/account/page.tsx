@@ -17,7 +17,7 @@ export default async function AccountOverviewPage({
   const { data: customer } = user
     ? await supabase
         .from("customers")
-        .select("name, phone, client_id")
+        .select("name, phone, client_id, date_of_birth, gender")
         .eq("id", user.id)
         .single()
     : { data: null };
@@ -57,10 +57,38 @@ export default async function AccountOverviewPage({
         <input
           name="phone"
           type="tel"
+          required
           defaultValue={customer?.phone ?? ""}
-          placeholder="Phone number (optional)"
+          placeholder="Phone number"
           className="border border-line bg-transparent px-3 py-2 text-sm"
         />
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs text-muted">Date of birth</span>
+          <input
+            name="date_of_birth"
+            type="date"
+            required
+            defaultValue={customer?.date_of_birth ?? ""}
+            className="border border-line bg-transparent px-3 py-2 text-sm text-foreground"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs text-muted">Gender</span>
+          <select
+            name="gender"
+            required
+            defaultValue={customer?.gender ?? ""}
+            className="border border-line bg-transparent px-3 py-2 text-sm text-foreground"
+          >
+            <option value="" disabled>
+              Select…
+            </option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
+          </select>
+        </label>
         <button
           type="submit"
           className="mt-2 self-start bg-accent px-5 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"

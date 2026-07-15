@@ -11,9 +11,11 @@ export default function CartPage() {
   const { items, subtotalCents, removeItem, setQuantity } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profileIncomplete, setProfileIncomplete] = useState(false);
 
   async function handleCheckout() {
     setError(null);
+    setProfileIncomplete(false);
     setIsCheckingOut(true);
     try {
       const res = await fetch("/api/checkout", {
@@ -30,6 +32,9 @@ export default function CartPage() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
+        if (body.code === "PROFILE_INCOMPLETE") {
+          setProfileIncomplete(true);
+        }
         throw new Error(body.error ?? "Checkout failed. Please try again.");
       }
 
@@ -146,7 +151,20 @@ export default function CartPage() {
         Shipping and taxes calculated at checkout.
       </p>
 
-      {error && <p className="mt-4 text-sm text-red-700">{error}</p>}
+      {error && (
+        <p className="mt-4 text-sm text-red-700">
+          {error}
+          {profileIncomplete && (
+            <>
+              {" "}
+              <Link href="/account" className="underline underline-offset-4">
+                Update your profile
+              </Link>
+              .
+            </>
+          )}
+        </p>
+      )}
 
       <button
         onClick={handleCheckout}

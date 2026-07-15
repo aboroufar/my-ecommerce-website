@@ -12,6 +12,9 @@ const addressSchema = z.object({
   region: z.string().optional().default(""),
   postal_code: z.string().min(1, "Postal code is required"),
   country: z.string().min(1, "Country is required"),
+  // Checkboxes are only present in FormData when checked ("on"), so a
+  // missing key means unchecked/false rather than a validation failure.
+  is_billing: z.preprocess((v) => v === "on", z.boolean()),
 });
 
 export async function addAddress(formData: FormData) {
@@ -28,7 +31,16 @@ export async function addAddress(formData: FormData) {
     );
   }
 
-  const { line2, region, ...rest } = parsed.data;
+  const { line2, region, is_billing, ...rest } = parsed.data;
+
+  // Only one address per customer can be the billing address -- clear any
+  // existing one first, same invariant as is_default (see setDefaultAddress).
+  if (is_billing) {
+    await supabase
+      .from("addresses")
+      .update({ is_billing: false })
+      .eq("customer_id", user.id);
+  }
 
   // Uses the logged-in user's own session (not the admin client) -- RLS
   // requires customer_id = auth.uid(), which also means this insert simply
@@ -38,6 +50,7 @@ export async function addAddress(formData: FormData) {
     ...rest,
     line2: line2 || null,
     region: region || null,
+    is_billing,
   });
 
   if (error) {
@@ -62,7 +75,14 @@ export async function updateAddress(id: string, formData: FormData) {
     );
   }
 
-  const { line2, region, ...rest } = parsed.data;
+  const { line2, region, is_billing, ...rest } = parsed.data;
+
+  if (is_billing) {
+    await supabase
+      .from("addresses")
+      .update({ is_billing: false })
+      .eq("customer_id", user.id);
+  }
 
   const { error } = await supabase
     .from("addresses")
@@ -70,6 +90,7 @@ export async function updateAddress(id: string, formData: FormData) {
       ...rest,
       line2: line2 || null,
       region: region || null,
+      is_billing,
     })
     .eq("id", id)
     .eq("customer_id", user.id);
@@ -79,6 +100,31 @@ export async function updateAddress(id: string, formData: FormData) {
       `/account/addresses?edit=${id}&error=${encodeURIComponent(error.message)}`
     );
   }
+
+  revalidatePath("/account/addresses");
+  redirect("/account/addresses");
+}
+
+export async function setBillingAddress(id: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/account");
+
+  // Only one address per customer should be marked billing -- clear the
+  // existing one (if any) before setting the new one, both scoped to
+  // the caller's own rows via RLS regardless.
+  await supabase
+    .from("addresses")
+    .update({ is_billing: false })
+    .eq("customer_id", user.id);
+
+  await supabase
+    .from("addresses")
+    .update({ is_billing: true })
+    .eq("id", id)
+    .eq("customer_id", user.id);
 
   revalidatePath("/account/addresses");
   redirect("/account/addresses");
