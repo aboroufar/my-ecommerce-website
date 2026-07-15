@@ -4,9 +4,9 @@ export function PaymentIcons() {
       <VisaIcon />
       <MastercardIcon />
       <AmexIcon />
-      <SepaIcon />
-      <IdealIcon />
-      <BancontactIcon />
+      <KlarnaIcon />
+      <SatispayIcon />
+      <PaypalIcon />
     </div>
   );
 }
@@ -64,10 +64,10 @@ function AmexIcon() {
   );
 }
 
-function SepaIcon() {
+function KlarnaIcon() {
   return (
-    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="SEPA Direct Debit">
-      <rect width="48" height="32" rx="4" fill="#f4f4f4" />
+    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Klarna">
+      <rect width="48" height="32" rx="4" fill="#FFB3C7" />
       <text
         x="24"
         y="20"
@@ -75,39 +75,49 @@ function SepaIcon() {
         fontFamily="Arial, sans-serif"
         fontSize="10"
         fontWeight="bold"
-        fill="#003399"
+        fill="#0B051D"
       >
-        SEPA
+        Klarna
       </text>
     </svg>
   );
 }
 
-function IdealIcon() {
+function SatispayIcon() {
   return (
-    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="iDEAL">
-      <rect width="48" height="32" rx="4" fill="#cc0066" />
+    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Satispay">
+      <rect width="48" height="32" rx="4" fill="#DA291C" />
       <text
         x="24"
         y="20"
         textAnchor="middle"
         fontFamily="Arial, sans-serif"
-        fontSize="10"
+        fontSize="8.5"
         fontWeight="bold"
         fill="#ffffff"
       >
-        iDEAL
+        Satispay
       </text>
     </svg>
   );
 }
 
-function BancontactIcon() {
+function PaypalIcon() {
   return (
-    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Bancontact">
-      <rect width="48" height="32" rx="4" fill="#f4f4f4" />
-      <circle cx="19" cy="16" r="8" fill="#005498" />
-      <circle cx="29" cy="16" r="8" fill="#FFD800" />
+    <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="PayPal">
+      <rect width="48" height="32" rx="4" fill="#003087" />
+      <text
+        x="24"
+        y="20"
+        textAnchor="middle"
+        fontFamily="Arial, sans-serif"
+        fontSize="9"
+        fontStyle="italic"
+        fontWeight="bold"
+        fill="#ffffff"
+      >
+        PayPal
+      </text>
     </svg>
   );
 }
