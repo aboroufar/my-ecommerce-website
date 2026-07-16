@@ -7,6 +7,7 @@ import { useCart } from "@/components/CartProvider";
 import { createClient } from "@/lib/supabase/client";
 import { OrderSummary } from "@/components/OrderSummary";
 import { formatPrice } from "@/lib/format";
+import { calculateShippingCents } from "@/lib/shipping";
 
 const DISCOUNT_STORAGE_KEY = "storefront:checkout-discount";
 const COUNTRY_LABELS: Record<string, string> = { IT: "Italy" };
@@ -30,8 +31,17 @@ export default function CheckoutReviewPage() {
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; discountCents: number } | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shippingSettings, setShippingSettings] = useState({
+    flatRateCents: 0,
+    freeThresholdCents: 0,
+  });
 
   const currency = items[0]?.currency ?? "eur";
+  const shippingCents = calculateShippingCents(
+    subtotalCents,
+    shippingSettings.flatRateCents,
+    shippingSettings.freeThresholdCents
+  );
 
   useEffect(() => {
     const stored = sessionStorage.getItem(DISCOUNT_STORAGE_KEY);
@@ -42,6 +52,18 @@ export default function CheckoutReviewPage() {
         // ignore malformed stored value
       }
     }
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/site-settings/shipping")
+      .then((res) => res.json())
+      .then((body) =>
+        setShippingSettings({
+          flatRateCents: body.shippingFlatRateCents,
+          freeThresholdCents: body.freeShippingThresholdCents,
+        })
+      )
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -181,6 +203,7 @@ export default function CheckoutReviewPage() {
           subtotalCents={subtotalCents}
           discountCents={appliedDiscount?.discountCents ?? 0}
           discountCode={appliedDiscount?.code ?? null}
+          shippingCents={shippingCents}
           currency={currency}
         />
       </div>

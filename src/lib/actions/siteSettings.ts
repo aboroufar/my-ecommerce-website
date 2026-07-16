@@ -20,6 +20,16 @@ const settingsSchema = z.object({
   social_twitter_url: z.string().optional().default(""),
   social_linkedin_url: z.string().optional().default(""),
   social_instagram_url: z.string().optional().default(""),
+  // Entered in the form as euros, stored in cents like every other price
+  // field in this codebase (products.price_cents, etc.).
+  shipping_flat_rate_cents: z.coerce
+    .number()
+    .nonnegative("Shipping rate can't be negative")
+    .transform((v) => Math.round(v * 100)),
+  free_shipping_threshold_cents: z.coerce
+    .number()
+    .nonnegative("Free shipping threshold can't be negative")
+    .transform((v) => Math.round(v * 100)),
 });
 
 const categoriesMenuLabelSchema = z.object({

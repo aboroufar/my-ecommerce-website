@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/lib/stripeCustomer";
+import { calculateShippingCents } from "@/lib/shipping";
 
 const requestSchema = z.object({
   items: z
@@ -199,7 +200,23 @@ export async function POST(req: NextRequest) {
   }
 
   const discountCents = appliedDiscount?.discountCents ?? 0;
-  const totalCents = Math.max(0, subtotalCents - discountCents);
+
+  const { data: shippingSettings } = await supabase
+    .from("site_settings")
+    .select("shipping_flat_rate_cents, free_shipping_threshold_cents")
+    .eq("id", true)
+    .maybeSingle();
+
+  // Shipping is calculated on the pre-discount subtotal -- a discount
+  // code brings the product total down but doesn't itself unlock free
+  // shipping, matching standard practice.
+  const shippingCents = calculateShippingCents(
+    subtotalCents,
+    shippingSettings?.shipping_flat_rate_cents ?? 0,
+    shippingSettings?.free_shipping_threshold_cents ?? Infinity
+  );
+
+  const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents;
 
   // Create a pending order first so the webhook has something to update
   // once Stripe confirms payment -- avoids trusting anything from the
@@ -213,6 +230,7 @@ export async function POST(req: NextRequest) {
       customer_id: user?.id ?? null,
       discount_code: appliedDiscount?.code ?? null,
       discount_cents: discountCents,
+      shipping_cents: shippingCents,
     })
     .select("id")
     .single();
@@ -304,6 +322,21 @@ export async function POST(req: NextRequest) {
       couponId = coupon.id;
     }
 
+    // Same one-time-object pattern as the discount coupon above: create a
+    // fresh Shipping Rate per checkout attempt rather than syncing a
+    // persistent Stripe object, so site_settings stays the source of
+    // truth. Skipped entirely when the order qualifies for free shipping
+    // -- Stripe's checkout page then shows no shipping line at all.
+    let shippingRateId: string | undefined;
+    if (shippingCents > 0) {
+      const shippingRate = await stripe.shippingRates.create({
+        display_name: "Standard shipping",
+        type: "fixed_amount",
+        fixed_amount: { amount: shippingCents, currency },
+      });
+      shippingRateId = shippingRate.id;
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: items.map((item) => {
@@ -324,6 +357,9 @@ export async function POST(req: NextRequest) {
       shipping_address_collection: { allowed_countries: ["IT"] },
       payment_method_types: ["card", "klarna", "satispay", "paypal"],
       ...(couponId ? { discounts: [{ coupon: couponId }] } : {}),
+      ...(shippingRateId
+        ? { shipping_options: [{ shipping_rate: shippingRateId }] }
+        : {}),
       ...(stripeCustomerId
         ? { customer: stripeCustomerId, customer_update: { shipping: "auto" } }
         : { customer_email: user?.email ?? undefined }),

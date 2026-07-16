@@ -685,6 +685,7 @@ export type Database = {
           discount_code: string | null
           id: string
           shipping_address: Json | null
+          shipping_cents: number
           status: string
           stripe_payment_intent_id: string | null
           total_cents: number
@@ -698,6 +699,7 @@ export type Database = {
           discount_code?: string | null
           id?: string
           shipping_address?: Json | null
+          shipping_cents?: number
           status?: string
           stripe_payment_intent_id?: string | null
           total_cents: number
@@ -711,6 +713,7 @@ export type Database = {
           discount_code?: string | null
           id?: string
           shipping_address?: Json | null
+          shipping_cents?: number
           status?: string
           stripe_payment_intent_id?: string | null
           total_cents?: number
@@ -1110,12 +1113,14 @@ export type Database = {
           blog_author_photo_url: string
           blog_author_twitter_url: string
           categories_menu_label: string
+          free_shipping_threshold_cents: number
           header_address: string
           header_email: string
           header_phone: string
           help_page_enabled: boolean
           id: boolean
           reviews_enabled: boolean
+          shipping_flat_rate_cents: number
           site_logo_url: string
           site_name: string
           social_facebook_url: string
@@ -1132,12 +1137,14 @@ export type Database = {
           blog_author_photo_url?: string
           blog_author_twitter_url?: string
           categories_menu_label?: string
+          free_shipping_threshold_cents?: number
           header_address?: string
           header_email?: string
           header_phone?: string
           help_page_enabled?: boolean
           id?: boolean
           reviews_enabled?: boolean
+          shipping_flat_rate_cents?: number
           site_logo_url?: string
           site_name?: string
           social_facebook_url?: string
@@ -1154,12 +1161,14 @@ export type Database = {
           blog_author_photo_url?: string
           blog_author_twitter_url?: string
           categories_menu_label?: string
+          free_shipping_threshold_cents?: number
           header_address?: string
           header_email?: string
           header_phone?: string
           help_page_enabled?: boolean
           id?: boolean
           reviews_enabled?: boolean
+          shipping_flat_rate_cents?: number
           site_logo_url?: string
           site_name?: string
           social_facebook_url?: string

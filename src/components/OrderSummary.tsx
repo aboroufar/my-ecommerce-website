@@ -4,14 +4,16 @@ export function OrderSummary({
   subtotalCents,
   discountCents,
   discountCode,
+  shippingCents,
   currency,
 }: {
   subtotalCents: number;
   discountCents: number;
   discountCode: string | null;
+  shippingCents: number;
   currency: string;
 }) {
-  const totalCents = Math.max(0, subtotalCents - discountCents);
+  const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents;
 
   return (
     <div className="border-t border-line pt-6">
@@ -35,7 +37,9 @@ export function OrderSummary({
 
       <div className="mt-2 flex items-center justify-between">
         <span className="text-sm text-muted">Shipping</span>
-        <span className="text-sm text-foreground">Calculated at checkout</span>
+        <span className="text-sm text-foreground">
+          {shippingCents > 0 ? formatPrice(shippingCents, currency) : "Free"}
+        </span>
       </div>
 
       <div className="mt-4 flex items-end justify-between border-t border-line pt-4">

@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/format";
 import { cartLineKey } from "@/lib/cart-types";
 import { createClient } from "@/lib/supabase/client";
 import { OrderSummary } from "@/components/OrderSummary";
+import { calculateShippingCents } from "@/lib/shipping";
 
 const DISCOUNT_STORAGE_KEY = "storefront:checkout-discount";
 
@@ -25,12 +26,34 @@ export default function CartPage() {
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
 
+  const [shippingSettings, setShippingSettings] = useState({
+    flatRateCents: 0,
+    freeThresholdCents: 0,
+  });
+
   const currency = items[0]?.currency ?? "eur";
   const discountCents = appliedDiscount?.discountCents ?? 0;
+  const shippingCents = calculateShippingCents(
+    subtotalCents,
+    shippingSettings.flatRateCents,
+    shippingSettings.freeThresholdCents
+  );
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => setSignedIn(!!data.user));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/site-settings/shipping")
+      .then((res) => res.json())
+      .then((body) =>
+        setShippingSettings({
+          flatRateCents: body.shippingFlatRateCents,
+          freeThresholdCents: body.freeShippingThresholdCents,
+        })
+      )
+      .catch(() => {});
   }, []);
 
   async function handleApplyDiscount() {
@@ -210,6 +233,7 @@ export default function CartPage() {
           subtotalCents={subtotalCents}
           discountCents={discountCents}
           discountCode={appliedDiscount?.code ?? null}
+          shippingCents={shippingCents}
           currency={currency}
         />
       </div>

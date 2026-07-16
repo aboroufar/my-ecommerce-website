@@ -128,6 +128,33 @@ export default async function AdminSettingsPage({
             </a>{" "}
             if needed.
           </p>
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-muted">Standard shipping rate (€)</span>
+              <input
+                name="shipping_flat_rate_cents"
+                type="number"
+                min={0}
+                step="0.01"
+                defaultValue={(settings.shipping_flat_rate_cents / 100).toFixed(2)}
+                className="border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-muted">Free shipping over (€)</span>
+              <input
+                name="free_shipping_threshold_cents"
+                type="number"
+                min={0}
+                step="0.01"
+                defaultValue={(settings.free_shipping_threshold_cents / 100).toFixed(2)}
+                className="border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </label>
+          </div>
+          <p className="text-xs text-muted">
+            Applied automatically at checkout based on order subtotal.
+          </p>
           <div>
             <span className="text-xs text-muted">Social links</span>
             <p className="mt-1 text-xs text-muted/70">
