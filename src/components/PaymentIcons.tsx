@@ -11,7 +11,7 @@ export function PaymentIcons() {
   );
 }
 
-export function VisaIcon() {
+function VisaIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Visa">
       <rect width="48" height="32" rx="4" fill="#1A1F71" />
@@ -31,7 +31,7 @@ export function VisaIcon() {
   );
 }
 
-export function MastercardIcon() {
+function MastercardIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Mastercard">
       <rect width="48" height="32" rx="4" fill="#f4f4f4" />
@@ -45,7 +45,7 @@ export function MastercardIcon() {
   );
 }
 
-export function AmexIcon() {
+function AmexIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="American Express">
       <rect width="48" height="32" rx="4" fill="#2E77BC" />
@@ -64,7 +64,7 @@ export function AmexIcon() {
   );
 }
 
-export function KlarnaIcon() {
+function KlarnaIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Klarna">
       <rect width="48" height="32" rx="4" fill="#FFB3C7" />
@@ -83,7 +83,7 @@ export function KlarnaIcon() {
   );
 }
 
-export function SatispayIcon() {
+function SatispayIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="Satispay">
       <rect width="48" height="32" rx="4" fill="#DA291C" />
@@ -102,7 +102,7 @@ export function SatispayIcon() {
   );
 }
 
-export function PaypalIcon() {
+function PaypalIcon() {
   return (
     <svg viewBox="0 0 48 32" className="h-6 w-auto" role="img" aria-label="PayPal">
       <rect width="48" height="32" rx="4" fill="#003087" />
