@@ -168,7 +168,7 @@ export default function CartPage() {
               const sale = getSaleInfo(item.priceCents, item.compareAtPriceCents ?? null);
               return (
                 <li key={lineKey} className="flex items-start gap-4 py-6">
-                  <div className="h-24 w-24 shrink-0 overflow-hidden rounded-md border border-line bg-accent-soft">
+                  <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-line bg-accent-soft">
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
@@ -211,7 +211,7 @@ export default function CartPage() {
                     </div>
 
                     {sale.onSale && (
-                      <span className="mt-1 inline-block bg-sale px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-background">
+                      <span className="mt-1 inline-block rounded-full bg-sale px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-background">
                         Special price
                       </span>
                     )}
@@ -229,7 +229,7 @@ export default function CartPage() {
                         >
                           <TrashIcon />
                         </button>
-                        <div className="flex items-center border border-line">
+                        <div className="flex items-center overflow-hidden rounded-full border border-line">
                           <button
                             type="button"
                             onClick={() => setQuantity(lineKey, item.quantity - 1)}
@@ -303,7 +303,7 @@ export default function CartPage() {
         </div>
 
         <div className="lg:sticky lg:top-6 lg:self-start">
-          <div className="border border-line bg-surface p-6">
+          <div className="rounded-lg border border-line bg-surface p-6">
             <OrderSummary
               subtotalCents={subtotalCents}
               discountCents={discountCents}
@@ -330,7 +330,7 @@ export default function CartPage() {
             <button
               onClick={handleCheckout}
               disabled={isCheckingOut}
-              className="mt-6 w-full bg-foreground px-6 py-3 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-6 w-full rounded-full bg-foreground px-6 py-3 text-sm font-medium uppercase tracking-wide text-background transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
             >
               {isCheckingOut ? "Redirecting to payment…" : "Proceed to payment"}
             </button>
@@ -340,7 +340,7 @@ export default function CartPage() {
             </p>
           </div>
 
-          <details className="mt-4 border border-line">
+          <details className="mt-4 rounded-lg border border-line">
             <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-foreground marker:content-none">
               Redeem a discount code
             </summary>
@@ -364,13 +364,13 @@ export default function CartPage() {
                     value={discountInput}
                     onChange={(e) => setDiscountInput(e.target.value)}
                     placeholder="Enter code"
-                    className="flex-1 border border-line bg-transparent px-3 py-2 text-sm uppercase"
+                    className="flex-1 rounded-full border border-line bg-transparent px-4 py-2 text-sm uppercase focus:border-accent focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={handleApplyDiscount}
                     disabled={isValidatingDiscount || !discountInput.trim()}
-                    className="border border-line px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-full border border-line px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isValidatingDiscount ? "Checking…" : "Apply"}
                   </button>

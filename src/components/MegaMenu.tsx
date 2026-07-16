@@ -105,7 +105,7 @@ function CategoriesDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 flex w-max max-w-[95vw] gap-8 rounded-sm bg-background p-6 shadow-xl ring-1 ring-line/60">
+        <div className="absolute left-0 top-full z-50 flex w-max max-w-[95vw] gap-8 rounded-lg border border-line bg-background p-6 shadow-md">
           <ul className="w-52 shrink-0 space-y-0.5">
             {topLevelCategories.map((category) => {
               const hasChildren = (childrenByParent.get(category.id) ?? []).length > 0;
@@ -120,7 +120,7 @@ function CategoriesDropdown({
                   <Link
                     href={`/products?category=${category.slug}`}
                     onMouseEnter={() => setActiveId(category.id)}
-                    className={`flex items-center justify-between rounded-sm px-3 py-2 text-sm font-medium transition-all duration-200 ease-out ${
+                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out ${
                       isActive
                         ? "translate-x-1.5 text-accent"
                         : "text-foreground hover:translate-x-1.5 hover:text-accent"
@@ -195,7 +195,7 @@ function ColumnDropdown({ column }: { column: MenuColumnData }) {
       </button>
 
       {open && column.items.length > 0 && (
-        <div className="absolute left-0 top-full z-50 w-56 border border-line bg-background p-4 shadow-lg">
+        <div className="absolute left-0 top-full z-50 w-56 rounded-lg border border-line bg-background p-4 shadow-md">
           <ul className="space-y-2 normal-case tracking-normal text-muted">
             {column.items.map((item) => (
               <li key={item.id}>

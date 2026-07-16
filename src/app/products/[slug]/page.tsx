@@ -86,7 +86,7 @@ export default async function ProductDetailPage({
 
       <ProductDetailProvider product={product}>
         <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2">
-          <div className="aspect-square overflow-hidden bg-surface">
+          <div className="aspect-square overflow-hidden rounded-lg border border-line bg-surface">
             {images[0] ? (
               <Image
                 src={images[0].url}
@@ -136,7 +136,7 @@ export default async function ProductDetailPage({
                       <span className="text-lg text-muted line-through">
                         {formatPrice(product.compare_at_price_cents!, product.currency)}
                       </span>
-                      <span className="bg-accent px-2 py-1 text-xs font-medium text-background">
+                      <span className="rounded-full bg-sale px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-background">
                         −{sale.percentOff}%
                       </span>
                     </>
