@@ -87,16 +87,16 @@ export default function CartPage() {
   }
 
   async function handleCheckout() {
-    // Signed-in shoppers see a review step (billing address + order
-    // summary) before paying; guests have no saved billing address to
-    // show there, so they keep going straight to Stripe as before.
+    // Signed-in shoppers go through the address/payment/review wizard
+    // before paying; guests have no saved billing address to choose
+    // from, so they keep going straight to Stripe as before.
     if (signedIn) {
       if (appliedDiscount) {
         sessionStorage.setItem(DISCOUNT_STORAGE_KEY, JSON.stringify(appliedDiscount));
       } else {
         sessionStorage.removeItem(DISCOUNT_STORAGE_KEY);
       }
-      router.push("/checkout/review");
+      router.push("/checkout/address");
       return;
     }
 

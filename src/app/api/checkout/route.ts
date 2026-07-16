@@ -17,6 +17,7 @@ const requestSchema = z.object({
     )
     .min(1, "Cart is empty"),
   discountCode: z.string().optional(),
+  paymentMethod: z.enum(["card", "klarna", "satispay", "paypal"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const { items, discountCode } = parsed.data;
+  const { items, discountCode, paymentMethod } = parsed.data;
 
   const supabase = createAdminClient();
 
@@ -355,7 +356,12 @@ export async function POST(req: NextRequest) {
         };
       }),
       shipping_address_collection: { allowed_countries: ["IT"] },
-      payment_method_types: ["card", "klarna", "satispay", "paypal"],
+      // A method chosen in the checkout wizard locks Stripe's hosted page
+      // to just that one, skipping its own method picker; guest checkout
+      // (which never sends paymentMethod) keeps showing all four.
+      payment_method_types: paymentMethod
+        ? [paymentMethod]
+        : ["card", "klarna", "satispay", "paypal"],
       ...(couponId ? { discounts: [{ coupon: couponId }] } : {}),
       ...(shippingRateId
         ? { shipping_options: [{ shipping_rate: shippingRateId }] }

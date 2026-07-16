@@ -6,11 +6,19 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { createClient } from "@/lib/supabase/client";
 import { OrderSummary } from "@/components/OrderSummary";
-import { formatPrice } from "@/lib/format";
 import { calculateShippingCents } from "@/lib/shipping";
+import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 
 const DISCOUNT_STORAGE_KEY = "storefront:checkout-discount";
+const PAYMENT_METHOD_STORAGE_KEY = "storefront:checkout-payment-method";
 const COUNTRY_LABELS: Record<string, string> = { IT: "Italy" };
+
+const METHOD_LABELS: Record<string, string> = {
+  card: "Card",
+  klarna: "Klarna",
+  satispay: "Satispay",
+  paypal: "PayPal",
+};
 
 interface BillingAddress {
   line1: string;
@@ -28,6 +36,7 @@ export default function CheckoutReviewPage() {
   const [checking, setChecking] = useState(true);
   const [name, setName] = useState<string | null>(null);
   const [address, setAddress] = useState<BillingAddress | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; discountCents: number } | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,14 +53,16 @@ export default function CheckoutReviewPage() {
   );
 
   useEffect(() => {
-    const stored = sessionStorage.getItem(DISCOUNT_STORAGE_KEY);
-    if (stored) {
+    const storedDiscount = sessionStorage.getItem(DISCOUNT_STORAGE_KEY);
+    if (storedDiscount) {
       try {
-        setAppliedDiscount(JSON.parse(stored));
+        setAppliedDiscount(JSON.parse(storedDiscount));
       } catch {
         // ignore malformed stored value
       }
     }
+    const storedMethod = sessionStorage.getItem(PAYMENT_METHOD_STORAGE_KEY);
+    if (storedMethod) setPaymentMethod(storedMethod);
   }, []);
 
   useEffect(() => {
@@ -67,11 +78,6 @@ export default function CheckoutReviewPage() {
   }, []);
 
   useEffect(() => {
-    // CartProvider hydrates its items from localStorage in its own
-    // mount-time effect, so `items` from useCart() can still be empty on
-    // this page's very first render even when a cart actually exists.
-    // Reading localStorage directly here avoids redirecting away from a
-    // non-empty cart just because of that hydration race.
     let cartIsEmpty = true;
     try {
       const raw = localStorage.getItem("storefront:cart");
@@ -119,6 +125,7 @@ export default function CheckoutReviewPage() {
             quantity: i.quantity,
           })),
           discountCode: appliedDiscount?.code,
+          paymentMethod,
         }),
       });
 
@@ -128,6 +135,7 @@ export default function CheckoutReviewPage() {
       }
 
       sessionStorage.removeItem(DISCOUNT_STORAGE_KEY);
+      sessionStorage.removeItem(PAYMENT_METHOD_STORAGE_KEY);
       const { url } = await res.json();
       window.location.href = url;
     } catch (err) {
@@ -146,7 +154,9 @@ export default function CheckoutReviewPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-12">
-      <h1 className="font-display text-2xl uppercase tracking-wide text-foreground">
+      <CheckoutSteps current="review" />
+
+      <h1 className="mt-4 font-display text-2xl uppercase tracking-wide text-foreground">
         Check your order
       </h1>
 
@@ -154,7 +164,7 @@ export default function CheckoutReviewPage() {
         <div className="flex items-center justify-between border-b border-line py-4">
           <span className="text-sm font-medium text-foreground">Billing address</span>
           <Link
-            href="/account/addresses"
+            href="/checkout/address"
             className="text-sm text-foreground underline underline-offset-4 hover:text-accent"
           >
             Edit
@@ -178,7 +188,7 @@ export default function CheckoutReviewPage() {
           ) : (
             <p className="text-sm text-muted">
               No billing address on file.{" "}
-              <Link href="/account/addresses" className="underline underline-offset-4">
+              <Link href="/checkout/address" className="underline underline-offset-4">
                 Add one
               </Link>{" "}
               to continue.
@@ -190,10 +200,16 @@ export default function CheckoutReviewPage() {
       <div className="border-t border-line">
         <div className="flex items-center justify-between border-b border-line py-4">
           <span className="text-sm font-medium text-foreground">Payment method</span>
+          <Link
+            href="/checkout/payment"
+            className="text-sm text-foreground underline underline-offset-4 hover:text-accent"
+          >
+            Edit
+          </Link>
         </div>
         <div className="py-4">
-          <p className="text-sm text-muted">
-            Card, Klarna, Satispay, or PayPal — choose on the next step.
+          <p className="text-sm text-foreground">
+            {METHOD_LABELS[paymentMethod] ?? paymentMethod}
           </p>
         </div>
       </div>
@@ -215,12 +231,8 @@ export default function CheckoutReviewPage() {
         disabled={isCheckingOut || !address}
         className="mt-6 w-full bg-accent px-6 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isCheckingOut ? "Redirecting to payment…" : "Proceed to payment"}
+        {isCheckingOut ? "Redirecting to payment…" : "Pay now"}
       </button>
-
-      <p className="mt-4 text-xs text-muted">
-        {formatPrice(subtotalCents, currency)} subtotal · Payment is completed securely on Stripe.
-      </p>
     </main>
   );
 }

@@ -61,6 +61,45 @@ export async function addAddress(formData: FormData) {
   redirect("/account/addresses");
 }
 
+// Same validation + insert logic as addAddress, but returns a result
+// instead of redirecting -- used by the checkout address-selection step.
+export async function addAddressInline(
+  formData: FormData
+): Promise<{ success: true } | { success: false; error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not signed in." };
+
+  const parsed = addressSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  const { line2, region, is_billing, ...rest } = parsed.data;
+
+  if (is_billing) {
+    await supabase
+      .from("addresses")
+      .update({ is_billing: false })
+      .eq("customer_id", user.id);
+  }
+
+  const { error } = await supabase.from("addresses").insert({
+    customer_id: user.id,
+    ...rest,
+    line2: line2 || null,
+    region: region || null,
+    is_billing,
+  });
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/account/addresses");
+  return { success: true };
+}
+
 export async function updateAddress(id: string, formData: FormData) {
   const supabase = await createClient();
   const {
@@ -128,6 +167,36 @@ export async function setBillingAddress(id: string) {
 
   revalidatePath("/account/addresses");
   redirect("/account/addresses");
+}
+
+// Same clear-then-set logic as setBillingAddress, but returns a result
+// instead of redirecting -- used by the checkout address-selection step,
+// which needs to stay on the same page rather than bouncing to
+// /account/addresses.
+export async function setBillingAddressInline(
+  id: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not signed in." };
+
+  await supabase
+    .from("addresses")
+    .update({ is_billing: false })
+    .eq("customer_id", user.id);
+
+  const { error } = await supabase
+    .from("addresses")
+    .update({ is_billing: true })
+    .eq("id", id)
+    .eq("customer_id", user.id);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/account/addresses");
+  return { success: true };
 }
 
 export async function setDefaultAddress(id: string) {
