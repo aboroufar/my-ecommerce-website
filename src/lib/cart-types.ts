@@ -3,6 +3,7 @@ export interface CartItem {
   name: string;
   slug: string;
   priceCents: number; // display only -- server re-validates against DB at checkout
+  compareAtPriceCents?: number | null; // display only -- for the "was" price when on sale
   currency: string;
   imageUrl: string | null;
   quantity: number;

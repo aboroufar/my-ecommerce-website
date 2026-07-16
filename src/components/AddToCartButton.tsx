@@ -40,6 +40,10 @@ export function AddToCartButton({
       name: product.name,
       slug: product.slug,
       priceCents: variant?.priceCents ?? product.price_cents,
+      // A variant's own price isn't necessarily comparable to the parent
+      // product's compare-at price, so only show a "was" price when the
+      // shopper is buying the base product (no variant override).
+      compareAtPriceCents: variant ? null : product.compare_at_price_cents,
       currency: product.currency,
       imageUrl: image?.url ?? null,
       quantity,

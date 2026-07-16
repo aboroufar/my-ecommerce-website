@@ -30,6 +30,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
       name: product.name,
       slug: product.slug,
       priceCents: product.price_cents,
+      compareAtPriceCents: product.compare_at_price_cents,
       currency: product.currency,
       imageUrl: image?.url ?? null,
       quantity: 1,
