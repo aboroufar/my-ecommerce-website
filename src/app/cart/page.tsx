@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { formatPrice, getSaleInfo } from "@/lib/format";
 import { cartLineKey } from "@/lib/cart-types";
@@ -11,15 +10,25 @@ import { createClient } from "@/lib/supabase/client";
 import { OrderSummary } from "@/components/OrderSummary";
 import { calculateShippingCents } from "@/lib/shipping";
 
-const DISCOUNT_STORAGE_KEY = "storefront:checkout-discount";
+const COUNTRY_LABELS: Record<string, string> = { IT: "Italy" };
+
+interface BillingAddress {
+  line1: string;
+  line2: string | null;
+  city: string;
+  region: string | null;
+  postal_code: string;
+  country: string;
+}
 
 export default function CartPage() {
-  const router = useRouter();
   const { items, subtotalCents, removeItem, setQuantity } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [name, setName] = useState<string | null>(null);
+  const [address, setAddress] = useState<BillingAddress | null>(null);
 
   const [discountInput, setDiscountInput] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; discountCents: number } | null>(null);
@@ -41,7 +50,15 @@ export default function CartPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setSignedIn(!!data.user));
+    supabase.auth.getUser().then(async ({ data }) => {
+      setSignedIn(!!data.user);
+      if (!data.user) return;
+      const res = await fetch("/api/account/billing-summary");
+      if (!res.ok) return;
+      const body = await res.json();
+      setName(body.name);
+      setAddress(body.address);
+    });
   }, []);
 
   useEffect(() => {
@@ -87,19 +104,6 @@ export default function CartPage() {
   }
 
   async function handleCheckout() {
-    // Signed-in shoppers see a review step (billing address + order
-    // summary) before paying; guests have no saved billing address to
-    // show there, so they keep going straight to Stripe as before.
-    if (signedIn) {
-      if (appliedDiscount) {
-        sessionStorage.setItem(DISCOUNT_STORAGE_KEY, JSON.stringify(appliedDiscount));
-      } else {
-        sessionStorage.removeItem(DISCOUNT_STORAGE_KEY);
-      }
-      router.push("/checkout/review");
-      return;
-    }
-
     setError(null);
     setProfileIncomplete(false);
     setIsCheckingOut(true);
@@ -258,6 +262,44 @@ export default function CartPage() {
               );
             })}
           </ul>
+
+          {signedIn && (
+            <div className="mt-8 border-t border-line">
+              <div className="flex items-center justify-between border-b border-line py-4">
+                <span className="text-sm font-medium text-foreground">Billing address</span>
+                <Link
+                  href="/account/addresses"
+                  className="text-sm text-foreground underline underline-offset-4 hover:text-accent"
+                >
+                  Edit
+                </Link>
+              </div>
+              <div className="py-4">
+                {address ? (
+                  <div className="text-sm text-foreground">
+                    {name && <p>{name}</p>}
+                    <p>
+                      {address.line1}
+                      {address.line2 ? `, ${address.line2}` : ""}
+                    </p>
+                    <p>
+                      {address.postal_code} {address.city}
+                      {address.region ? `, ${address.region}` : ""}
+                    </p>
+                    <p>{COUNTRY_LABELS[address.country] ?? address.country}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted">
+                    No billing address on file.{" "}
+                    <Link href="/account/addresses" className="underline underline-offset-4">
+                      Add one
+                    </Link>{" "}
+                    before checking out.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="lg:sticky lg:top-6 lg:self-start">
@@ -290,7 +332,7 @@ export default function CartPage() {
               disabled={isCheckingOut}
               className="mt-6 w-full bg-foreground px-6 py-3 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isCheckingOut ? "Redirecting to checkout…" : "Proceed to payment"}
+              {isCheckingOut ? "Redirecting to payment…" : "Proceed to payment"}
             </button>
 
             <p className="mt-4 text-xs text-muted">
