@@ -38,6 +38,25 @@ async function markOrderPaid(
 
   const shipping = session.collected_information?.shipping_details ?? null;
 
+  // A discount code is now redeemed on Stripe's own hosted page
+  // (allow_promotion_codes) rather than applied when the order row was
+  // first created, so the order's total_cents at creation time never
+  // reflects it. session.amount_total is what Stripe actually charged --
+  // always re-derive the order's final total from it here rather than
+  // trusting the pre-checkout figure, same "never trust a stale
+  // client-side/pre-payment price" principle as the rest of checkout.
+  // The webhook event payload doesn't include total_details.breakdown
+  // unless expanded, so re-fetch the session with that expansion to read
+  // back which promotion code (if any) was actually redeemed.
+  const expandedSession = await getStripe().checkout.sessions.retrieve(session.id, {
+    expand: ["total_details.breakdown.discounts"],
+  });
+  const discountCents = expandedSession.total_details?.amount_discount ?? 0;
+  const promotionCode =
+    expandedSession.total_details?.breakdown?.discounts?.[0]?.discount?.promotion_code;
+  const promotionCodeString =
+    typeof promotionCode === "string" ? promotionCode : promotionCode?.code ?? null;
+
   await supabase
     .from("orders")
     .update({
@@ -47,6 +66,9 @@ async function markOrderPaid(
           ? session.payment_intent
           : session.payment_intent?.id ?? null,
       shipping_address: shipping ? JSON.parse(JSON.stringify(shipping)) : null,
+      total_cents: expandedSession.amount_total ?? order.total_cents,
+      discount_cents: discountCents,
+      discount_code: promotionCodeString,
     })
     .eq("id", orderId);
 
@@ -105,7 +127,7 @@ async function markOrderPaid(
         ? `${siteUrl}/account/orders/${orderId}`
         : undefined;
 
-    const totalCents = order.total_cents;
+    const totalCents = expandedSession.amount_total ?? order.total_cents;
 
     await sendOrderConfirmationEmail({
       to: customerEmail,

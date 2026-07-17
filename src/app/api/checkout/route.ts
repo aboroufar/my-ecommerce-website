@@ -16,7 +16,6 @@ const requestSchema = z.object({
       })
     )
     .min(1, "Cart is empty"),
-  discountCode: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +26,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const { items, discountCode } = parsed.data;
+  const { items } = parsed.data;
 
   const supabase = createAdminClient();
 
@@ -171,36 +170,12 @@ export async function POST(req: NextRequest) {
     return sum + unitPrice * item.quantity;
   }, 0);
 
-  // Re-validate the discount code server-side, exactly like the
-  // /api/discount-codes/validate endpoint -- duplicated rather than
-  // called internally so this runs in the same server-trusted context as
-  // the rest of checkout (prices are always re-derived from Supabase,
-  // never trusted from the client). If the code is invalid/expired by
-  // now, checkout still proceeds without a discount rather than failing.
-  let appliedDiscount: { code: string; type: string; value: number; discountCents: number } | null = null;
-  if (discountCode) {
-    const { data: discount } = await supabase
-      .from("discount_codes")
-      .select("code, type, value, active, expires_at")
-      .eq("code", discountCode.trim().toUpperCase())
-      .maybeSingle();
-
-    const isValid =
-      discount &&
-      discount.active &&
-      (!discount.expires_at || new Date(discount.expires_at) >= new Date());
-
-    if (isValid && discount) {
-      const discountCents =
-        discount.type === "percent"
-          ? Math.round((subtotalCents * discount.value) / 100)
-          : Math.min(discount.value, subtotalCents);
-      appliedDiscount = { code: discount.code, type: discount.type, value: discount.value, discountCents };
-    }
-  }
-
-  const discountCents = appliedDiscount?.discountCents ?? 0;
-
+  // Discount codes are no longer applied here -- the shopper redeems one
+  // directly on Stripe's hosted Checkout page (allow_promotion_codes
+  // below), and the webhook reconciles orders.total_cents/discount_cents
+  // from the actual Stripe session once payment succeeds. The order is
+  // created here at the pre-discount total; see markOrderPaid in
+  // src/app/api/webhooks/stripe/route.ts for the reconciliation.
   const { data: shippingSettings } = await supabase
     .from("site_settings")
     .select("shipping_flat_rate_cents, free_shipping_threshold_cents")
@@ -216,11 +191,15 @@ export async function POST(req: NextRequest) {
     shippingSettings?.free_shipping_threshold_cents ?? Infinity
   );
 
-  const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents;
+  const totalCents = subtotalCents + shippingCents;
 
   // Create a pending order first so the webhook has something to update
   // once Stripe confirms payment -- avoids trusting anything from the
-  // client at confirmation time.
+  // client at confirmation time. total_cents/discount_cents/discount_code
+  // here are the pre-discount figures; markOrderPaid in the webhook
+  // overwrites them with what Stripe actually charged once payment
+  // succeeds, since a promotion code may be redeemed on Stripe's page
+  // after this row is created.
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -228,8 +207,8 @@ export async function POST(req: NextRequest) {
       total_cents: totalCents,
       currency,
       customer_id: user?.id ?? null,
-      discount_code: appliedDiscount?.code ?? null,
-      discount_cents: discountCents,
+      discount_code: null,
+      discount_cents: 0,
       shipping_cents: shippingCents,
     })
     .select("id")
@@ -308,21 +287,7 @@ export async function POST(req: NextRequest) {
   try {
     const stripe = getStripe();
 
-    // A fresh one-time Stripe Coupon is created per checkout attempt
-    // (rather than syncing a persistent Coupon per discount_codes row) so
-    // discount_codes stays the single source of truth -- no Stripe
-    // Dashboard object to keep in sync when a code is edited/deleted.
-    let couponId: string | undefined;
-    if (appliedDiscount) {
-      const coupon = await stripe.coupons.create(
-        appliedDiscount.type === "percent"
-          ? { duration: "once", percent_off: appliedDiscount.value }
-          : { duration: "once", amount_off: appliedDiscount.discountCents, currency }
-      );
-      couponId = coupon.id;
-    }
-
-    // Same one-time-object pattern as the discount coupon above: create a
+    // Same one-time-object pattern used elsewhere in this route: create a
     // fresh Shipping Rate per checkout attempt rather than syncing a
     // persistent Stripe object, so site_settings stays the source of
     // truth. Skipped entirely when the order qualifies for free shipping
@@ -356,7 +321,12 @@ export async function POST(req: NextRequest) {
       }),
       shipping_address_collection: { allowed_countries: ["IT"] },
       payment_method_types: ["card", "klarna", "satispay", "paypal"],
-      ...(couponId ? { discounts: [{ coupon: couponId }] } : {}),
+      // Discount codes are now redeemed on Stripe's own hosted page --
+      // this surfaces Stripe's built-in "Add promotion code" field,
+      // which appears after the shopper enters their shipping address.
+      // Requires each discount_codes row to have a matching Stripe
+      // Promotion Code (see src/lib/actions/discounts.ts).
+      allow_promotion_codes: true,
       ...(shippingRateId
         ? { shipping_options: [{ shipping_rate: shippingRateId }] }
         : {}),

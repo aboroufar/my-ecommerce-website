@@ -20,8 +20,8 @@ export default async function AdminDiscountsPage({
     <div>
       <h1 className="font-display text-2xl text-foreground">Discount codes</h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        Codes shoppers can redeem in the cart for a percentage or fixed
-        amount off their subtotal.
+        Codes shoppers can redeem on the payment page for a percentage or
+        fixed amount off their subtotal.
       </p>
 
       {error && (

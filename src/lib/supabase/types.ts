@@ -397,6 +397,8 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: string
+          stripe_coupon_id: string | null
+          stripe_promotion_code_id: string | null
           type: string
           value: number
         }
@@ -406,6 +408,8 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          stripe_coupon_id?: string | null
+          stripe_promotion_code_id?: string | null
           type: string
           value: number
         }
@@ -415,6 +419,8 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          stripe_coupon_id?: string | null
+          stripe_promotion_code_id?: string | null
           type?: string
           value?: number
         }
