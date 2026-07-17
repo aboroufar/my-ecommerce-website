@@ -150,8 +150,15 @@ export async function fetchShippingRates(orderId: string, formData: FormData) {
     );
   }
 
+  // redirect() works by throwing a special Next.js control-flow signal, not
+  // a real error -- it must never be called from inside this try block, or
+  // the catch below would treat that throw as a real failure and swallow
+  // it into a second (broken) redirect. Only the actual Shippo API call
+  // goes in the try; every redirect happens after it, based on a result
+  // variable, so no redirect() ever passes through this catch.
+  let rates: Awaited<ReturnType<typeof getShippingRates>>;
   try {
-    const rates = await getShippingRates({
+    rates = await getShippingRates({
       fromAddress: {
         name: settings.ship_from_name || "Storefront",
         street1: settings.ship_from_line1,
@@ -179,21 +186,21 @@ export async function fetchShippingRates(orderId: string, formData: FormData) {
         heightCm: parsed.data.height_cm,
       },
     });
-
-    if (rates.length === 0) {
-      redirect(
-        `/admin/orders/${orderId}?error=${encodeURIComponent("No carrier rates were returned for this address.")}`
-      );
-    }
-
-    await supabase
-      .from("orders")
-      .update({ pending_rates: JSON.parse(JSON.stringify(rates)) })
-      .eq("id", orderId);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not fetch shipping rates.";
     redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(message)}`);
   }
+
+  if (rates.length === 0) {
+    redirect(
+      `/admin/orders/${orderId}?error=${encodeURIComponent("No carrier rates were returned for this address.")}`
+    );
+  }
+
+  await supabase
+    .from("orders")
+    .update({ pending_rates: JSON.parse(JSON.stringify(rates)) })
+    .eq("id", orderId);
 
   revalidatePath(`/admin/orders/${orderId}`);
   redirect(`/admin/orders/${orderId}`);
@@ -238,27 +245,32 @@ export async function buyShippingLabel(orderId: string, formData: FormData) {
     );
   }
 
+  // Same rule as fetchShippingRates: redirect() throws a Next.js
+  // control-flow signal, not a real error, so it must never happen inside
+  // this try -- only the Shippo API call does, and every redirect happens
+  // after, based on a result variable.
+  let label: Awaited<ReturnType<typeof purchaseShippingLabel>>;
   try {
-    const label = await purchaseShippingLabel(parsed.data.rate_id, chosenRate!.provider);
-
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        carrier: label.carrier,
-        tracking_number: label.trackingNumber,
-        tracking_url: label.trackingUrl,
-        label_url: label.labelUrl,
-        shippo_transaction_id: label.transactionId,
-        pending_rates: null,
-      })
-      .eq("id", orderId);
-
-    if (error) {
-      redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
-    }
+    label = await purchaseShippingLabel(parsed.data.rate_id, chosenRate!.provider);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not purchase the shipping label.";
     redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(message)}`);
+  }
+
+  const { error } = await supabase
+    .from("orders")
+    .update({
+      carrier: label.carrier,
+      tracking_number: label.trackingNumber,
+      tracking_url: label.trackingUrl,
+      label_url: label.labelUrl,
+      shippo_transaction_id: label.transactionId,
+      pending_rates: null,
+    })
+    .eq("id", orderId);
+
+  if (error) {
+    redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/admin/orders");
