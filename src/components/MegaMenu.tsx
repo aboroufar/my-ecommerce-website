@@ -214,6 +214,22 @@ function CategoriesDropdown({
 function ColumnDropdown({ column }: { column: MenuColumnData }) {
   const { open, setOpen, containerRef } = useMenuDisclosure();
 
+  // A column with exactly one item has nothing to disclose -- render it as
+  // a plain link instead of a dropdown trigger with an empty-feeling
+  // chevron, matching how single-destination nav items (e.g. "Promo") read
+  // on reference sites like douglas.it.
+  if (column.items.length === 1) {
+    const [item] = column.items;
+    return (
+      <Link
+        href={item.href}
+        className="flex items-center gap-1 rounded-full py-2 text-sm font-normal tracking-normal transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        {column.title}
+      </Link>
+    );
+  }
+
   return (
     <div
       ref={containerRef}

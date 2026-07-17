@@ -181,27 +181,50 @@ const sortColumns: Record<ProductSort, { column: string; ascending: boolean }> =
 };
 
 /**
+ * Parses a raw minPrice/maxPrice searchParam string (entered in major
+ * currency units, e.g. "25" = 25.00) into whole-cent integers for the
+ * price_cents query filter. Returns undefined for missing/invalid input
+ * so the caller can skip the filter entirely rather than filtering on 0.
+ */
+export function parsePriceParam(value?: string): number | undefined {
+  if (!value) return undefined;
+  const num = Number(value);
+  if (Number.isNaN(num) || num < 0) return undefined;
+  return Math.round(num * 100);
+}
+
+/**
  * Fetches active products for the listing page, optionally filtered by
- * category slug and sorted. Returns an empty array (rather than throwing)
- * if Supabase isn't configured yet or the request fails, so the page can
- * render a friendly empty state instead of crashing.
+ * category slug, price range, and sorted. Returns an empty array (rather
+ * than throwing) if Supabase isn't configured yet or the request fails, so
+ * the page can render a friendly empty state instead of crashing.
  */
 export async function getActiveProducts(options?: {
   categorySlug?: string;
   tagSlug?: string;
   sort?: ProductSort;
+  minPriceCents?: number;
+  maxPriceCents?: number;
 }): Promise<ProductSummary[]> {
   try {
     const supabase = createPublicClient();
     const { column, ascending } = sortColumns[options?.sort ?? "newest"];
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("products")
       .select(
         "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating), product_tags(tags(slug))"
       )
-      .eq("status", "active")
-      .order(column, { ascending });
+      .eq("status", "active");
+
+    if (options?.minPriceCents !== undefined) {
+      query = query.gte("price_cents", options.minPriceCents);
+    }
+    if (options?.maxPriceCents !== undefined) {
+      query = query.lte("price_cents", options.maxPriceCents);
+    }
+
+    const { data, error } = await query.order(column, { ascending });
 
     if (error) {
       console.error("getActiveProducts error:", error.message);

@@ -31,7 +31,7 @@ export default async function Home() {
   const sectionComponents: Record<HomepageSectionKey, React.ReactNode> = {
     hero: <HeroSlideshow slides={heroSlides} />,
     category_grid: <CategoryGrid categories={categories} products={allProducts} />,
-    sale: <SaleSection products={allProducts} />,
+    sale: <SaleSection products={allProducts} categories={filterableCategories} />,
     best_sellers: <BestSellers products={allProducts} categories={filterableCategories} />,
     brand_bar: <BrandBar brands={brands} />,
   };

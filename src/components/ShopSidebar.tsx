@@ -1,13 +1,18 @@
 import Link from "next/link";
 import type { Category } from "@/lib/products";
 import { SearchBox } from "./SearchBox";
+import { PriceRangeFilter } from "./PriceRangeFilter";
 
 export function ShopSidebar({
   categories,
   activeSlug,
+  minPrice,
+  maxPrice,
 }: {
   categories: Category[];
   activeSlug?: string;
+  minPrice?: string;
+  maxPrice?: string;
 }) {
   const topLevel = categories.filter((c) => !c.parent_id);
   const childrenByParent = new Map<string, Category[]>();
@@ -63,6 +68,8 @@ export function ShopSidebar({
           {renderTree(topLevel, 0)}
         </div>
       )}
+
+      <PriceRangeFilter minPrice={minPrice} maxPrice={maxPrice} />
     </aside>
   );
 }

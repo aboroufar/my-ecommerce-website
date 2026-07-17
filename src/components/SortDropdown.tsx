@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ProductSort } from "@/lib/products";
 
 const sortLabels: Record<ProductSort, string> = {
@@ -12,6 +12,7 @@ const sortLabels: Record<ProductSort, string> = {
 
 export function SortDropdown({ current }: { current: ProductSort }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   function handleChange(value: string) {
@@ -21,7 +22,7 @@ export function SortDropdown({ current }: { current: ProductSort }) {
     } else {
       params.set("sort", value);
     }
-    router.push(`/products?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}`);
   }
 
   return (

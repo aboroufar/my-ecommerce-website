@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getActiveProducts, getCategories, getTags, type Category, type ProductSort } from "@/lib/products";
+import {
+  getActiveProducts,
+  getCategories,
+  getTags,
+  parsePriceParam,
+  type Category,
+  type ProductSort,
+} from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { SortDropdown } from "@/components/SortDropdown";
 import { ShopSidebar } from "@/components/ShopSidebar";
@@ -18,15 +25,29 @@ const validSorts: ProductSort[] = ["newest", "price-asc", "price-desc", "name-as
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; tag?: string; sort?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    tag?: string;
+    sort?: string;
+    minPrice?: string;
+    maxPrice?: string;
+  }>;
 }) {
-  const { category, tag, sort } = await searchParams;
+  const { category, tag, sort, minPrice, maxPrice } = await searchParams;
   const activeSort = validSorts.includes(sort as ProductSort)
     ? (sort as ProductSort)
     : "newest";
+  const minPriceCents = parsePriceParam(minPrice);
+  const maxPriceCents = parsePriceParam(maxPrice);
 
   const [products, allCategories, allTags] = await Promise.all([
-    getActiveProducts({ categorySlug: category, tagSlug: tag, sort: activeSort }),
+    getActiveProducts({
+      categorySlug: category,
+      tagSlug: tag,
+      sort: activeSort,
+      minPriceCents,
+      maxPriceCents,
+    }),
     getCategories(),
     tag ? getTags() : Promise.resolve([]),
   ]);
@@ -71,7 +92,12 @@ export default async function ProductsPage({
       )}
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 lg:flex-row">
-        <ShopSidebar categories={sidebarCategories} activeSlug={category} />
+        <ShopSidebar
+          categories={sidebarCategories}
+          activeSlug={category}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+        />
 
         <div className="min-w-0 flex-1">
           <div className="mb-10">
