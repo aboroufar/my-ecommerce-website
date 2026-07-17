@@ -1,23 +1,19 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CartProvider } from "@/components/CartProvider";
 import { WishlistProvider } from "@/components/WishlistProvider";
 
-const playfair = Playfair_Display({
+// Figtree is a geometric sans-serif close to Avenir Next (used site-wide,
+// including headings, on douglas.it) -- one typeface everywhere instead
+// of a serif/sans pairing, matching that reference site's uniform look.
+const figtree = Figtree({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-playfair",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-  variable: "--font-inter",
+  variable: "--font-figtree",
 });
 
 export const metadata: Metadata = {
@@ -31,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${playfair.variable} ${inter.variable}`}>
+    <html lang="en" className={`h-full antialiased ${figtree.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
         <CartProvider>
           <WishlistProvider>

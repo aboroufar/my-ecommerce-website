@@ -107,7 +107,7 @@ export default function CartPage() {
               const sale = getSaleInfo(item.priceCents, item.compareAtPriceCents ?? null);
               return (
                 <li key={lineKey} className="flex items-start gap-4 py-6">
-                  <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-line bg-accent-soft">
+                  <div className="h-24 w-24 shrink-0 overflow-hidden bg-accent-soft">
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}

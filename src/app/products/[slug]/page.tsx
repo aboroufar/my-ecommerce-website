@@ -86,14 +86,14 @@ export default async function ProductDetailPage({
 
       <ProductDetailProvider product={product}>
         <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2">
-          <div className="aspect-square overflow-hidden rounded-lg border border-line bg-surface">
+          <div className="aspect-square overflow-hidden bg-surface">
             {images[0] ? (
               <Image
                 src={images[0].url}
                 alt={images[0].alt_text ?? product.name}
                 width={800}
                 height={800}
-                className="h-full w-full object-contain p-10"
+                className="h-full w-full object-cover"
                 priority
               />
             ) : (

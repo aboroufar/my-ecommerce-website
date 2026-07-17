@@ -81,7 +81,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
       </div>
 
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden rounded-lg border border-line bg-surface shadow-sm transition-shadow duration-300 group-hover:shadow-md">
+        <div className="relative aspect-square overflow-hidden bg-surface">
           {(sale.onSale || product.is_popular) && (
             <div className="absolute left-3 top-3 z-10 flex gap-1.5">
               {sale.onSale && (
@@ -102,7 +102,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
               alt={image.alt_text ?? product.name}
               fill
               sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-              className="object-contain p-6 transition-transform duration-300 group-hover:scale-[1.03]"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center">

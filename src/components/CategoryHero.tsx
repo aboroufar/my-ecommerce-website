@@ -112,7 +112,7 @@ function Tile({
   return (
     <Link
       href={href}
-      className={`group relative min-h-[110px] overflow-hidden rounded-xl ${className}`}
+      className={`group relative min-h-[110px] overflow-hidden ${className}`}
     >
       <Image
         src={imageUrl}

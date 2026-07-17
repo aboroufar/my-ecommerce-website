@@ -80,7 +80,7 @@ export function CategoryGrid({
           category.display_only ? (
             <div
               key={category.id}
-              className="relative aspect-square cursor-default overflow-hidden rounded-xl"
+              className="relative aspect-square cursor-default overflow-hidden"
             >
               <Image
                 src={url}
@@ -103,7 +103,7 @@ export function CategoryGrid({
             <Link
               key={category.id}
               href={`/products?category=${category.slug}`}
-              className="group relative aspect-square overflow-hidden rounded-xl"
+              className="group relative aspect-square overflow-hidden"
             >
               <Image
                 src={url}

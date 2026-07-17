@@ -10,7 +10,7 @@ export function BlogPostCard({ post }: { post: BlogPostSummary }) {
   return (
     <article>
       <Link href={`/blog/${post.slug}`} className="group block">
-        <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-surface">
+        <div className="relative aspect-[16/10] overflow-hidden bg-surface">
           {post.cover_image_url ? (
             <Image
               src={post.cover_image_url}

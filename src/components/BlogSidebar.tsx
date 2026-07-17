@@ -80,7 +80,7 @@ export function BlogSidebar({
               return (
                 <li key={post.id}>
                   <Link href={`/blog/${post.slug}`} className="group flex gap-3">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-line">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden bg-line">
                       {post.cover_image_url && (
                         <Image
                           src={post.cover_image_url}
