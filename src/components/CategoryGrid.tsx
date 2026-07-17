@@ -105,9 +105,6 @@ export function CategoryGrid({
 
   return (
     <section className="w-full px-2 pt-8 sm:px-4">
-      <h2 className="px-2 pb-4 text-center font-display text-2xl font-bold uppercase tracking-wide text-foreground sm:px-0">
-        Brand Highlights
-      </h2>
       <div className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${lgColsClass}`}>
         {cards.map(({ category, url, alt, isPlaceholder }) =>
           category.display_only ? (
