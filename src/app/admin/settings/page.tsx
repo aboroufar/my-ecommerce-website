@@ -13,9 +13,16 @@ export default async function AdminSettingsPage({
 }) {
   const { error, saved } = await searchParams;
   const supabase = createAdminClient();
-  const [{ data: admins }, settings] = await Promise.all([
+  const [{ data: admins }, settings, { data: shipFrom }] = await Promise.all([
     supabase.from("admins").select("id, email, created_at").order("created_at", { ascending: true }),
     getSiteSettings(),
+    supabase
+      .from("site_settings")
+      .select(
+        "ship_from_name, ship_from_line1, ship_from_line2, ship_from_city, ship_from_region, ship_from_postal_code, ship_from_country, ship_from_phone, ship_from_email"
+      )
+      .eq("id", true)
+      .maybeSingle(),
   ]);
 
   const envEmails = (process.env.ADMIN_EMAILS ?? "")
@@ -155,6 +162,94 @@ export default async function AdminSettingsPage({
           <p className="text-xs text-muted">
             Applied automatically at checkout based on order subtotal.
           </p>
+          <div>
+            <span className="text-xs text-muted">Shipping origin</span>
+            <p className="mt-1 text-xs text-muted/70">
+              Where labels ship from -- required to fetch carrier rates when
+              buying a shipping label on an order&apos;s admin page.
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-4">
+              <label className="col-span-2 flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Sender name</span>
+                <input
+                  name="ship_from_name"
+                  defaultValue={shipFrom?.ship_from_name ?? ""}
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="col-span-2 flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Address line 1</span>
+                <input
+                  name="ship_from_line1"
+                  defaultValue={shipFrom?.ship_from_line1 ?? ""}
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="col-span-2 flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Address line 2</span>
+                <input
+                  name="ship_from_line2"
+                  defaultValue={shipFrom?.ship_from_line2 ?? ""}
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">City</span>
+                <input
+                  name="ship_from_city"
+                  defaultValue={shipFrom?.ship_from_city ?? ""}
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Region/State</span>
+                <input
+                  name="ship_from_region"
+                  defaultValue={shipFrom?.ship_from_region ?? ""}
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Postal code</span>
+                <input
+                  name="ship_from_postal_code"
+                  defaultValue={shipFrom?.ship_from_postal_code ?? ""}
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Country (2-letter code)</span>
+                <input
+                  name="ship_from_country"
+                  defaultValue={shipFrom?.ship_from_country ?? ""}
+                  placeholder="IT"
+                  maxLength={2}
+                  className="border border-line bg-transparent px-3 py-2 text-sm uppercase"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Sender phone</span>
+                <input
+                  name="ship_from_phone"
+                  defaultValue={shipFrom?.ship_from_phone ?? ""}
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Sender email</span>
+                <input
+                  name="ship_from_email"
+                  type="email"
+                  defaultValue={shipFrom?.ship_from_email ?? ""}
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-muted/70">
+              Some carriers (e.g. USPS) require a sender phone or email to
+              purchase a label.
+            </p>
+          </div>
           <div>
             <span className="text-xs text-muted">Social links</span>
             <p className="mt-1 text-xs text-muted/70">

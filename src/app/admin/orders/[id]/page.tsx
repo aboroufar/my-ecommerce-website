@@ -2,7 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPrice } from "@/lib/format";
-import { updateOrderStatus } from "@/lib/actions/orders";
+import {
+  updateOrderStatus,
+  fetchShippingRates,
+  buyShippingLabel,
+  clearPendingRates,
+} from "@/lib/actions/orders";
 import type { OrderStatus } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +22,15 @@ interface ShippingAddress {
     postal_code?: string;
     country?: string;
   };
+}
+
+interface PendingRate {
+  rateId: string;
+  provider: string;
+  serviceLevel: string;
+  amount: string;
+  currency: string;
+  estimatedDays: number | null;
 }
 
 const statusOptions: OrderStatus[] = [
@@ -41,7 +55,7 @@ export default async function AdminOrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, status, total_cents, currency, created_at, shipping_address, stripe_payment_intent_id, customers(email)"
+      "id, status, total_cents, currency, created_at, shipping_address, stripe_payment_intent_id, customers(email), carrier, tracking_number, tracking_url, label_url, pending_rates"
     )
     .eq("id", id)
     .single();
@@ -54,7 +68,11 @@ export default async function AdminOrderDetailPage({
     .eq("order_id", id);
 
   const shipping = order.shipping_address as ShippingAddress | null;
+  const pendingRates = order.pending_rates as PendingRate[] | null;
   const updateStatusWithId = updateOrderStatus.bind(null, id);
+  const fetchRatesWithId = fetchShippingRates.bind(null, id);
+  const buyLabelWithId = buyShippingLabel.bind(null, id);
+  const clearRatesWithId = clearPendingRates.bind(null, id);
 
   return (
     <div>
@@ -125,6 +143,135 @@ export default async function AdminOrderDetailPage({
             <br />
             {shipping.address.country}
           </p>
+        </div>
+      )}
+
+      {shipping?.address && (
+        <div className="mt-8 border-t border-line pt-6">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
+            Shipping label
+          </h2>
+
+          {order.tracking_number ? (
+            <div className="mt-2 space-y-1 text-sm text-foreground">
+              <p>
+                {order.carrier} · {order.tracking_number}
+              </p>
+              {order.tracking_url && (
+                <a
+                  href={order.tracking_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block text-accent underline underline-offset-4"
+                >
+                  Track shipment →
+                </a>
+              )}
+              {order.label_url && (
+                <a
+                  href={order.label_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block text-accent underline underline-offset-4"
+                >
+                  View label PDF →
+                </a>
+              )}
+            </div>
+          ) : pendingRates && pendingRates.length > 0 ? (
+            <form action={buyLabelWithId} className="mt-3 space-y-3">
+              <ul className="space-y-2">
+                {pendingRates.map((rate, i) => (
+                  <li key={rate.rateId}>
+                    <label className="flex items-center gap-3 border border-line p-3 text-sm">
+                      <input
+                        type="radio"
+                        name="rate_id"
+                        value={rate.rateId}
+                        defaultChecked={i === 0}
+                        required
+                      />
+                      <span className="flex-1">
+                        {rate.provider} — {rate.serviceLevel}
+                        {rate.estimatedDays != null && ` · ${rate.estimatedDays}d`}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {rate.amount} {rate.currency}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+                >
+                  Buy label
+                </button>
+                <button
+                  type="submit"
+                  formAction={clearRatesWithId}
+                  className="text-xs text-muted underline underline-offset-4 hover:text-foreground"
+                >
+                  Start over
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form action={fetchRatesWithId} className="mt-3 grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Weight (g)</span>
+                <input
+                  name="weight_grams"
+                  type="number"
+                  min={1}
+                  step="1"
+                  required
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Length (cm)</span>
+                <input
+                  name="length_cm"
+                  type="number"
+                  min={0.1}
+                  step="0.1"
+                  required
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Width (cm)</span>
+                <input
+                  name="width_cm"
+                  type="number"
+                  min={0.1}
+                  step="0.1"
+                  required
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Height (cm)</span>
+                <input
+                  name="height_cm"
+                  type="number"
+                  min={0.1}
+                  step="0.1"
+                  required
+                  className="border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </label>
+              <button
+                type="submit"
+                className="col-span-2 bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              >
+                Get rates
+              </button>
+            </form>
+          )}
         </div>
       )}
 

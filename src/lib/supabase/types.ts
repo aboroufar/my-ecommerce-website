@@ -687,45 +687,63 @@ export type Database = {
       }
       orders: {
         Row: {
+          carrier: string | null
           created_at: string
           currency: string
           customer_id: string | null
           discount_cents: number
           discount_code: string | null
           id: string
+          label_url: string | null
+          pending_rates: Json | null
           shipping_address: Json | null
           shipping_cents: number
+          shippo_transaction_id: string | null
           status: string
           stripe_payment_intent_id: string | null
           total_cents: number
+          tracking_number: string | null
+          tracking_url: string | null
           updated_at: string
         }
         Insert: {
+          carrier?: string | null
           created_at?: string
           currency?: string
           customer_id?: string | null
           discount_cents?: number
           discount_code?: string | null
           id?: string
+          label_url?: string | null
+          pending_rates?: Json | null
           shipping_address?: Json | null
           shipping_cents?: number
+          shippo_transaction_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           total_cents: number
+          tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Update: {
+          carrier?: string | null
           created_at?: string
           currency?: string
           customer_id?: string | null
           discount_cents?: number
           discount_code?: string | null
           id?: string
+          label_url?: string | null
+          pending_rates?: Json | null
           shipping_address?: Json | null
           shipping_cents?: number
+          shippo_transaction_id?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           total_cents?: number
+          tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1129,6 +1147,15 @@ export type Database = {
           help_page_enabled: boolean
           id: boolean
           reviews_enabled: boolean
+          ship_from_city: string | null
+          ship_from_country: string | null
+          ship_from_email: string | null
+          ship_from_line1: string | null
+          ship_from_line2: string | null
+          ship_from_name: string | null
+          ship_from_phone: string | null
+          ship_from_postal_code: string | null
+          ship_from_region: string | null
           shipping_flat_rate_cents: number
           site_logo_url: string
           site_name: string
@@ -1153,6 +1180,15 @@ export type Database = {
           help_page_enabled?: boolean
           id?: boolean
           reviews_enabled?: boolean
+          ship_from_city?: string | null
+          ship_from_country?: string | null
+          ship_from_email?: string | null
+          ship_from_line1?: string | null
+          ship_from_line2?: string | null
+          ship_from_name?: string | null
+          ship_from_phone?: string | null
+          ship_from_postal_code?: string | null
+          ship_from_region?: string | null
           shipping_flat_rate_cents?: number
           site_logo_url?: string
           site_name?: string
@@ -1177,6 +1213,15 @@ export type Database = {
           help_page_enabled?: boolean
           id?: boolean
           reviews_enabled?: boolean
+          ship_from_city?: string | null
+          ship_from_country?: string | null
+          ship_from_email?: string | null
+          ship_from_line1?: string | null
+          ship_from_line2?: string | null
+          ship_from_name?: string | null
+          ship_from_phone?: string | null
+          ship_from_postal_code?: string | null
+          ship_from_region?: string | null
           shipping_flat_rate_cents?: number
           site_logo_url?: string
           site_name?: string

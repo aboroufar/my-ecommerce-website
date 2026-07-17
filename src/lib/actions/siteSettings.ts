@@ -30,6 +30,21 @@ const settingsSchema = z.object({
     .number()
     .nonnegative("Free shipping threshold can't be negative")
     .transform((v) => Math.round(v * 100)),
+  // Ship-from address used for every Shippo rate/label request -- optional
+  // here since a store can exist before this is filled in, but the
+  // "Get rates" flow in /admin/orders/[id] requires it to be complete.
+  ship_from_name: z.string().optional().default(""),
+  ship_from_line1: z.string().optional().default(""),
+  ship_from_line2: z.string().optional().default(""),
+  ship_from_city: z.string().optional().default(""),
+  ship_from_region: z.string().optional().default(""),
+  ship_from_postal_code: z.string().optional().default(""),
+  ship_from_country: z.string().optional().default(""),
+  // USPS specifically rejects a label purchase without a sender phone or
+  // email, so these are collected here even though not every carrier
+  // requires them.
+  ship_from_phone: z.string().optional().default(""),
+  ship_from_email: z.string().optional().default(""),
 });
 
 const categoriesMenuLabelSchema = z.object({

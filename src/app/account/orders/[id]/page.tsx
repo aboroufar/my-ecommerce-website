@@ -27,7 +27,9 @@ export default async function OrderDetailPage({
   // order that isn't the logged-in user's -- no manual ownership check needed.
   const { data: order } = await supabase
     .from("orders")
-    .select("id, status, total_cents, currency, created_at, shipping_address")
+    .select(
+      "id, status, total_cents, currency, created_at, shipping_address, carrier, tracking_number, tracking_url"
+    )
     .eq("id", id)
     .single();
 
@@ -96,6 +98,27 @@ export default async function OrderDetailPage({
             <br />
             {shipping.address.country}
           </p>
+        </div>
+      )}
+
+      {order.tracking_number && (
+        <div className="mt-8 border-t border-line pt-6">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
+            Tracking
+          </h2>
+          <p className="mt-2 text-sm text-foreground">
+            {order.carrier} · {order.tracking_number}
+          </p>
+          {order.tracking_url && (
+            <a
+              href={order.tracking_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-block text-sm text-accent underline underline-offset-4"
+            >
+              Track your shipment →
+            </a>
+          )}
         </div>
       )}
     </div>
