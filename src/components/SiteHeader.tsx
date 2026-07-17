@@ -115,7 +115,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <nav className="flex items-center gap-6 overflow-x-auto border-t border-line px-6 py-3 text-xs font-medium uppercase tracking-wide text-foreground sm:hidden">
+      <nav className="flex items-center gap-6 overflow-x-auto border-t border-line px-6 py-3 text-sm font-normal tracking-normal text-foreground sm:hidden">
         {categories.filter((category) => !category.parent_id).map((category) => (
           <Link
             key={category.id}

@@ -71,7 +71,7 @@ export function MegaMenuColumns({
   const topLevelCategories = categories.filter((c) => !c.parent_id);
 
   return (
-    <nav className="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide text-foreground sm:flex">
+    <nav className="hidden items-center gap-8 text-sm font-normal tracking-normal text-foreground sm:flex">
       {extraColumns.map((column) =>
         column.title === "Home" ? (
           <ColumnDropdown
@@ -132,7 +132,7 @@ function CategoriesDropdown({
         onClick={() => setOpen(true)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-full py-2 text-sm font-semibold uppercase tracking-wide text-foreground transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="flex items-center gap-2 rounded-full py-2 text-sm font-normal tracking-normal text-foreground transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {label} <MenuIcon />
       </button>
@@ -182,7 +182,7 @@ function CategoriesDropdown({
                   <div key={group.id} className="w-40 shrink-0">
                     <Link
                       href={`/products?category=${group.slug}`}
-                      className="font-display text-sm font-bold normal-case tracking-normal text-foreground transition-colors duration-200 hover:text-accent"
+                      className="font-display text-sm font-medium normal-case tracking-normal text-foreground transition-colors duration-200 hover:text-accent"
                     >
                       {group.name}
                     </Link>
@@ -226,7 +226,7 @@ function ColumnDropdown({ column }: { column: MenuColumnData }) {
         onClick={() => setOpen(true)}
         aria-haspopup="true"
         aria-expanded={open}
-        className="flex items-center gap-1 rounded-full py-2 text-sm font-semibold uppercase tracking-wide transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="flex items-center gap-1 rounded-full py-2 text-sm font-normal tracking-normal transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {column.title}
         <ChevronDownIcon />
