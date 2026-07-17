@@ -58,7 +58,7 @@ export default async function OrdersPage({
               No orders yet.{" "}
               <Link
                 href="/products"
-                className="text-accent underline underline-offset-4"
+                className="text-accent-text underline underline-offset-4"
               >
                 Start shopping
               </Link>

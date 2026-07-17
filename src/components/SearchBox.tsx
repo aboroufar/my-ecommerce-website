@@ -21,7 +21,7 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search products…"
         autoFocus
-        className="w-full border border-line bg-transparent px-4 py-3 pr-12 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none"
+        className="w-full border border-line bg-transparent px-4 py-3 pr-12 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
       <button
         type="submit"

@@ -56,7 +56,7 @@ export function ResetPasswordForm() {
             placeholder="At least 6 characters"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-line bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none"
+            className="border border-line bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
           />
         </label>
 

@@ -12,6 +12,7 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
+  const [resetSending, setResetSending] = useState(false);
 
   async function handleLogIn(e: React.FormEvent) {
     e.preventDefault();
@@ -37,10 +38,12 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
       return;
     }
     setError(null);
+    setResetSending(true);
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/account/reset-password`,
     });
+    setResetSending(false);
     if (error) {
       setError(error.message);
       return;
@@ -102,7 +105,8 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
         <button
           type="submit"
           disabled={status === "loading"}
-          className="bg-foreground px-6 py-3.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+          aria-live="polite"
+          className="bg-foreground px-6 py-3.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           {status === "loading" ? "Logging in…" : "Log in"}
         </button>
@@ -110,9 +114,11 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
         <button
           type="button"
           onClick={handleForgotPassword}
-          className="self-start text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4"
+          disabled={resetSending}
+          aria-live="polite"
+          className="self-start rounded text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          Forgot your password?
+          {resetSending ? "Sending…" : "Forgot your password?"}
         </button>
       </form>
 
@@ -170,7 +176,7 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-line bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none"
+        className="border border-line bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
     </label>
   );

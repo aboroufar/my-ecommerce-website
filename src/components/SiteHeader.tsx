@@ -40,9 +40,7 @@ export async function SiteHeader() {
               </span>
             )}
           </div>
-          <span className="flex items-center gap-1 text-xs font-medium">
-            EN <ChevronIcon />
-          </span>
+          <span className="text-xs font-medium">EN</span>
         </div>
       </div>
 
@@ -69,7 +67,7 @@ export async function SiteHeader() {
           <Link
             href="/search"
             aria-label="Search"
-            className="hidden max-w-xl flex-1 items-center gap-3 rounded-full bg-surface px-5 py-2.5 text-sm text-muted transition-colors hover:bg-line/60 sm:flex"
+            className="hidden max-w-xl flex-1 items-center gap-3 rounded-full bg-surface px-5 py-2.5 text-sm text-muted transition-colors hover:bg-line/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:flex"
           >
             <span className="flex-1">Search</span>
             <SearchIcon />
@@ -161,14 +159,6 @@ function PinIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-3.5 w-3.5">
       <path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="12" cy="9" r="2.5" />
-    </svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3">
-      <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

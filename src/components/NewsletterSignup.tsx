@@ -35,7 +35,7 @@ export function NewsletterSignup() {
           name="email"
           required
           placeholder="you@example.com"
-          className="flex-1 border border-line bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none sm:border-r-0"
+          className="flex-1 border border-line bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40 sm:border-r-0"
         />
         <button
           type="submit"

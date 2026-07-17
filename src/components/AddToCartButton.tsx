@@ -57,17 +57,17 @@ export function AddToCartButton({
   return (
     <div>
       <div className="mt-8 flex items-stretch gap-3">
-        <div className="flex items-center rounded-full border border-line">
+        <div className="flex items-center overflow-hidden rounded-full border border-line">
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             disabled={quantity <= 1}
             aria-label="Decrease quantity"
-            className="flex h-full w-10 items-center justify-center text-sm text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-full w-10 items-center justify-center text-sm text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
           >
             −
           </button>
-          <span className="w-10 text-center text-sm text-foreground">
+          <span className="w-10 text-center text-sm text-foreground" aria-live="polite">
             {quantity}
           </span>
           <button
@@ -75,7 +75,7 @@ export function AddToCartButton({
             onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
             disabled={quantity >= MAX_QUANTITY}
             aria-label="Increase quantity"
-            className="flex h-full w-10 items-center justify-center text-sm text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-full w-10 items-center justify-center text-sm text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
           >
             +
           </button>
@@ -84,7 +84,8 @@ export function AddToCartButton({
         <button
           onClick={handleAdd}
           disabled={disabled}
-          className="flex-1 rounded-full bg-foreground px-6 py-4 text-sm font-medium uppercase tracking-wide text-background transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-100 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+          aria-live="polite"
+          className="flex-1 rounded-full bg-foreground px-6 py-4 text-sm font-medium uppercase tracking-wide text-background transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-100 disabled:hover:translate-y-0 disabled:hover:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           {disabled ? "Select options" : added ? "Added ✓" : "Add to cart"}
         </button>

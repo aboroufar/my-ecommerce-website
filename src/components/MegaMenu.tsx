@@ -1,9 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Category } from "@/lib/products";
 import type { MenuColumn as MenuColumnData } from "@/lib/menu";
+
+// Shared by both dropdown variants below: hover opens/closes the panel for
+// mouse users, but the trigger button also toggles on click and closes on
+// Escape or an outside click, so keyboard-only users (who can't hover) can
+// still open, navigate, and dismiss the menu.
+function useMenuDisclosure() {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
+  return { open, setOpen, containerRef };
+}
 
 export function MegaMenu({
   categories,
@@ -77,7 +106,7 @@ function CategoriesDropdown({
   topLevelCategories: Category[];
   childrenByParent: Map<string, Category[]>;
 }) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, containerRef } = useMenuDisclosure();
   const [activeId, setActiveId] = useState<string | null>(
     topLevelCategories[0]?.id ?? null
   );
@@ -93,13 +122,17 @@ function CategoriesDropdown({
 
   return (
     <div
+      ref={containerRef}
       className="relative"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
       <button
         type="button"
-        className="flex items-center gap-2 py-2 text-sm font-semibold uppercase tracking-wide text-foreground transition-colors hover:text-accent"
+        onClick={() => setOpen(true)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="flex items-center gap-2 rounded-full py-2 text-sm font-semibold uppercase tracking-wide text-foreground transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {label} <MenuIcon />
       </button>
@@ -120,7 +153,8 @@ function CategoriesDropdown({
                   <Link
                     href={`/products?category=${category.slug}`}
                     onMouseEnter={() => setActiveId(category.id)}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out ${
+                    onFocus={() => setActiveId(category.id)}
+                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                       isActive
                         ? "translate-x-1.5 text-accent"
                         : "text-foreground hover:translate-x-1.5 hover:text-accent"
@@ -178,17 +212,21 @@ function CategoriesDropdown({
 }
 
 function ColumnDropdown({ column }: { column: MenuColumnData }) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, containerRef } = useMenuDisclosure();
 
   return (
     <div
+      ref={containerRef}
       className="relative"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
       <button
         type="button"
-        className="flex items-center gap-1 py-2 text-sm font-semibold uppercase tracking-wide transition-colors hover:text-accent"
+        onClick={() => setOpen(true)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="flex items-center gap-1 rounded-full py-2 text-sm font-semibold uppercase tracking-wide transition-colors hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {column.title}
         <ChevronDownIcon />
@@ -201,7 +239,7 @@ function ColumnDropdown({ column }: { column: MenuColumnData }) {
               <li key={item.id}>
                 <Link
                   href={item.href}
-                  className="block transition-colors hover:text-foreground"
+                  className="block rounded transition-colors hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
                   {item.label}
                 </Link>

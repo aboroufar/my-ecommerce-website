@@ -50,13 +50,13 @@ export function ProductCard({ product }: { product: ProductSummary }) {
 
   return (
     <div className="group relative transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-1">
-      <div className="absolute right-3 top-3 z-10 flex flex-col gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+      <div className="absolute right-3 top-3 z-10 flex flex-col gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
         <button
           type="button"
           onClick={handleToggleWishlist}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           aria-pressed={wishlisted}
-          className={`flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors ${
+          className={`flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
             wishlisted
               ? "bg-accent text-background"
               : "bg-background text-foreground hover:bg-accent hover:text-background"
@@ -67,14 +67,14 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         <Link
           href={`/products/${product.slug}`}
           aria-label="Quick view"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <SearchIcon />
         </Link>
         <Link
           href="/account"
-          aria-label="Compare"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background"
+          aria-label="Sign in to save this to your wishlist"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <CompareIcon />
         </Link>
@@ -140,7 +140,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           type="button"
           onClick={handleAddToCart}
           aria-label={`Add ${product.name} to cart`}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent text-accent transition-colors hover:bg-accent hover:text-background"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent text-accent transition-colors hover:bg-accent hover:text-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <CartPlusIcon />
         </button>

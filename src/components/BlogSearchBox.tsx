@@ -20,7 +20,7 @@ export function BlogSearchBox({ initialQuery = "" }: { initialQuery?: string }) 
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search posts…"
-        className="w-full border border-line bg-background px-4 py-2.5 pr-11 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none"
+        className="w-full border border-line bg-background px-4 py-2.5 pr-11 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
       <button
         type="submit"

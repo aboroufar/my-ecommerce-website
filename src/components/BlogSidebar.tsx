@@ -93,7 +93,7 @@ export function BlogSidebar({
                     </div>
                     <div className="min-w-0">
                       {category && (
-                        <span className="text-xs font-medium uppercase tracking-wide text-accent underline-offset-4 group-hover:underline">
+                        <span className="text-xs font-medium uppercase tracking-wide text-accent-text underline-offset-4 group-hover:underline">
                           {category.name}
                         </span>
                       )}

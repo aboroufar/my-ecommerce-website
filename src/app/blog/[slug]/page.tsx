@@ -102,7 +102,7 @@ export default async function BlogPostPage({
                 <Link
                   key={category.slug}
                   href={`/blog?category=${category.slug}`}
-                  className="text-xs font-medium uppercase tracking-wide text-accent underline-offset-4 hover:underline"
+                  className="text-xs font-medium uppercase tracking-wide text-accent-text underline-offset-4 hover:underline"
                 >
                   {category.name}
                 </Link>

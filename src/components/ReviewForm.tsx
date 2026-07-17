@@ -52,18 +52,26 @@ export function ReviewForm({ productId }: { productId: string }) {
       </label>
 
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted">
+        <span id="rating-label" className="text-xs font-medium uppercase tracking-wide text-muted">
           Your rating
         </span>
-        <div className="flex gap-1" onMouseLeave={() => setHoverRating(0)}>
+        <div
+          role="radiogroup"
+          aria-labelledby="rating-label"
+          aria-describedby={error ? "rating-error" : undefined}
+          className="flex gap-1"
+          onMouseLeave={() => setHoverRating(0)}
+        >
           {[1, 2, 3, 4, 5].map((value) => (
             <button
               key={value}
               type="button"
+              role="radio"
+              aria-checked={value === rating}
               onClick={() => setRating(value)}
               onMouseEnter={() => setHoverRating(value)}
               aria-label={`${value} star${value === 1 ? "" : "s"}`}
-              className="text-2xl leading-none"
+              className="rounded text-2xl leading-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <span
                 className={
@@ -85,7 +93,7 @@ export function ReviewForm({ productId }: { productId: string }) {
           name="body"
           required
           rows={4}
-          className="border border-line bg-transparent px-3 py-2 text-sm"
+          className="border border-line bg-transparent px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
       </label>
 
@@ -96,7 +104,7 @@ export function ReviewForm({ productId }: { productId: string }) {
         <input
           name="reviewer_name"
           required
-          className="border border-line bg-transparent px-3 py-2 text-sm"
+          className="border border-line bg-transparent px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
       </label>
 
@@ -109,19 +117,23 @@ export function ReviewForm({ productId }: { productId: string }) {
           name="reviewer_email"
           required
           placeholder="you@example.com"
-          className="border border-line bg-transparent px-3 py-2 text-sm"
+          className="border border-line bg-transparent px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
         <span className="text-xs text-muted">
           Your email address will not be published.
         </span>
       </label>
 
-      {error && <p className="text-xs text-red-700">{error}</p>}
+      {error && (
+        <p id="rating-error" className="text-xs text-red-700">
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"
         disabled={status === "loading"}
-        className="self-start bg-foreground px-6 py-2.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="self-start bg-foreground px-6 py-2.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {status === "loading" ? "Submitting…" : "Submit"}
       </button>
