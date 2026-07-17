@@ -138,6 +138,7 @@ export interface Category {
   hero_headline: string | null;
   hero_eyebrow: string | null;
   display_only: boolean;
+  featured_in_grid: boolean;
 }
 
 /**
@@ -314,7 +315,7 @@ export async function getCategories(options?: {
     const { data, error } = await supabase
       .from("categories")
       .select(
-        "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only"
+        "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only, featured_in_grid"
       )
       .order("name", { ascending: true });
 

@@ -21,7 +21,7 @@ export interface HomepageSection {
  */
 const defaults: HomepageSection[] = [
   { key: "hero", label: "Hero slideshow", enabled: true, sort_order: 0 },
-  { key: "category_grid", label: "Category grid", enabled: true, sort_order: 1 },
+  { key: "category_grid", label: "Brand highlights", enabled: true, sort_order: 1 },
   { key: "sale", label: "Products on sale", enabled: true, sort_order: 2 },
   { key: "best_sellers", label: "Top bestsellers", enabled: true, sort_order: 3 },
   { key: "brand_bar", label: "Brand bar", enabled: true, sort_order: 4 },

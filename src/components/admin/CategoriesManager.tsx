@@ -18,6 +18,7 @@ interface Category {
   hero_headline?: string | null;
   hero_eyebrow?: string | null;
   display_only?: boolean;
+  featured_in_grid?: boolean;
 }
 
 export function CategoriesManager({
@@ -151,6 +152,14 @@ function CategoryRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <TierBadge depth={depth} />
+          {category.featured_in_grid && (
+            <span
+              className="shrink-0 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-violet-800"
+              title="Eligible to appear as one of the 5 random tiles in the homepage's Brand Highlights section."
+            >
+              Brand Highlights
+            </span>
+          )}
           {category.display_only ? (
             <span
               className="shrink-0 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-800"
@@ -324,6 +333,18 @@ function CategoryForm({
           />
           Display only -- show as a plain tile on the homepage grid, not
           clickable, no products needed
+        </label>
+      )}
+
+      {resultingDepth === 0 && (
+        <label className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name="featured_in_grid"
+            defaultChecked={category?.featured_in_grid ?? false}
+          />
+          Show in Brand Highlights -- eligible to appear as one of the 5
+          random tiles in the homepage&apos;s Brand Highlights section
         </label>
       )}
 

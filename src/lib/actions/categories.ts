@@ -20,6 +20,7 @@ const categorySchema = z.object({
   // Checkboxes are only present in FormData when checked ("on"), so a
   // missing key means unchecked/false rather than a validation failure.
   display_only: z.preprocess((v) => v === "on", z.boolean()),
+  featured_in_grid: z.preprocess((v) => v === "on", z.boolean()),
 });
 
 /**
@@ -52,6 +53,7 @@ export async function createCategory(formData: FormData) {
     hero_headline: parsed.data.hero_headline || null,
     hero_eyebrow: parsed.data.hero_eyebrow || null,
     display_only: parsed.data.display_only,
+    featured_in_grid: parsed.data.featured_in_grid,
   });
 
   if (error) {
@@ -94,6 +96,7 @@ export async function updateCategory(id: string, formData: FormData) {
       hero_headline: parsed.data.hero_headline || null,
       hero_eyebrow: parsed.data.hero_eyebrow || null,
       display_only: parsed.data.display_only,
+      featured_in_grid: parsed.data.featured_in_grid,
     })
     .eq("id", id);
 

@@ -16,9 +16,28 @@ const placeholderImages = [
   "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=600&q=80",
 ];
 
+const BRAND_HIGHLIGHTS_SLOTS = 5;
+
 /**
- * One card per real category. Prefers the admin-uploaded category photo
- * (categories.image_url, set via /admin/categories); falls back to
+ * Picks up to `count` categories at random, without repeats. Fisher-Yates
+ * on a copy of the input so the caller's array/order is never mutated.
+ */
+function pickRandom<T>(items: T[], count: number): T[] {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count);
+}
+
+/**
+ * One card per category, up to BRAND_HIGHLIGHTS_SLOTS (5) tiles. Categories
+ * marked `featured_in_grid` (set via /admin/categories) are the eligible
+ * pool and a fresh random subset is drawn on every render/request -- if
+ * fewer than 5 are marked eligible, the remaining slots are filled from the
+ * rest of the category list so the section is never sparse. Prefers the
+ * admin-uploaded category photo (categories.image_url); falls back to
  * borrowing a product photo from that category, then to a labeled stock
  * placeholder if neither exists -- so this section is never blank, but a
  * real admin-provided photo always wins once one is set.
@@ -32,7 +51,18 @@ export function CategoryGrid({
 }) {
   if (categories.length === 0) return null;
 
-  const cards = categories.map((category, i) => {
+  const eligible = categories.filter((c) => c.featured_in_grid);
+  const pool = eligible.length > 0 ? eligible : categories;
+  const remaining = categories.filter((c) => !pool.includes(c));
+  const selected =
+    pool.length >= BRAND_HIGHLIGHTS_SLOTS
+      ? pickRandom(pool, BRAND_HIGHLIGHTS_SLOTS)
+      : [
+          ...pool,
+          ...pickRandom(remaining, BRAND_HIGHLIGHTS_SLOTS - pool.length),
+        ];
+
+  const cards = selected.map((category, i) => {
     if (category.image_url) {
       return {
         category,
@@ -74,7 +104,10 @@ export function CategoryGrid({
     }[cards.length] ?? "lg:grid-cols-5";
 
   return (
-    <section className="w-full px-2 pt-2 sm:px-4">
+    <section className="w-full px-2 pt-8 sm:px-4">
+      <h2 className="px-2 pb-4 text-center font-display text-2xl font-bold uppercase tracking-wide text-foreground sm:px-0">
+        Brand Highlights
+      </h2>
       <div className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${lgColsClass}`}>
         {cards.map(({ category, url, alt, isPlaceholder }) =>
           category.display_only ? (

@@ -19,7 +19,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
   }, [slides.length]);
 
   if (slides.length === 0) {
-    return <section className="relative flex min-h-[60vh] items-center bg-surface" />;
+    return <section className="relative flex aspect-[7/3] items-center bg-surface" />;
   }
 
   function goTo(i: number) {
@@ -29,7 +29,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
   const current = slides[active];
 
   return (
-    <section className="relative flex min-h-[60vh] items-center overflow-hidden">
+    <section className="relative flex aspect-[7/3] items-center overflow-hidden">
       {slides.map((slide, i) => (
         <Image
           key={slide.id}

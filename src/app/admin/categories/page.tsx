@@ -14,7 +14,7 @@ export default async function AdminCategoriesPage({
   const { data: categories } = await supabase
     .from("categories")
     .select(
-      "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only"
+      "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only, featured_in_grid"
     )
     .order("name", { ascending: true });
 
@@ -39,7 +39,10 @@ export default async function AdminCategoriesPage({
         &quot;Display only&quot; to show it as a plain image tile on the
         homepage grid without a product requirement -- it won&apos;t be
         clickable and won&apos;t appear in the header menu or /products
-        filters.
+        filters. Check &quot;Show in Brand Highlights&quot; to make a
+        top-level category eligible for the homepage&apos;s Brand
+        Highlights section, which always shows 5 tiles picked at random
+        from every eligible category on each page load.
       </p>
 
       {error && (

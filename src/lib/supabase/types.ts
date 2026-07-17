@@ -319,6 +319,7 @@ export type Database = {
         Row: {
           created_at: string
           display_only: boolean
+          featured_in_grid: boolean
           hero_eyebrow: string | null
           hero_headline: string | null
           hero_image_url: string | null
@@ -331,6 +332,7 @@ export type Database = {
         Insert: {
           created_at?: string
           display_only?: boolean
+          featured_in_grid?: boolean
           hero_eyebrow?: string | null
           hero_headline?: string | null
           hero_image_url?: string | null
@@ -343,6 +345,7 @@ export type Database = {
         Update: {
           created_at?: string
           display_only?: boolean
+          featured_in_grid?: boolean
           hero_eyebrow?: string | null
           hero_headline?: string | null
           hero_image_url?: string | null
