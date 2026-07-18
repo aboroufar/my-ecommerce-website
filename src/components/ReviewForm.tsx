@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { submitReview } from "@/lib/actions/reviews";
 
 /**
@@ -9,6 +10,7 @@ import { submitReview } from "@/lib/actions/reviews";
  * confirmation message on success rather than navigating away.
  */
 export function ReviewForm({ productId }: { productId: string }) {
+  const t = useTranslations("reviewForm");
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
@@ -16,7 +18,7 @@ export function ReviewForm({ productId }: { productId: string }) {
 
   async function handleSubmit(formData: FormData) {
     if (rating === 0) {
-      setError("Please select a rating.");
+      setError(t("ratingRequired"));
       return;
     }
     formData.set("rating", String(rating));
@@ -34,26 +36,26 @@ export function ReviewForm({ productId }: { productId: string }) {
   if (status === "done") {
     return (
       <p className="text-sm text-foreground">
-        Thanks — your review will appear once it&apos;s approved.
+        {t("success")}
       </p>
     );
   }
 
   return (
     <form action={handleSubmit} className="flex max-w-md flex-col gap-4">
-      <h3 className="font-display text-lg font-bold text-foreground">Add a review</h3>
+      <h3 className="font-display text-lg font-bold text-foreground">{t("addReview")}</h3>
 
       {/* Honeypot -- hidden from real visitors via CSS, not display:none
           (some bots skip fields with display:none), left in the tab order
           but visually and practically unreachable for a human. */}
       <label className="absolute left-[-9999px]" aria-hidden="true">
-        Website
+        {t("website")}
         <input name="website" tabIndex={-1} autoComplete="off" />
       </label>
 
       <div className="flex flex-col gap-1.5">
         <span id="rating-label" className="text-xs font-medium uppercase tracking-wide text-muted">
-          Your rating
+          {t("yourRating")}
         </span>
         <div
           role="radiogroup"
@@ -70,7 +72,7 @@ export function ReviewForm({ productId }: { productId: string }) {
               aria-checked={value === rating}
               onClick={() => setRating(value)}
               onMouseEnter={() => setHoverRating(value)}
-              aria-label={`${value} star${value === 1 ? "" : "s"}`}
+              aria-label={t("starAriaLabel", { count: value })}
               className="rounded text-2xl leading-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <span
@@ -87,7 +89,7 @@ export function ReviewForm({ productId }: { productId: string }) {
 
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-muted">
-          Your review
+          {t("yourReview")}
         </span>
         <textarea
           name="body"
@@ -99,7 +101,7 @@ export function ReviewForm({ productId }: { productId: string }) {
 
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-muted">
-          Your name
+          {t("yourName")}
         </span>
         <input
           name="reviewer_name"
@@ -110,17 +112,17 @@ export function ReviewForm({ productId }: { productId: string }) {
 
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-muted">
-          Your email
+          {t("yourEmail")}
         </span>
         <input
           type="email"
           name="reviewer_email"
           required
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
           className="border border-line bg-transparent px-3 py-2 text-sm focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
         <span className="text-xs text-muted">
-          Your email address will not be published.
+          {t("emailNotPublished")}
         </span>
       </label>
 
@@ -135,7 +137,7 @@ export function ReviewForm({ productId }: { productId: string }) {
         disabled={status === "loading"}
         className="self-start bg-foreground px-6 py-2.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        {status === "loading" ? "Submitting…" : "Submit"}
+        {status === "loading" ? t("submitting") : t("submit")}
       </button>
     </form>
   );

@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { SocialIconLink } from "./SocialIconLink";
 
 export function BlogShareRow({ title }: { title: string }) {
+  const t = useTranslations("blogShareRow");
   const pathname = usePathname();
   const [origin, setOrigin] = useState("");
 
@@ -17,20 +19,20 @@ export function BlogShareRow({ title }: { title: string }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm font-semibold text-foreground">Share:</span>
+      <span className="text-sm font-semibold text-foreground">{t("share")}</span>
       <SocialIconLink
         platform="facebook"
-        label="Share on Facebook"
+        label={t("shareFacebook")}
         href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
       />
       <SocialIconLink
         platform="twitter"
-        label="Share on Twitter"
+        label={t("shareTwitter")}
         href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`}
       />
       <SocialIconLink
         platform="linkedin"
-        label="Share on LinkedIn"
+        label={t("shareLinkedin")}
         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
       />
     </div>

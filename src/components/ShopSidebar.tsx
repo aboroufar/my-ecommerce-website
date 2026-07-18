@@ -1,9 +1,10 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Category } from "@/lib/products";
 import { SearchBox } from "./SearchBox";
 import { PriceRangeFilter } from "./PriceRangeFilter";
 
-export function ShopSidebar({
+export async function ShopSidebar({
   categories,
   activeSlug,
   minPrice,
@@ -14,6 +15,7 @@ export function ShopSidebar({
   minPrice?: string;
   maxPrice?: string;
 }) {
+  const t = await getTranslations("shopSidebar");
   const topLevel = categories.filter((c) => !c.parent_id);
   const childrenByParent = new Map<string, Category[]>();
   for (const c of categories) {
@@ -51,7 +53,7 @@ export function ShopSidebar({
       {categories.length > 0 && (
         <div className="mt-8">
           <h2 className="font-display text-base font-bold text-foreground">
-            Categories
+            {t("categories")}
           </h2>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
@@ -61,7 +63,7 @@ export function ShopSidebar({
                   !activeSlug ? "font-semibold text-foreground" : "text-muted"
                 }`}
               >
-                All products
+                {t("allProducts")}
               </Link>
             </li>
           </ul>

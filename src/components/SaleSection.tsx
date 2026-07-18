@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { Category, ProductSummary } from "@/lib/products";
 import { getSaleInfo } from "@/lib/format";
 import { ProductCard } from "./ProductCard";
@@ -42,6 +43,7 @@ export function SaleSection({
   products: ProductSummary[];
   categories: Category[];
 }) {
+  const t = useTranslations("saleSection");
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
 
   const saleProducts = useMemo(
@@ -77,7 +79,7 @@ export function SaleSection({
     <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-16">
       <div className="text-center">
         <h2 className="font-display text-3xl font-bold text-foreground">
-          Products on sale
+          {t("heading")}
         </h2>
       </div>
 
@@ -91,7 +93,7 @@ export function SaleSection({
               : "bg-surface text-foreground hover:bg-line/60"
           }`}
         >
-          Show all
+          {t("showAll")}
         </button>
         {categories.map((category) => (
           <button
@@ -117,7 +119,7 @@ export function SaleSection({
         </div>
       ) : (
         <p className="mt-10 text-center text-sm text-muted">
-          No sale products in this category yet.
+          {t("emptyCategory")}
         </p>
       )}
 
@@ -126,7 +128,7 @@ export function SaleSection({
           href="/promo"
           className="inline-block rounded-full border border-foreground px-8 py-3.5 text-xs font-semibold uppercase tracking-wide text-foreground transition-colors hover:bg-foreground hover:text-background"
         >
-          View all
+          {t("viewAll")}
         </Link>
       </div>
     </section>

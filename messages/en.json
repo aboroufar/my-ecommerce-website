@@ -1,0 +1,536 @@
+{
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "shopAll": "Shop all",
+    "promo": "Promo",
+    "about": "About",
+    "blog": "Blog",
+    "contact": "Contact",
+    "search": "Search",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "account": "Account",
+    "contactUs": "Contact us",
+    "categories": "Categories",
+    "noSubcategories": "No subcategories yet.",
+    "homeSuffix": "{category} Home"
+  },
+  "footer": {
+    "help": "Help",
+    "shopAll": "Shop all",
+    "cart": "Cart",
+    "shipping": "Shipping & Delivery",
+    "faq": "FAQ",
+    "returns": "Returns",
+    "accounts": "Accounts",
+    "signIn": "Sign in",
+    "trackOrder": "Track an order",
+    "contactUs": "Contact us",
+    "subscribeHeading": "Subscribe to our emails",
+    "subscribeText": "New products, restocks, and the occasional sale.",
+    "rightsReserved": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "common": {
+    "loading": "Loading...",
+    "viewAll": "View all",
+    "addToCart": "Add to cart",
+    "outOfStock": "Out of stock",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "search": "Search",
+    "edit": "Edit",
+    "remove": "Remove"
+  },
+  "cart": {
+    "title": "Your cart",
+    "yourItems": "Your items",
+    "empty": "Your cart is empty",
+    "continueShopping": "Continue shopping",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "checkout": "Checkout",
+    "remove": "Remove",
+    "removeItem": "Remove {name}",
+    "decreaseQuantity": "Decrease quantity of {name}",
+    "increaseQuantity": "Increase quantity of {name}",
+    "quantity": "Quantity",
+    "specialPrice": "Special price",
+    "shipsWithin": "Ships within 2–3 business days",
+    "checkoutFailedGeneric": "Checkout failed. Please try again.",
+    "checkoutFailed": "Checkout failed.",
+    "updateYourProfile": "Update your profile",
+    "redirectingToPayment": "Redirecting to payment…",
+    "proceedToPayment": "Proceed to payment",
+    "secureCheckout": "Secure checkout",
+    "notReservedNotice": "Items in your cart are not reserved. You can enter a discount code on the payment page."
+  },
+  "account": {
+    "orders": "Orders",
+    "addresses": "Addresses",
+    "wishlist": "Wishlist",
+    "signOut": "Sign out",
+    "signIn": "Sign in",
+    "account": "Account",
+    "welcomeBack": "Welcome back",
+    "saved": "Saved.",
+    "myPersonalData": "My personal data",
+    "billingAddress": "Billing address",
+    "noBillingAddress": "No billing address set.",
+    "customerData": "Customer data",
+    "fullNamePlaceholder": "Full name",
+    "phonePlaceholder": "Phone number",
+    "dateOfBirth": "Date of birth",
+    "gender": "Gender",
+    "selectPlaceholder": "Select…",
+    "myCustomerNumber": "My customer number:",
+    "orderHistory": "Order history",
+    "savedAddresses": "Saved addresses",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "genderPreferNotToSay": "Prefer not to say",
+    "countryItaly": "Italy",
+    "default": "Default",
+    "billing": "Billing",
+    "setAsDefault": "Set as default",
+    "setAsBilling": "Set as billing",
+    "addNewAddress": "Add a new address",
+    "saveChanges": "Save changes",
+    "saveAddress": "Save address",
+    "addressLine1Placeholder": "Address line 1",
+    "addressLine2Placeholder": "Address line 2 (optional)",
+    "cityPlaceholder": "City",
+    "stateRegionPlaceholder": "State / region",
+    "postalCodePlaceholder": "Postal code",
+    "useAsBillingAddress": "Use as billing address",
+    "tabAll": "All",
+    "tabProcessing": "Processing",
+    "tabShipped": "Shipped",
+    "tabCancelled": "Cancelled",
+    "noOrdersYet": "No orders yet.",
+    "startShopping": "Start shopping",
+    "noStatusOrders": "No {status} orders.",
+    "orderNumber": "Order #{id}",
+    "backToOrderHistory": "← Order history",
+    "placed": "Placed",
+    "total": "Total",
+    "shippingAddress": "Shipping address",
+    "tracking": "Tracking",
+    "trackShipment": "Track your shipment →",
+    "statusPending": "Pending",
+    "statusPaid": "Paid",
+    "statusFulfilled": "Fulfilled",
+    "statusCancelled": "Cancelled",
+    "statusRefunded": "Refunded",
+    "resetPasswordTitle": "Reset password — Storefront",
+    "passwordUpdated": "Password updated. Taking you to your account…",
+    "setNewPassword": "Set a new password",
+    "newPasswordLabel": "New password*",
+    "newPasswordPlaceholder": "At least 6 characters",
+    "saving": "Saving…",
+    "saveNewPassword": "Save new password",
+    "wishlistEmpty": "Nothing saved yet. Tap the heart on any product to add it here."
+  },
+  "checkout": {
+    "thankYou": "Thank you — order confirmed.",
+    "confirmationEmail": "A confirmation email is on its way. We'll let you know once it ships.",
+    "orderReference": "Order reference:",
+    "continueShopping": "Continue shopping"
+  },
+  "legal": {
+    "eyebrow": "Legal",
+    "placeholderNotice": "This page is a placeholder. Replace the sections below with your actual {title} before launch."
+  },
+  "termsPage": {
+    "title": "Terms of Service — Storefront",
+    "pageTitle": "Terms of Service",
+    "acceptanceHeading": "Acceptance of terms",
+    "acceptanceHint": "What using this site or making a purchase means the customer agrees to.",
+    "ordersHeading": "Orders and payment",
+    "ordersHint": "e.g. prices are re-verified server-side at checkout, when a charge is considered final, accepted payment methods.",
+    "shippingHeading": "Shipping and delivery",
+    "shippingHint": "Reference your Shipping & Delivery page, or restate the key terms here.",
+    "returnsHeading": "Returns and refunds",
+    "returnsHint": "Reference your Returns Policy page, or restate the key terms here.",
+    "ipHeading": "Intellectual property",
+    "ipHint": "Ownership of site content, product images, and branding.",
+    "liabilityHeading": "Limitation of liability",
+    "liabilityHint": "Standard liability disclaimers -- get real legal review for this section specifically.",
+    "lawHeading": "Governing law",
+    "lawHint": "Which jurisdiction's laws apply to disputes.",
+    "contactHeading": "Contact",
+    "contactHint": "Who to contact with questions about these terms."
+  },
+  "privacyPage": {
+    "title": "Privacy Policy — Storefront",
+    "pageTitle": "Privacy Policy",
+    "collectHeading": "What information we collect",
+    "collectHint": "e.g. name, email, shipping address, payment details (handled by Stripe, never stored directly), browsing/cookie data.",
+    "useHeading": "How we use it",
+    "useHint": "e.g. processing orders, sending order updates, marketing emails (only if subscribed), improving the site.",
+    "shareHeading": "Who we share it with",
+    "shareHint": "e.g. Stripe (payments), Resend (email), Supabase (hosting/database), shipping carriers.",
+    "cookiesHeading": "Cookies",
+    "cookiesHint": "What cookies this site sets and why (e.g. cart contents, session).",
+    "rightsHeading": "Your rights",
+    "rightsHint": "How customers can request their data, ask for deletion, or opt out of marketing.",
+    "contactHeading": "Contact",
+    "contactHint": "Who to contact with privacy questions."
+  },
+  "returnsPage": {
+    "title": "Returns Policy — Storefront",
+    "pageTitle": "Returns Policy",
+    "windowHeading": "Return window",
+    "windowHint": "e.g. how many days after delivery a customer can request a return.",
+    "eligibleHeading": "Eligible items",
+    "eligibleHint": "Condition requirements (unused, original packaging, etc.) and any non-returnable categories.",
+    "howToHeading": "How to start a return",
+    "howToHint": "The actual process -- e.g. contact support, use a self-serve portal, print a label.",
+    "refundHeading": "Refund method and timing",
+    "refundHint": "e.g. refunded to original payment method, how long it takes to process once received.",
+    "whoPaysHeading": "Who pays return shipping",
+    "whoPaysHint": "Customer-paid vs. free returns, and under what conditions.",
+    "exchangesHeading": "Exchanges",
+    "exchangesHint": "Whether exchanges are offered as an alternative to a refund."
+  },
+  "contactPage": {
+    "title": "Contact — Storefront",
+    "heading": "Contact us for any enquiries or questions you may have",
+    "body": "Send us a message and we'll get back to you as soon as we can."
+  },
+  "contactForm": {
+    "success": "Thanks — your message has been sent. We'll get back to you soon.",
+    "name": "Name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "message": "Message",
+    "sending": "Sending…",
+    "submit": "Submit",
+    "nameRequired": "Name is required",
+    "emailInvalid": "Enter a valid email address",
+    "messageRequired": "Message is required",
+    "genericError": "Something went wrong sending your message. Please try again."
+  },
+  "reviewForm": {
+    "ratingRequired": "Please select a rating.",
+    "success": "Thanks — your review will appear once it's approved.",
+    "addReview": "Add a review",
+    "website": "Website",
+    "yourRating": "Your rating",
+    "starAriaLabel": "{count, plural, one {# star} other {# stars}}",
+    "yourReview": "Your review",
+    "yourName": "Your name",
+    "yourEmail": "Your email",
+    "emailPlaceholder": "you@example.com",
+    "emailNotPublished": "Your email address will not be published.",
+    "submitting": "Submitting…",
+    "submit": "Submit",
+    "nameRequired": "Name is required",
+    "emailInvalid": "Enter a valid email address",
+    "reviewRequired": "Review is required",
+    "genericError": "Something went wrong submitting your review. Please try again."
+  },
+  "newsletter": {
+    "success": "You're on the list — thanks for subscribing.",
+    "emailPlaceholder": "you@example.com",
+    "subscribing": "Subscribing…",
+    "subscribe": "Subscribe",
+    "emailInvalid": "Enter a valid email address",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "addressesErrors": {
+    "addressRequired": "Address is required",
+    "cityRequired": "City is required",
+    "postalCodeRequired": "Postal code is required",
+    "countryRequired": "Country is required"
+  },
+  "checkoutErrors": {
+    "cartEmpty": "Cart is empty",
+    "invalidRequest": "Invalid request.",
+    "couldNotLoadProducts": "Could not load products.",
+    "couldNotLoadOptions": "Could not load product options.",
+    "itemUnavailable": "One of the items in your cart is no longer available.",
+    "notEnoughStock": "Not enough stock for \"{name}\".",
+    "incompleteProfile": "Please complete your profile (name, phone, date of birth, gender, and a billing address) before checking out.",
+    "couldNotCreateOrder": "Could not create order.",
+    "couldNotCreateOrderItems": "Could not create order items.",
+    "couldNotStartCheckout": "Could not start checkout. Please try again."
+  },
+  "shippingPage": {
+    "title": "Shipping & Delivery — Storefront",
+    "eyebrow": "Help",
+    "heading": "Shipping & Delivery",
+    "processingTimeTitle": "Processing time",
+    "processingTimeBody": "In-stock orders ship within 2–3 business days of purchase. You'll get an email confirmation as soon as your order is placed.",
+    "whereWeShipTitle": "Where we ship",
+    "whereWeShipBody": "We currently ship to Italy only. If your address is outside Italy, checkout won't be able to collect a shipping address for it yet.",
+    "shippingCostTitle": "Shipping cost",
+    "shippingCostBody": "Free shipping on orders over €75. Standard shipping rates apply below that threshold, calculated at checkout based on your address and order weight.",
+    "questionTitle": "Have a question about your order?",
+    "questionBodyStart": "Check your order status any time from",
+    "questionBodyYourAccount": "your account",
+    "questionBodyOr": ", or see our",
+    "questionBodyFaq": "FAQ",
+    "questionBodyEnd": "for more."
+  },
+  "aboutPage": {
+    "title": "About Us — Storefront",
+    "eyebrow": "About",
+    "heading": "About Us",
+    "placeholderNotice": "This page is a placeholder. Replace it with your real brand story before launch.",
+    "body": "Write who you are, why the store exists, and what makes your products worth choosing -- founding story, values, sourcing, craftsmanship, whatever is true and specific to your brand."
+  },
+  "faqPage": {
+    "title": "FAQ — Storefront",
+    "eyebrow": "Help",
+    "heading": "Frequently asked questions",
+    "closingText": "Don't see your question here?",
+    "emailUs": "Email us",
+    "closingSuffix": "and we'll help you out.",
+    "q1Question": "How do I track my order?",
+    "q1AnswerStart": "Sign in and go to",
+    "q1AnswerLink": "your orders",
+    "q1AnswerEnd": "to see the status of anything you've purchased. You'll also get an email confirmation when your order is placed.",
+    "q2Question": "What payment methods do you accept?",
+    "q2Answer": "We accept all major credit and debit cards through Stripe's secure checkout.",
+    "q3Question": "Where do you ship?",
+    "q3AnswerStart": "Italy only, for now. See",
+    "q3AnswerLink": "Shipping & Delivery",
+    "q3AnswerEnd": "for details.",
+    "q4Question": "How long does shipping take?",
+    "q4Answer": "Orders ship within 2–3 business days. Shipping is free on orders over €75.",
+    "q5Question": "Do I need an account to check out?",
+    "q5Answer": "No — guest checkout is available. Creating an account lets you track order history and save addresses for next time."
+  },
+  "helpPage": {
+    "title": "Help — Storefront",
+    "eyebrow": "Help",
+    "heading": "How can we help?",
+    "empty": "Nothing here yet -- check back soon."
+  },
+  "pdp": {
+    "shopAll": "← Shop all",
+    "reviewCount": "({count, plural, one {# customer review} other {# customer reviews}})",
+    "taxIncluded": "Tax included at checkout.",
+    "category": "Category:",
+    "tags": "Tags:",
+    "sku": "SKU:",
+    "description": "Description",
+    "noDescription": "No description yet.",
+    "additionalInformation": "Additional information",
+    "reviews": "Reviews ({count})",
+    "relatedItems": "Related items"
+  },
+  "productCard": {
+    "removeFromWishlist": "Remove from wishlist",
+    "addToWishlist": "Add to wishlist",
+    "quickView": "Quick view",
+    "signInToSave": "Sign in to save this to your wishlist",
+    "sale": "Sale",
+    "popular": "Popular",
+    "addToCart": "Add {name} to cart"
+  },
+  "orderSummary": {
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "shipping": "Shipping",
+    "free": "Free",
+    "total": "Total",
+    "vatIncluded": "VAT included"
+  },
+  "variantSelector": {
+    "selectOption": "Select {option}"
+  },
+  "blog": {
+    "readMore": "Read more"
+  },
+  "blogPost": {
+    "home": "Home",
+    "blog": "Blog",
+    "tags": "Tags:",
+    "relatedPosts": "Related posts"
+  },
+  "reviewsTab": {
+    "heading": "{count, plural, one {# review} other {# reviews}} for {product}"
+  },
+  "wishlistButton": {
+    "removeFromWishlist": "Remove from wishlist",
+    "addToWishlist": "Add to wishlist"
+  },
+  "searchBox": {
+    "placeholder": "Search products…",
+    "search": "Search"
+  },
+  "blogSearchBox": {
+    "placeholder": "Search posts…",
+    "search": "Search"
+  },
+  "productsPage": {
+    "title": "Shop — Storefront",
+    "description": "Browse the full catalog.",
+    "breadcrumbHome": "Home",
+    "breadcrumb": "Breadcrumb",
+    "shop": "Shop",
+    "catalog": "Catalog",
+    "shopAll": "Shop all",
+    "emptyFilteredHeading": "No products in this category yet.",
+    "viewAllProducts": "View all products",
+    "emptyHeading": "No products yet.",
+    "emptyBody": "Once your Supabase project is connected and migrated, products marked {statusActive} will show up here automatically. Run {seedCommand} for sample data."
+  },
+  "promoPage": {
+    "title": "Promo — Storefront",
+    "description": "Shop active promotions and discounted products.",
+    "promo": "Promo",
+    "onSaleCategory": "On sale — {category}",
+    "onSaleNow": "On sale now",
+    "emptyFilteredHeading": "No sale products in this category yet.",
+    "viewAllPromos": "View all promos",
+    "emptyHeading": "No products on sale right now — check back soon."
+  },
+  "priceRangeFilter": {
+    "price": "Price",
+    "minPrice": "Minimum price",
+    "min": "Min",
+    "maxPrice": "Maximum price",
+    "max": "Max",
+    "apply": "Apply"
+  },
+  "bestSellers": {
+    "eyebrow": "Everything you may need",
+    "heading": "Top Bestsellers",
+    "showAll": "Show all",
+    "emptyCategory": "No products in this category yet.",
+    "viewAll": "View all"
+  },
+  "categoryGrid": {
+    "sampleImage": "Sample image",
+    "viewMore": "View More"
+  },
+  "saleSection": {
+    "heading": "Products on sale",
+    "showAll": "Show all",
+    "emptyCategory": "No sale products in this category yet.",
+    "viewAll": "View all"
+  },
+  "heroSlideshow": {
+    "readMore": "Read more",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide"
+  },
+  "signInForm": {
+    "title": "Sign in",
+    "or": "or",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "loggingIn": "Logging in…",
+    "logIn": "Log in",
+    "sending": "Sending…",
+    "forgotPassword": "Forgot your password?",
+    "enterEmailFirst": "Enter your email above first, then click this link.",
+    "resetSent": "Check your email for a link to reset your password.",
+    "preferNoPassword": "Prefer not to use a password?",
+    "emailMeLink": "Email me a sign-in link instead",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create account",
+    "continueWithGoogle": "Continue with Google"
+  },
+  "signOutButton": {
+    "signOut": "Sign out"
+  },
+  "signUpForm": {
+    "title": "Create account",
+    "or": "or",
+    "checkEmail": "Check your email to confirm your account.",
+    "email": "Email*",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password*",
+    "passwordPlaceholder": "At least 6 characters",
+    "creating": "Creating account…",
+    "createAccount": "Create account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "addToCartButton": {
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "selectOptions": "Select options",
+    "added": "Added ✓",
+    "addToCart": "Add to cart",
+    "chooseOption": "Choose an option for every dropdown above to continue.",
+    "shipsIn": "Ships in 2–3 business days.",
+    "shippingDetails": "Shipping details"
+  },
+  "magicLinkForm": {
+    "heading": "Sign in",
+    "description": "Enter your email and we'll send a one-time sign-in link. No password to manage.",
+    "checkEmail": "Check your email for a sign-in link.",
+    "emailPlaceholder": "you@example.com",
+    "sending": "Sending…",
+    "sendMagicLink": "Send magic link",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "blogShareRow": {
+    "share": "Share:",
+    "shareFacebook": "Share on Facebook",
+    "shareTwitter": "Share on Twitter",
+    "shareLinkedin": "Share on LinkedIn"
+  },
+  "magicLinkPage": {
+    "title": "Sign in with a magic link — Storefront"
+  },
+  "signUpPage": {
+    "title": "Create account — Storefront"
+  },
+  "brandBar": {
+    "scrollLeft": "Scroll brands left",
+    "scrollRight": "Scroll brands right"
+  },
+  "sortDropdown": {
+    "ariaLabel": "Sort products",
+    "newest": "Newest",
+    "priceAsc": "Price: Low to High",
+    "priceDesc": "Price: High to Low",
+    "nameAsc": "Name: A to Z"
+  },
+  "shopSidebar": {
+    "categories": "Categories",
+    "allProducts": "All products"
+  },
+  "categoryHero": {
+    "eyebrowDefault": "Everything you may need",
+    "viewMore": "View More"
+  },
+  "blogSidebar": {
+    "categories": "Categories",
+    "allPosts": "All posts",
+    "relatedPost": "Related post",
+    "tags": "Tags",
+    "followUs": "Follow Us"
+  },
+  "blogPage": {
+    "title": "Blog — Storefront",
+    "description": "Guides, tips, and news from the Storefront team.",
+    "blog": "Blog",
+    "resultsFor": "Results for \"{query}\"",
+    "allPosts": "All posts",
+    "noPostsMatch": "No posts match your search.",
+    "noPostsYet": "No posts yet.",
+    "viewAllPosts": "View all posts"
+  },
+  "searchPage": {
+    "title": "Search — Storefront",
+    "search": "Search",
+    "resultsFor": "Results for “{query}”",
+    "searchProducts": "Search products",
+    "enterSearchTerm": "Enter a search term above to find products.",
+    "noneFoundFor": "No products found for “{query}”.",
+    "browseAll": "Browse all products"
+  }
+}

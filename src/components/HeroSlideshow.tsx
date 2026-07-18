@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { HeroSlide } from "@/lib/heroSlides";
 
 const SLIDE_DURATION_MS = 6000;
 
 export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
+  const t = useTranslations("heroSlideshow");
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
           href={current.link_url}
           className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:bg-background hover:text-foreground hover:shadow-md"
         >
-          Read more
+          {t("readMore")}
         </Link>
       </div>
 
@@ -66,7 +68,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
         <>
           <button
             type="button"
-            aria-label="Previous slide"
+            aria-label={t("previousSlide")}
             onClick={() => goTo(active - 1)}
             className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-background transition-opacity hover:opacity-70 sm:left-8"
           >
@@ -74,7 +76,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
           </button>
           <button
             type="button"
-            aria-label="Next slide"
+            aria-label={t("nextSlide")}
             onClick={() => goTo(active + 1)}
             className="absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-background transition-opacity hover:opacity-70 sm:right-8"
           >

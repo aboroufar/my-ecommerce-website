@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { subscribeToNewsletter } from "@/lib/actions/newsletter";
 
 export function NewsletterSignup() {
+  const t = useTranslations("newsletter");
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +24,7 @@ export function NewsletterSignup() {
   if (status === "done") {
     return (
       <p className="text-sm text-foreground">
-        You&apos;re on the list — thanks for subscribing.
+        {t("success")}
       </p>
     );
   }
@@ -34,7 +36,7 @@ export function NewsletterSignup() {
           type="email"
           name="email"
           required
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
           className="flex-1 border border-line bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40 sm:border-r-0"
         />
         <button
@@ -42,7 +44,7 @@ export function NewsletterSignup() {
           disabled={status === "loading"}
           className="bg-foreground px-5 py-2 text-xs font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {status === "loading" ? "Subscribing…" : "Subscribe"}
+          {status === "loading" ? t("subscribing") : t("subscribe")}
         </button>
       </form>
       {error && <p className="mt-2 text-xs text-red-700">{error}</p>}

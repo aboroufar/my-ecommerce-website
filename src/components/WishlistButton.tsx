@@ -1,11 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { useState } from "react";
 import { useWishlist } from "./WishlistProvider";
 
 /** Standalone heart toggle for the PDP -- same useWishlist hook as ProductCard's icon, sized for standing next to Add to cart rather than floating over a thumbnail. */
 export function WishlistButton({ productId }: { productId: string }) {
+  const t = useTranslations("wishlistButton");
   const wishlist = useWishlist();
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -25,7 +27,7 @@ export function WishlistButton({ productId }: { productId: string }) {
     <button
       type="button"
       onClick={handleToggle}
-      aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+      aria-label={wishlisted ? t("removeFromWishlist") : t("addToWishlist")}
       aria-pressed={wishlisted}
       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
         wishlisted

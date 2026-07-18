@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export function AccountLink() {
+  const t = useTranslations("account");
   // null = not yet known (first paint before hydration/auth check resolves).
   // Rendering "Sign in" as the default avoids a layout-shift-causing blank
   // state and is the more common case anyway.
@@ -26,7 +28,7 @@ export function AccountLink() {
   return (
     <Link
       href="/account"
-      aria-label={signedIn ? "Account" : "Sign in"}
+      aria-label={signedIn ? t("account") : t("signIn")}
       className="flex items-center gap-1.5 text-foreground transition-opacity hover:opacity-70"
     >
       <PersonIcon />

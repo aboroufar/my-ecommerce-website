@@ -1,0 +1,536 @@
+{
+  "nav": {
+    "home": "Home",
+    "shop": "Negozio",
+    "shopAll": "Vedi tutto",
+    "promo": "Promo",
+    "about": "Chi siamo",
+    "blog": "Blog",
+    "contact": "Contatti",
+    "search": "Cerca",
+    "cart": "Carrello",
+    "wishlist": "Preferiti",
+    "account": "Account",
+    "contactUs": "Contattaci",
+    "categories": "Categorie",
+    "noSubcategories": "Nessuna sottocategoria al momento.",
+    "homeSuffix": "{category} Home"
+  },
+  "footer": {
+    "help": "Aiuto",
+    "shopAll": "Vedi tutto",
+    "cart": "Carrello",
+    "shipping": "Spedizioni e consegna",
+    "faq": "FAQ",
+    "returns": "Resi",
+    "accounts": "Account",
+    "signIn": "Accedi",
+    "trackOrder": "Traccia un ordine",
+    "contactUs": "Contattaci",
+    "subscribeHeading": "Iscriviti alla nostra newsletter",
+    "subscribeText": "Nuovi prodotti, riassortimenti e offerte occasionali.",
+    "rightsReserved": "Tutti i diritti riservati.",
+    "privacy": "Informativa sulla privacy",
+    "terms": "Termini di servizio"
+  },
+  "common": {
+    "loading": "Caricamento...",
+    "viewAll": "Vedi tutto",
+    "addToCart": "Aggiungi al carrello",
+    "outOfStock": "Esaurito",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "submit": "Invia",
+    "search": "Cerca",
+    "edit": "Modifica",
+    "remove": "Rimuovi"
+  },
+  "cart": {
+    "title": "Il tuo carrello",
+    "yourItems": "I tuoi articoli",
+    "empty": "Il tuo carrello è vuoto",
+    "continueShopping": "Continua lo shopping",
+    "subtotal": "Subtotale",
+    "total": "Totale",
+    "checkout": "Checkout",
+    "remove": "Rimuovi",
+    "removeItem": "Rimuovi {name}",
+    "decreaseQuantity": "Diminuisci la quantità di {name}",
+    "increaseQuantity": "Aumenta la quantità di {name}",
+    "quantity": "Quantità",
+    "specialPrice": "Prezzo speciale",
+    "shipsWithin": "Spedito entro 2-3 giorni lavorativi",
+    "checkoutFailedGeneric": "Checkout non riuscito. Riprova.",
+    "checkoutFailed": "Checkout non riuscito.",
+    "updateYourProfile": "Aggiorna il tuo profilo",
+    "redirectingToPayment": "Reindirizzamento al pagamento…",
+    "proceedToPayment": "Procedi al pagamento",
+    "secureCheckout": "Pagamento sicuro",
+    "notReservedNotice": "Gli articoli nel tuo carrello non sono riservati. Puoi inserire un codice sconto nella pagina di pagamento."
+  },
+  "account": {
+    "orders": "Ordini",
+    "addresses": "Indirizzi",
+    "wishlist": "Preferiti",
+    "signOut": "Esci",
+    "signIn": "Accedi",
+    "account": "Account",
+    "welcomeBack": "Bentornato/a",
+    "saved": "Salvato.",
+    "myPersonalData": "I miei dati personali",
+    "billingAddress": "Indirizzo di fatturazione",
+    "noBillingAddress": "Nessun indirizzo di fatturazione impostato.",
+    "customerData": "Dati cliente",
+    "fullNamePlaceholder": "Nome completo",
+    "phonePlaceholder": "Numero di telefono",
+    "dateOfBirth": "Data di nascita",
+    "gender": "Genere",
+    "selectPlaceholder": "Seleziona…",
+    "myCustomerNumber": "Il mio numero cliente:",
+    "orderHistory": "Storico ordini",
+    "savedAddresses": "Indirizzi salvati",
+    "genderMale": "Uomo",
+    "genderFemale": "Donna",
+    "genderOther": "Altro",
+    "genderPreferNotToSay": "Preferisco non specificare",
+    "countryItaly": "Italia",
+    "default": "Predefinito",
+    "billing": "Fatturazione",
+    "setAsDefault": "Imposta come predefinito",
+    "setAsBilling": "Imposta come fatturazione",
+    "addNewAddress": "Aggiungi un nuovo indirizzo",
+    "saveChanges": "Salva modifiche",
+    "saveAddress": "Salva indirizzo",
+    "addressLine1Placeholder": "Indirizzo (riga 1)",
+    "addressLine2Placeholder": "Indirizzo (riga 2, opzionale)",
+    "cityPlaceholder": "Città",
+    "stateRegionPlaceholder": "Provincia / regione",
+    "postalCodePlaceholder": "CAP",
+    "useAsBillingAddress": "Usa come indirizzo di fatturazione",
+    "tabAll": "Tutti",
+    "tabProcessing": "In lavorazione",
+    "tabShipped": "Spediti",
+    "tabCancelled": "Annullati",
+    "noOrdersYet": "Nessun ordine finora.",
+    "startShopping": "Inizia lo shopping",
+    "noStatusOrders": "Nessun ordine {status}.",
+    "orderNumber": "Ordine #{id}",
+    "backToOrderHistory": "← Storico ordini",
+    "placed": "Effettuato il",
+    "total": "Totale",
+    "shippingAddress": "Indirizzo di spedizione",
+    "tracking": "Tracciamento",
+    "trackShipment": "Traccia la tua spedizione →",
+    "statusPending": "In attesa",
+    "statusPaid": "Pagato",
+    "statusFulfilled": "Evaso",
+    "statusCancelled": "Annullato",
+    "statusRefunded": "Rimborsato",
+    "resetPasswordTitle": "Reimposta password — Storefront",
+    "passwordUpdated": "Password aggiornata. Ti stiamo portando al tuo account…",
+    "setNewPassword": "Imposta una nuova password",
+    "newPasswordLabel": "Nuova password*",
+    "newPasswordPlaceholder": "Almeno 6 caratteri",
+    "saving": "Salvataggio…",
+    "saveNewPassword": "Salva nuova password",
+    "wishlistEmpty": "Ancora nessun salvataggio. Tocca il cuore su un prodotto per aggiungerlo qui."
+  },
+  "checkout": {
+    "thankYou": "Grazie — ordine confermato.",
+    "confirmationEmail": "Un'email di conferma è in arrivo. Ti avviseremo quando verrà spedito.",
+    "orderReference": "Riferimento ordine:",
+    "continueShopping": "Continua lo shopping"
+  },
+  "legal": {
+    "eyebrow": "Legale",
+    "placeholderNotice": "Questa pagina è un segnaposto. Sostituisci le sezioni seguenti con il tuo {title} reale prima del lancio."
+  },
+  "termsPage": {
+    "title": "Termini di servizio — Storefront",
+    "pageTitle": "Termini di servizio",
+    "acceptanceHeading": "Accettazione dei termini",
+    "acceptanceHint": "Cosa comporta per il cliente l'uso di questo sito o un acquisto.",
+    "ordersHeading": "Ordini e pagamento",
+    "ordersHint": "Es. i prezzi vengono riverificati lato server al checkout, quando un addebito è considerato definitivo, metodi di pagamento accettati.",
+    "shippingHeading": "Spedizione e consegna",
+    "shippingHint": "Fai riferimento alla tua pagina Spedizioni e consegna, oppure ripeti qui i termini principali.",
+    "returnsHeading": "Resi e rimborsi",
+    "returnsHint": "Fai riferimento alla tua Politica di reso, oppure ripeti qui i termini principali.",
+    "ipHeading": "Proprietà intellettuale",
+    "ipHint": "Proprietà dei contenuti del sito, immagini dei prodotti e branding.",
+    "liabilityHeading": "Limitazione di responsabilità",
+    "liabilityHint": "Clausole standard di limitazione di responsabilità -- richiedi una revisione legale reale per questa sezione specifica.",
+    "lawHeading": "Legge applicabile",
+    "lawHint": "Quale giurisdizione si applica alle controversie.",
+    "contactHeading": "Contatti",
+    "contactHint": "A chi rivolgersi per domande su questi termini."
+  },
+  "privacyPage": {
+    "title": "Informativa sulla privacy — Storefront",
+    "pageTitle": "Informativa sulla privacy",
+    "collectHeading": "Quali informazioni raccogliamo",
+    "collectHint": "Es. nome, email, indirizzo di spedizione, dati di pagamento (gestiti da Stripe, mai memorizzati direttamente), dati di navigazione/cookie.",
+    "useHeading": "Come li utilizziamo",
+    "useHint": "Es. elaborazione ordini, invio aggiornamenti sugli ordini, email di marketing (solo se iscritti), miglioramento del sito.",
+    "shareHeading": "Con chi li condividiamo",
+    "shareHint": "Es. Stripe (pagamenti), Resend (email), Supabase (hosting/database), corrieri.",
+    "cookiesHeading": "Cookie",
+    "cookiesHint": "Quali cookie imposta questo sito e perché (es. contenuto del carrello, sessione).",
+    "rightsHeading": "I tuoi diritti",
+    "rightsHint": "Come i clienti possono richiedere i propri dati, chiederne la cancellazione o rinunciare al marketing.",
+    "contactHeading": "Contatti",
+    "contactHint": "A chi rivolgersi per domande sulla privacy."
+  },
+  "returnsPage": {
+    "title": "Politica di reso — Storefront",
+    "pageTitle": "Politica di reso",
+    "windowHeading": "Termine per il reso",
+    "windowHint": "Es. entro quanti giorni dalla consegna un cliente può richiedere un reso.",
+    "eligibleHeading": "Articoli idonei",
+    "eligibleHint": "Requisiti di condizione (non utilizzato, confezione originale, ecc.) ed eventuali categorie non restituibili.",
+    "howToHeading": "Come avviare un reso",
+    "howToHint": "Il processo effettivo -- es. contattare l'assistenza, usare un portale self-service, stampare un'etichetta.",
+    "refundHeading": "Metodo e tempistiche di rimborso",
+    "refundHint": "Es. rimborsato sul metodo di pagamento originale, quanto tempo richiede l'elaborazione una volta ricevuto.",
+    "whoPaysHeading": "Chi paga la spedizione di reso",
+    "whoPaysHint": "Reso a pagamento vs. gratuito, e a quali condizioni.",
+    "exchangesHeading": "Cambi",
+    "exchangesHint": "Se i cambi sono offerti come alternativa al rimborso."
+  },
+  "contactPage": {
+    "title": "Contatti — Storefront",
+    "heading": "Contattaci per qualsiasi richiesta o domanda tu possa avere",
+    "body": "Inviaci un messaggio e ti risponderemo il prima possibile."
+  },
+  "contactForm": {
+    "success": "Grazie — il tuo messaggio è stato inviato. Ti risponderemo presto.",
+    "name": "Nome",
+    "email": "Email",
+    "emailPlaceholder": "tu@esempio.com",
+    "message": "Messaggio",
+    "sending": "Invio…",
+    "submit": "Invia",
+    "nameRequired": "Il nome è obbligatorio",
+    "emailInvalid": "Inserisci un indirizzo email valido",
+    "messageRequired": "Il messaggio è obbligatorio",
+    "genericError": "Si è verificato un errore durante l'invio del messaggio. Riprova."
+  },
+  "reviewForm": {
+    "ratingRequired": "Seleziona una valutazione.",
+    "success": "Grazie — la tua recensione apparirà una volta approvata.",
+    "addReview": "Aggiungi una recensione",
+    "website": "Sito web",
+    "yourRating": "La tua valutazione",
+    "starAriaLabel": "{count, plural, one {# stella} other {# stelle}}",
+    "yourReview": "La tua recensione",
+    "yourName": "Il tuo nome",
+    "yourEmail": "La tua email",
+    "emailPlaceholder": "tu@esempio.com",
+    "emailNotPublished": "Il tuo indirizzo email non sarà pubblicato.",
+    "submitting": "Invio…",
+    "submit": "Invia",
+    "nameRequired": "Il nome è obbligatorio",
+    "emailInvalid": "Inserisci un indirizzo email valido",
+    "reviewRequired": "La recensione è obbligatoria",
+    "genericError": "Si è verificato un errore durante l'invio della recensione. Riprova."
+  },
+  "newsletter": {
+    "success": "Sei iscritto — grazie per esserti iscritto.",
+    "emailPlaceholder": "tu@esempio.com",
+    "subscribing": "Iscrizione…",
+    "subscribe": "Iscriviti",
+    "emailInvalid": "Inserisci un indirizzo email valido",
+    "genericError": "Si è verificato un errore. Riprova."
+  },
+  "addressesErrors": {
+    "addressRequired": "L'indirizzo è obbligatorio",
+    "cityRequired": "La città è obbligatoria",
+    "postalCodeRequired": "Il CAP è obbligatorio",
+    "countryRequired": "Il paese è obbligatorio"
+  },
+  "checkoutErrors": {
+    "cartEmpty": "Il carrello è vuoto",
+    "invalidRequest": "Richiesta non valida.",
+    "couldNotLoadProducts": "Impossibile caricare i prodotti.",
+    "couldNotLoadOptions": "Impossibile caricare le opzioni del prodotto.",
+    "itemUnavailable": "Uno degli articoli nel tuo carrello non è più disponibile.",
+    "notEnoughStock": "Scorte insufficienti per \"{name}\".",
+    "incompleteProfile": "Completa il tuo profilo (nome, telefono, data di nascita, genere e un indirizzo di fatturazione) prima di procedere al checkout.",
+    "couldNotCreateOrder": "Impossibile creare l'ordine.",
+    "couldNotCreateOrderItems": "Impossibile creare gli articoli dell'ordine.",
+    "couldNotStartCheckout": "Impossibile avviare il checkout. Riprova."
+  },
+  "shippingPage": {
+    "title": "Spedizioni e consegna — Storefront",
+    "eyebrow": "Aiuto",
+    "heading": "Spedizioni e consegna",
+    "processingTimeTitle": "Tempi di lavorazione",
+    "processingTimeBody": "Gli ordini disponibili vengono spediti entro 2-3 giorni lavorativi dall'acquisto. Riceverai un'email di conferma non appena l'ordine viene effettuato.",
+    "whereWeShipTitle": "Dove spediamo",
+    "whereWeShipBody": "Al momento spediamo solo in Italia. Se il tuo indirizzo è al di fuori dell'Italia, il checkout non sarà in grado di raccogliere un indirizzo di spedizione per te.",
+    "shippingCostTitle": "Costi di spedizione",
+    "shippingCostBody": "Spedizione gratuita per ordini superiori a €75. Al di sotto di questa soglia si applicano le tariffe di spedizione standard, calcolate al checkout in base al tuo indirizzo e al peso dell'ordine.",
+    "questionTitle": "Hai una domanda sul tuo ordine?",
+    "questionBodyStart": "Controlla lo stato del tuo ordine in qualsiasi momento dal",
+    "questionBodyYourAccount": "tuo account",
+    "questionBodyOr": ", oppure consulta le nostre",
+    "questionBodyFaq": "FAQ",
+    "questionBodyEnd": "per saperne di più."
+  },
+  "aboutPage": {
+    "title": "Chi siamo — Storefront",
+    "eyebrow": "Chi siamo",
+    "heading": "Chi siamo",
+    "placeholderNotice": "Questa pagina è un segnaposto. Sostituiscila con la tua vera storia del brand prima del lancio.",
+    "body": "Scrivi chi sei, perché esiste il negozio e cosa rende i tuoi prodotti degni di essere scelti -- storia fondativa, valori, provenienza, artigianalità, tutto ciò che è vero e specifico per il tuo brand."
+  },
+  "faqPage": {
+    "title": "FAQ — Storefront",
+    "eyebrow": "Aiuto",
+    "heading": "Domande frequenti",
+    "closingText": "Non trovi la tua domanda?",
+    "emailUs": "Scrivici",
+    "closingSuffix": "e ti aiuteremo.",
+    "q1Question": "Come posso tracciare il mio ordine?",
+    "q1AnswerStart": "Accedi e vai a",
+    "q1AnswerLink": "i tuoi ordini",
+    "q1AnswerEnd": "per vedere lo stato di tutto ciò che hai acquistato. Riceverai anche un'email di conferma quando il tuo ordine viene effettuato.",
+    "q2Question": "Quali metodi di pagamento accettate?",
+    "q2Answer": "Accettiamo tutte le principali carte di credito e debito tramite il checkout sicuro di Stripe.",
+    "q3Question": "Dove spedite?",
+    "q3AnswerStart": "Solo in Italia, per ora. Vedi",
+    "q3AnswerLink": "Spedizioni e consegna",
+    "q3AnswerEnd": "per i dettagli.",
+    "q4Question": "Quanto tempo richiede la spedizione?",
+    "q4Answer": "Gli ordini vengono spediti entro 2-3 giorni lavorativi. La spedizione è gratuita per ordini superiori a €75.",
+    "q5Question": "Devo avere un account per completare l'acquisto?",
+    "q5Answer": "No — è disponibile il checkout come ospite. Creare un account ti permette di monitorare lo storico ordini e salvare gli indirizzi per la prossima volta."
+  },
+  "helpPage": {
+    "title": "Aiuto — Storefront",
+    "eyebrow": "Aiuto",
+    "heading": "Come possiamo aiutarti?",
+    "empty": "Ancora nessun contenuto -- torna a trovarci presto."
+  },
+  "pdp": {
+    "shopAll": "← Vedi tutto",
+    "reviewCount": "({count, plural, one {# recensione cliente} other {# recensioni clienti}})",
+    "taxIncluded": "Tasse incluse al checkout.",
+    "category": "Categoria:",
+    "tags": "Tag:",
+    "sku": "SKU:",
+    "description": "Descrizione",
+    "noDescription": "Nessuna descrizione disponibile.",
+    "additionalInformation": "Informazioni aggiuntive",
+    "reviews": "Recensioni ({count})",
+    "relatedItems": "Articoli correlati"
+  },
+  "productCard": {
+    "removeFromWishlist": "Rimuovi dai preferiti",
+    "addToWishlist": "Aggiungi ai preferiti",
+    "quickView": "Vista rapida",
+    "signInToSave": "Accedi per salvare questo articolo nei preferiti",
+    "sale": "Saldi",
+    "popular": "Popolare",
+    "addToCart": "Aggiungi {name} al carrello"
+  },
+  "orderSummary": {
+    "subtotal": "Subtotale",
+    "discount": "Sconto",
+    "shipping": "Spedizione",
+    "free": "Gratis",
+    "total": "Totale",
+    "vatIncluded": "IVA inclusa"
+  },
+  "variantSelector": {
+    "selectOption": "Seleziona {option}"
+  },
+  "blog": {
+    "readMore": "Leggi tutto"
+  },
+  "blogPost": {
+    "home": "Home",
+    "blog": "Blog",
+    "tags": "Tag:",
+    "relatedPosts": "Articoli correlati"
+  },
+  "reviewsTab": {
+    "heading": "{count, plural, one {# recensione} other {# recensioni}} per {product}"
+  },
+  "wishlistButton": {
+    "removeFromWishlist": "Rimuovi dai preferiti",
+    "addToWishlist": "Aggiungi ai preferiti"
+  },
+  "searchBox": {
+    "placeholder": "Cerca prodotti…",
+    "search": "Cerca"
+  },
+  "blogSearchBox": {
+    "placeholder": "Cerca articoli…",
+    "search": "Cerca"
+  },
+  "productsPage": {
+    "title": "Negozio — Storefront",
+    "description": "Sfoglia l'intero catalogo.",
+    "breadcrumbHome": "Home",
+    "breadcrumb": "Breadcrumb",
+    "shop": "Negozio",
+    "catalog": "Catalogo",
+    "shopAll": "Vedi tutto",
+    "emptyFilteredHeading": "Ancora nessun prodotto in questa categoria.",
+    "viewAllProducts": "Vedi tutti i prodotti",
+    "emptyHeading": "Ancora nessun prodotto.",
+    "emptyBody": "Una volta che il tuo progetto Supabase è connesso e migrato, i prodotti contrassegnati {statusActive} appariranno qui automaticamente. Esegui {seedCommand} per dati di esempio."
+  },
+  "promoPage": {
+    "title": "Promo — Storefront",
+    "description": "Scopri le promozioni attive e i prodotti scontati.",
+    "promo": "Promo",
+    "onSaleCategory": "In saldo — {category}",
+    "onSaleNow": "In saldo ora",
+    "emptyFilteredHeading": "Ancora nessun prodotto in saldo in questa categoria.",
+    "viewAllPromos": "Vedi tutte le promo",
+    "emptyHeading": "Nessun prodotto in saldo al momento — torna a trovarci presto."
+  },
+  "priceRangeFilter": {
+    "price": "Prezzo",
+    "minPrice": "Prezzo minimo",
+    "min": "Min",
+    "maxPrice": "Prezzo massimo",
+    "max": "Max",
+    "apply": "Applica"
+  },
+  "bestSellers": {
+    "eyebrow": "Tutto ciò di cui hai bisogno",
+    "heading": "I più venduti",
+    "showAll": "Vedi tutto",
+    "emptyCategory": "Ancora nessun prodotto in questa categoria.",
+    "viewAll": "Vedi tutto"
+  },
+  "categoryGrid": {
+    "sampleImage": "Immagine di esempio",
+    "viewMore": "Scopri di più"
+  },
+  "saleSection": {
+    "heading": "Prodotti in saldo",
+    "showAll": "Vedi tutto",
+    "emptyCategory": "Ancora nessun prodotto in saldo in questa categoria.",
+    "viewAll": "Vedi tutto"
+  },
+  "heroSlideshow": {
+    "readMore": "Leggi tutto",
+    "previousSlide": "Slide precedente",
+    "nextSlide": "Slide successiva"
+  },
+  "signInForm": {
+    "title": "Accedi",
+    "or": "oppure",
+    "email": "Email",
+    "emailPlaceholder": "Inserisci la tua email",
+    "password": "Password",
+    "passwordPlaceholder": "Inserisci la tua password",
+    "loggingIn": "Accesso in corso…",
+    "logIn": "Accedi",
+    "sending": "Invio…",
+    "forgotPassword": "Hai dimenticato la password?",
+    "enterEmailFirst": "Inserisci prima la tua email qui sopra, poi clicca questo link.",
+    "resetSent": "Controlla la tua email per il link di reimpostazione della password.",
+    "preferNoPassword": "Preferisci non usare una password?",
+    "emailMeLink": "Inviami un link di accesso via email",
+    "noAccount": "Non hai un account?",
+    "createAccount": "Crea account",
+    "continueWithGoogle": "Continua con Google"
+  },
+  "signOutButton": {
+    "signOut": "Esci"
+  },
+  "signUpForm": {
+    "title": "Crea account",
+    "or": "oppure",
+    "checkEmail": "Controlla la tua email per confermare il tuo account.",
+    "email": "Email*",
+    "emailPlaceholder": "Inserisci la tua email",
+    "password": "Password*",
+    "passwordPlaceholder": "Almeno 6 caratteri",
+    "creating": "Creazione account…",
+    "createAccount": "Crea account",
+    "alreadyHaveAccount": "Hai già un account?",
+    "signIn": "Accedi"
+  },
+  "addToCartButton": {
+    "decreaseQuantity": "Diminuisci quantità",
+    "increaseQuantity": "Aumenta quantità",
+    "selectOptions": "Seleziona le opzioni",
+    "added": "Aggiunto ✓",
+    "addToCart": "Aggiungi al carrello",
+    "chooseOption": "Scegli un'opzione per ogni menu qui sopra per continuare.",
+    "shipsIn": "Spedito entro 2-3 giorni lavorativi.",
+    "shippingDetails": "Dettagli sulla spedizione"
+  },
+  "magicLinkForm": {
+    "heading": "Accedi",
+    "description": "Inserisci la tua email e ti invieremo un link di accesso monouso. Nessuna password da gestire.",
+    "checkEmail": "Controlla la tua email per il link di accesso.",
+    "emailPlaceholder": "tu@esempio.com",
+    "sending": "Invio…",
+    "sendMagicLink": "Invia link di accesso",
+    "genericError": "Si è verificato un errore. Riprova."
+  },
+  "blogShareRow": {
+    "share": "Condividi:",
+    "shareFacebook": "Condividi su Facebook",
+    "shareTwitter": "Condividi su Twitter",
+    "shareLinkedin": "Condividi su LinkedIn"
+  },
+  "magicLinkPage": {
+    "title": "Accedi con un link magico — Storefront"
+  },
+  "signUpPage": {
+    "title": "Crea account — Storefront"
+  },
+  "brandBar": {
+    "scrollLeft": "Scorri i brand a sinistra",
+    "scrollRight": "Scorri i brand a destra"
+  },
+  "sortDropdown": {
+    "ariaLabel": "Ordina prodotti",
+    "newest": "Più recenti",
+    "priceAsc": "Prezzo: dal più basso",
+    "priceDesc": "Prezzo: dal più alto",
+    "nameAsc": "Nome: A-Z"
+  },
+  "shopSidebar": {
+    "categories": "Categorie",
+    "allProducts": "Tutti i prodotti"
+  },
+  "categoryHero": {
+    "eyebrowDefault": "Tutto ciò di cui hai bisogno",
+    "viewMore": "Scopri di più"
+  },
+  "blogSidebar": {
+    "categories": "Categorie",
+    "allPosts": "Tutti gli articoli",
+    "relatedPost": "Articolo correlato",
+    "tags": "Tag",
+    "followUs": "Seguici"
+  },
+  "blogPage": {
+    "title": "Blog — Storefront",
+    "description": "Guide, consigli e notizie dal team di Storefront.",
+    "blog": "Blog",
+    "resultsFor": "Risultati per \"{query}\"",
+    "allPosts": "Tutti gli articoli",
+    "noPostsMatch": "Nessun articolo corrisponde alla tua ricerca.",
+    "noPostsYet": "Ancora nessun articolo.",
+    "viewAllPosts": "Vedi tutti gli articoli"
+  },
+  "searchPage": {
+    "title": "Cerca — Storefront",
+    "search": "Cerca",
+    "resultsFor": "Risultati per “{query}”",
+    "searchProducts": "Cerca prodotti",
+    "enterSearchTerm": "Inserisci un termine di ricerca sopra per trovare prodotti.",
+    "noneFoundFor": "Nessun prodotto trovato per “{query}”.",
+    "browseAll": "Sfoglia tutti i prodotti"
+  }
+}

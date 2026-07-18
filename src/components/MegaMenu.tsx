@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { Category } from "@/lib/products";
 import type { MenuColumn as MenuColumnData } from "@/lib/menu";
 
@@ -36,13 +37,14 @@ function useMenuDisclosure() {
 
 export function MegaMenu({
   categories,
-  categoriesLabel = "Categories",
+  categoriesLabel,
   extraColumns = [],
 }: {
   categories: Category[];
   categoriesLabel?: string;
   extraColumns?: MenuColumnData[];
 }) {
+  const t = useTranslations("nav");
   const topLevelCategories = categories.filter((c) => !c.parent_id);
   const childrenByParent = new Map<string, Category[]>();
   for (const c of categories) {
@@ -54,7 +56,8 @@ export function MegaMenu({
 
   return (
     <CategoriesDropdown
-      label={categoriesLabel}
+      label={categoriesLabel ?? t("categories")}
+      noSubcategoriesLabel={t("noSubcategories")}
       topLevelCategories={topLevelCategories}
       childrenByParent={childrenByParent}
     />
@@ -99,10 +102,12 @@ export function MegaMenuColumns({
 
 function CategoriesDropdown({
   label,
+  noSubcategoriesLabel,
   topLevelCategories,
   childrenByParent,
 }: {
   label: string;
+  noSubcategoriesLabel: string;
   topLevelCategories: Category[];
   childrenByParent: Map<string, Category[]>;
 }) {
@@ -174,7 +179,7 @@ function CategoriesDropdown({
 
           <div className="flex flex-1 items-start gap-10 border-l border-line/50 pl-8">
             {activeGroups.length === 0 ? (
-              <p className="text-sm text-muted">No subcategories yet.</p>
+              <p className="text-sm text-muted">{noSubcategoriesLabel}</p>
             ) : (
               activeGroups.map((group) => {
                 const items = childrenByParent.get(group.id) ?? [];

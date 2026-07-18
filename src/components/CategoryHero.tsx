@@ -1,5 +1,6 @@
-import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Category } from "@/lib/products";
 
 /**
@@ -11,7 +12,7 @@ import type { Category } from "@/lib/products";
  * layout picked per count, so it reads as deliberate at any count instead
  * of a fixed grid with empty slots.
  */
-export function CategoryHero({
+export async function CategoryHero({
   category,
   groups,
 }: {
@@ -21,8 +22,9 @@ export function CategoryHero({
   const heroUrl = category.hero_image_url ?? category.image_url;
   if (!heroUrl) return null;
 
+  const t = await getTranslations("categoryHero");
   const featuredGroups = groups.filter((g) => g.image_url).slice(0, 5);
-  const eyebrow = category.hero_eyebrow || "Everything you may need";
+  const eyebrow = category.hero_eyebrow || t("eyebrowDefault");
   const headline = category.hero_headline || category.name;
 
   return (
@@ -57,7 +59,7 @@ export function CategoryHero({
                   >
                     <h3 className="text-base font-bold">{group.name}</h3>
                     <span className="text-xs font-medium underline underline-offset-4">
-                      View More
+                      {t("viewMore")}
                     </span>
                   </Tile>
                 );

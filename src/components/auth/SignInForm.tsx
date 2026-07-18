@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export function SignInForm({ next = "/account" }: { next?: string }) {
+  const t = useTranslations("signInForm");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +35,7 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
 
   async function handleForgotPassword() {
     if (!email) {
-      setError("Enter your email above first, then click this link.");
+      setError(t("enterEmailFirst"));
       return;
     }
     setError(null);
@@ -66,31 +67,31 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-6 py-20">
       <h1 className="font-display text-2xl font-bold text-foreground">
-        Sign in
+        {t("title")}
       </h1>
 
       <GoogleButton onClick={handleGoogleSignIn} />
 
       <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-wide text-muted">
         <span className="h-px flex-1 bg-line" />
-        or
+        {t("or")}
         <span className="h-px flex-1 bg-line" />
       </div>
 
       <form onSubmit={handleLogIn} className="flex flex-col gap-5">
         <Field
-          label="Email"
+          label={t("email")}
           type="email"
           required
-          placeholder="Enter your email"
+          placeholder={t("emailPlaceholder")}
           value={email}
           onChange={setEmail}
         />
         <Field
-          label="Password"
+          label={t("password")}
           type="password"
           required
-          placeholder="Enter your password"
+          placeholder={t("passwordPlaceholder")}
           value={password}
           onChange={setPassword}
         />
@@ -98,7 +99,7 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
         {error && <p className="text-sm text-red-700">{error}</p>}
         {resetSent && (
           <p className="text-sm text-foreground">
-            Check your email for a link to reset your password.
+            {t("resetSent")}
           </p>
         )}
 
@@ -108,7 +109,7 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
           aria-live="polite"
           className="bg-foreground px-6 py-3.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {status === "loading" ? "Logging in…" : "Log in"}
+          {status === "loading" ? t("loggingIn") : t("logIn")}
         </button>
 
         <button
@@ -118,17 +119,17 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
           aria-live="polite"
           className="self-start rounded text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {resetSending ? "Sending…" : "Forgot your password?"}
+          {resetSending ? t("sending") : t("forgotPassword")}
         </button>
       </form>
 
       <p className="mt-6 text-xs text-muted">
-        Prefer not to use a password?{" "}
+        {t("preferNoPassword")}{" "}
         <Link
           href="/auth/magic-link"
           className="text-foreground underline underline-offset-4"
         >
-          Email me a sign-in link instead
+          {t("emailMeLink")}
         </Link>
         .
       </p>
@@ -136,14 +137,14 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
       <hr className="my-10 border-line" />
 
       <h2 className="font-display text-3xl font-bold uppercase leading-tight text-foreground">
-        Don&apos;t have an account?
+        {t("noAccount")}
       </h2>
 
       <Link
         href="/auth/sign-up"
         className="mt-6 inline-block bg-foreground px-6 py-3.5 text-center text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90"
       >
-        Create account
+        {t("createAccount")}
       </Link>
     </main>
   );
@@ -183,6 +184,7 @@ function Field({
 }
 
 export function GoogleButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations("signInForm");
   return (
     <button
       type="button"
@@ -190,7 +192,7 @@ export function GoogleButton({ onClick }: { onClick: () => void }) {
       className="mt-6 flex w-full items-center justify-center gap-3 border border-line px-6 py-3.5 text-sm font-medium text-foreground transition-colors hover:border-foreground"
     >
       <GoogleIcon />
-      Continue with Google
+      {t("continueWithGoogle")}
     </button>
   );
 }

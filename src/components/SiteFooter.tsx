@@ -1,13 +1,15 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { PaymentIcons } from "./PaymentIcons";
 import { getSiteContent } from "@/lib/content";
 import { getSiteSettings } from "@/lib/siteSettings";
 
 export async function SiteFooter() {
-  const [content, settings] = await Promise.all([
+  const [content, settings, t] = await Promise.all([
     getSiteContent(),
     getSiteSettings(),
+    getTranslations("footer"),
   ]);
 
   return (
@@ -24,52 +26,52 @@ export async function SiteFooter() {
           </div>
 
           <div>
-            <h3 className="font-display text-base font-bold">Help</h3>
+            <h3 className="font-display text-base font-bold">{t("help")}</h3>
             <ul className="mt-3 space-y-2 text-sm text-background/70">
               <li>
                 <Link href="/products" className="transition-colors hover:text-background">
-                  Shop all
+                  {t("shopAll")}
                 </Link>
               </li>
               <li>
                 <Link href="/cart" className="transition-colors hover:text-background">
-                  Cart
+                  {t("cart")}
                 </Link>
               </li>
               <li>
                 <Link href="/shipping" className="transition-colors hover:text-background">
-                  Shipping &amp; Delivery
+                  {t("shipping")}
                 </Link>
               </li>
               <li>
                 <Link href="/faq" className="transition-colors hover:text-background">
-                  FAQ
+                  {t("faq")}
                 </Link>
               </li>
               <li>
                 <Link href="/returns" className="transition-colors hover:text-background">
-                  Returns
+                  {t("returns")}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-display text-base font-bold">Accounts</h3>
+            <h3 className="font-display text-base font-bold">{t("accounts")}</h3>
             <ul className="mt-3 space-y-2 text-sm text-background/70">
               <li>
                 <Link href="/account" className="transition-colors hover:text-background">
-                  Sign in
+                  {t("signIn")}
                 </Link>
               </li>
               <li>
                 <Link href="/account/orders" className="transition-colors hover:text-background">
-                  Track an order
+                  {t("trackOrder")}
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="transition-colors hover:text-background">
-                  Contact us
+                  {t("contactUs")}
                 </Link>
               </li>
             </ul>
@@ -77,10 +79,10 @@ export async function SiteFooter() {
 
           <div>
             <h3 className="font-display text-base font-bold">
-              Subscribe to our emails
+              {t("subscribeHeading")}
             </h3>
             <p className="mt-3 text-sm text-background/70">
-              New products, restocks, and the occasional sale.
+              {t("subscribeText")}
             </p>
             <div className="mt-4">
               <NewsletterSignup />
@@ -91,13 +93,13 @@ export async function SiteFooter() {
         <div className="mt-14 border-t border-background/20 pt-6">
           <PaymentIcons />
           <div className="mt-4 flex flex-col items-center gap-2 text-xs uppercase tracking-wide text-background/70">
-            <p>© {new Date().getFullYear()} {settings.site_name}. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {settings.site_name}. {t("rightsReserved")}</p>
             <div className="flex items-center gap-4">
               <Link href="/privacy" className="transition-colors hover:text-background">
-                Privacy Policy
+                {t("privacy")}
               </Link>
               <Link href="/terms" className="transition-colors hover:text-background">
-                Terms of Service
+                {t("terms")}
               </Link>
             </div>
           </div>

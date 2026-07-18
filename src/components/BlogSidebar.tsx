@@ -1,12 +1,13 @@
 import Image from "next/image";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { BlogCategory, BlogPostSummary } from "@/lib/blog";
 import type { Tag } from "@/lib/products";
 import type { SiteSettings } from "@/lib/siteSettings";
 import { BlogSearchBox } from "./BlogSearchBox";
 import { SocialIconLink, type SocialPlatform } from "./SocialIconLink";
 
-export function BlogSidebar({
+export async function BlogSidebar({
   categories,
   tags,
   relatedPosts,
@@ -21,6 +22,7 @@ export function BlogSidebar({
   activeCategorySlug?: string;
   activeTagSlug?: string;
 }) {
+  const t = await getTranslations("blogSidebar");
   const allSocialLinks: { platform: SocialPlatform; url: string; label: string }[] = [
     { platform: "facebook", url: settings.social_facebook_url, label: "Facebook" },
     { platform: "twitter", url: settings.social_twitter_url, label: "Twitter" },
@@ -36,7 +38,7 @@ export function BlogSidebar({
       {categories.length > 0 && (
         <div>
           <h2 className="font-display text-base font-bold text-foreground">
-            Categories
+            {t("categories")}
           </h2>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
@@ -46,7 +48,7 @@ export function BlogSidebar({
                   !activeCategorySlug ? "font-semibold text-foreground" : "text-muted"
                 }`}
               >
-                All posts
+                {t("allPosts")}
               </Link>
             </li>
             {categories.map((category) => (
@@ -70,7 +72,7 @@ export function BlogSidebar({
       {relatedPosts.length > 0 && (
         <div>
           <h2 className="font-display text-base font-bold text-foreground">
-            Related post
+            {t("relatedPost")}
           </h2>
           <ul className="mt-4 space-y-4">
             {relatedPosts.map((post) => {
@@ -112,7 +114,7 @@ export function BlogSidebar({
       {tags.length > 0 && (
         <div>
           <h2 className="font-display text-base font-bold text-foreground">
-            Tags
+            {t("tags")}
           </h2>
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
             {tags.map((tag) => (
@@ -135,7 +137,7 @@ export function BlogSidebar({
       {socialLinks.length > 0 && (
         <div>
           <h2 className="font-display text-base font-bold text-foreground">
-            Follow Us
+            {t("followUs")}
           </h2>
           <div className="mt-3 flex items-center gap-2">
             {socialLinks.map((s) => (

@@ -1,11 +1,17 @@
-import Link from "next/link";
 import Image from "next/image";
+import { getTranslations, getLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import { formatDate } from "@/lib/format";
 import type { BlogPostSummary } from "@/lib/blog";
 
-export function BlogPostCard({ post }: { post: BlogPostSummary }) {
+export async function BlogPostCard({ post }: { post: BlogPostSummary }) {
   const categories = post.blog_post_categories
     .map((pc) => pc.blog_categories)
     .filter((c): c is { name: string; slug: string } => !!c);
+  const [t, locale] = await Promise.all([
+    getTranslations("blog"),
+    getLocale(),
+  ]);
 
   return (
     <article>
@@ -28,7 +34,7 @@ export function BlogPostCard({ post }: { post: BlogPostSummary }) {
           )}
           {post.published_at && (
             <span className="absolute left-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground">
-              {new Date(post.published_at).toLocaleDateString()}
+              {formatDate(post.published_at, locale)}
             </span>
           )}
         </div>
@@ -64,7 +70,7 @@ export function BlogPostCard({ post }: { post: BlogPostSummary }) {
         href={`/blog/${post.slug}`}
         className="mt-3 inline-block text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4"
       >
-        Read more
+        {t("readMore")}
       </Link>
     </article>
   );

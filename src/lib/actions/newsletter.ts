@@ -1,9 +1,8 @@
 "use server";
 
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const emailSchema = z.string().email("Enter a valid email address");
 
 /**
  * Subscribes an email to the newsletter list. Uses the service-role client
@@ -15,6 +14,9 @@ const emailSchema = z.string().email("Enter a valid email address");
 export async function subscribeToNewsletter(
   formData: FormData
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const t = await getTranslations("newsletter");
+  const emailSchema = z.string().email(t("emailInvalid"));
+
   const parsed = emailSchema.safeParse(formData.get("email"));
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
@@ -29,7 +31,7 @@ export async function subscribeToNewsletter(
     // unique_violation -- already subscribed, treat as success rather
     // than surfacing a confusing error for a perfectly fine outcome
     if (error.code === "23505") return { ok: true };
-    return { ok: false, error: "Something went wrong. Please try again." };
+    return { ok: false, error: t("genericError") };
   }
 
   return { ok: true };

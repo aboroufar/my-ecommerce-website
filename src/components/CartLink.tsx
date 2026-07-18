@@ -1,15 +1,17 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useCart } from "./CartProvider";
 
 export function CartLink() {
+  const t = useTranslations("nav");
   const { itemCount } = useCart();
 
   return (
     <Link
       href="/cart"
-      aria-label="Cart"
+      aria-label={t("cart")}
       className="relative flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background transition-opacity hover:opacity-90"
     >
       <BagIcon />

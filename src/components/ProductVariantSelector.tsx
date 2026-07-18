@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
 import { AddToCartButton } from "./AddToCartButton";
 import { formatPrice } from "@/lib/format";
 import type { ProductDetail, ProductVariant } from "@/lib/products";
@@ -24,6 +25,8 @@ export function ProductVariantSelector({
   onSelect: (typeId: string, valueId: string) => void;
   matchedVariant: ProductVariant | undefined;
 }) {
+  const t = useTranslations("variantSelector");
+  const locale = useLocale();
   const sortedTypes = [...product.product_option_types].sort(
     (a, b) => a.sort_order - b.sort_order
   );
@@ -34,7 +37,8 @@ export function ProductVariantSelector({
         <span className="text-2xl font-bold text-foreground">
           {formatPrice(
             matchedVariant ? matchedVariant.price_cents : product.price_cents,
-            product.currency
+            product.currency,
+            locale
           )}
         </span>
       </div>
@@ -55,7 +59,7 @@ export function ProductVariantSelector({
                 className="border border-line bg-transparent px-3 py-2 text-sm"
               >
                 <option value="" disabled>
-                  Select {type.name.toLowerCase()}
+                  {t("selectOption", { option: type.name.toLowerCase() })}
                 </option>
                 {sortedValues.map((value) => (
                   <option key={value.id} value={value.id}>

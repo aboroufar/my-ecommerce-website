@@ -1,19 +1,22 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import type { ProductSort } from "@/lib/products";
 
-const sortLabels: Record<ProductSort, string> = {
-  newest: "Newest",
-  "price-asc": "Price: Low to High",
-  "price-desc": "Price: High to Low",
-  "name-asc": "Name: A to Z",
-};
-
 export function SortDropdown({ current }: { current: ProductSort }) {
+  const t = useTranslations("sortDropdown");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const sortLabels: Record<ProductSort, string> = {
+    newest: t("newest"),
+    "price-asc": t("priceAsc"),
+    "price-desc": t("priceDesc"),
+    "name-asc": t("nameAsc"),
+  };
 
   function handleChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -31,7 +34,7 @@ export function SortDropdown({ current }: { current: ProductSort }) {
         value={current}
         onChange={(e) => handleChange(e.target.value)}
         className="appearance-none bg-background px-4 py-2.5 pr-9 text-sm text-foreground focus:outline-none"
-        aria-label="Sort products"
+        aria-label={t("ariaLabel")}
       >
         {Object.entries(sortLabels).map(([value, label]) => (
           <option key={value} value={value}>

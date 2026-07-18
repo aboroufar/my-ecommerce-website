@@ -1,5 +1,6 @@
-import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { Category, ProductSummary } from "@/lib/products";
 
 /**
@@ -42,7 +43,7 @@ function pickRandom<T>(items: T[], count: number): T[] {
  * placeholder if neither exists -- so this section is never blank, but a
  * real admin-provided photo always wins once one is set.
  */
-export function CategoryGrid({
+export async function CategoryGrid({
   categories,
   products,
 }: {
@@ -50,6 +51,7 @@ export function CategoryGrid({
   products: ProductSummary[];
 }) {
   if (categories.length === 0) return null;
+  const t = await getTranslations("categoryGrid");
 
   const eligible = categories.filter((c) => c.featured_in_grid);
   const pool = eligible.length > 0 ? eligible : categories;
@@ -122,7 +124,7 @@ export function CategoryGrid({
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
               {isPlaceholder && (
                 <span className="absolute right-2 top-2 rounded bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
-                  Sample image
+                  {t("sampleImage")}
                 </span>
               )}
               <div className="absolute bottom-4 left-4 text-background">
@@ -145,13 +147,13 @@ export function CategoryGrid({
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
               {isPlaceholder && (
                 <span className="absolute right-2 top-2 rounded bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
-                  Sample image
+                  {t("sampleImage")}
                 </span>
               )}
               <div className="absolute bottom-4 left-4 text-background">
                 <h3 className="text-lg font-bold">{category.name}</h3>
                 <span className="text-sm font-medium underline underline-offset-4">
-                  View More
+                  {t("viewMore")}
                 </span>
               </div>
             </Link>

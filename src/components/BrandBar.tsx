@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { Brand } from "@/lib/brands";
 
 const SCROLL_STEP_PX = 400;
@@ -16,6 +17,7 @@ const SCROLL_STEP_PX = 400;
  * simply doesn't render until at least one real brand exists.
  */
 export function BrandBar({ brands }: { brands: Brand[] }) {
+  const t = useTranslations("brandBar");
   const trackRef = useRef<HTMLDivElement>(null);
 
   if (brands.length === 0) return null;
@@ -33,7 +35,7 @@ export function BrandBar({ brands }: { brands: Brand[] }) {
         <button
           type="button"
           onClick={() => scrollBy(-1)}
-          aria-label="Scroll brands left"
+          aria-label={t("scrollLeft")}
           className="hidden shrink-0 items-center justify-center text-muted transition-colors hover:text-foreground sm:flex"
         >
           <ChevronIcon direction="left" />
@@ -76,7 +78,7 @@ export function BrandBar({ brands }: { brands: Brand[] }) {
         <button
           type="button"
           onClick={() => scrollBy(1)}
-          aria-label="Scroll brands right"
+          aria-label={t("scrollRight")}
           className="hidden shrink-0 items-center justify-center text-muted transition-colors hover:text-foreground sm:flex"
         >
           <ChevronIcon direction="right" />

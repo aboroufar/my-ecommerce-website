@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useCart } from "./CartProvider";
 import type { ProductDetail } from "@/lib/products";
 
@@ -27,6 +28,7 @@ export function AddToCartButton({
   // selecting one value per option type yet.
   disabled?: boolean;
 }) {
+  const t = useTranslations("addToCartButton");
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -62,7 +64,7 @@ export function AddToCartButton({
             type="button"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             disabled={quantity <= 1}
-            aria-label="Decrease quantity"
+            aria-label={t("decreaseQuantity")}
             className="flex h-full w-10 items-center justify-center text-sm text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
           >
             −
@@ -74,7 +76,7 @@ export function AddToCartButton({
             type="button"
             onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
             disabled={quantity >= MAX_QUANTITY}
-            aria-label="Increase quantity"
+            aria-label={t("increaseQuantity")}
             className="flex h-full w-10 items-center justify-center text-sm text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
           >
             +
@@ -87,17 +89,17 @@ export function AddToCartButton({
           aria-live="polite"
           className="flex-1 rounded-full bg-foreground px-6 py-4 text-sm font-medium uppercase tracking-wide text-background transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-100 disabled:hover:translate-y-0 disabled:hover:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {disabled ? "Select options" : added ? "Added ✓" : "Add to cart"}
+          {disabled ? t("selectOptions") : added ? t("added") : t("addToCart")}
         </button>
       </div>
       <p className="mt-2 text-xs text-muted">
         {disabled ? (
-          "Choose an option for every dropdown above to continue."
+          t("chooseOption")
         ) : (
           <>
-            Ships in 2–3 business days.{" "}
+            {t("shipsIn")}{" "}
             <Link href="/shipping" className="underline underline-offset-4 hover:text-foreground">
-              Shipping details
+              {t("shippingDetails")}
             </Link>
           </>
         )}

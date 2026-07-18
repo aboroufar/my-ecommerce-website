@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 
 export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
+  const t = useTranslations("searchBox");
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
 
@@ -19,13 +21,13 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search products…"
+        placeholder={t("placeholder")}
         autoFocus
         className="w-full border border-line bg-transparent px-4 py-3 pr-12 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
       <button
         type="submit"
-        aria-label="Search"
+        aria-label={t("search")}
         className="absolute right-0 top-0 flex h-full w-12 items-center justify-center text-foreground transition-opacity hover:opacity-70"
       >
         <SearchIcon />

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 export function PriceRangeFilter({
   minPrice,
@@ -10,6 +12,7 @@ export function PriceRangeFilter({
   minPrice?: string;
   maxPrice?: string;
 }) {
+  const t = useTranslations("priceRangeFilter");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -28,10 +31,10 @@ export function PriceRangeFilter({
 
   return (
     <form onSubmit={handleSubmit} className="mt-8">
-      <h2 className="font-display text-base font-bold text-foreground">Price</h2>
+      <h2 className="font-display text-base font-bold text-foreground">{t("price")}</h2>
       <div className="mt-3 flex items-center gap-2">
         <label className="flex-1">
-          <span className="sr-only">Minimum price</span>
+          <span className="sr-only">{t("minPrice")}</span>
           <input
             type="number"
             inputMode="decimal"
@@ -39,13 +42,13 @@ export function PriceRangeFilter({
             step="0.01"
             value={min}
             onChange={(e) => setMin(e.target.value)}
-            placeholder="Min"
+            placeholder={t("min")}
             className="w-full border border-line bg-background px-2.5 py-2 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none"
           />
         </label>
         <span className="text-muted">–</span>
         <label className="flex-1">
-          <span className="sr-only">Maximum price</span>
+          <span className="sr-only">{t("maxPrice")}</span>
           <input
             type="number"
             inputMode="decimal"
@@ -53,7 +56,7 @@ export function PriceRangeFilter({
             step="0.01"
             value={max}
             onChange={(e) => setMax(e.target.value)}
-            placeholder="Max"
+            placeholder={t("max")}
             className="w-full border border-line bg-background px-2.5 py-2 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none"
           />
         </label>
@@ -62,7 +65,7 @@ export function PriceRangeFilter({
         type="submit"
         className="mt-3 w-full border border-line px-3 py-2 text-xs font-medium uppercase tracking-wide text-foreground transition-colors hover:border-foreground"
       >
-        Apply
+        {t("apply")}
       </button>
     </form>
   );

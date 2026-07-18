@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useState } from "react";
 import { getReviewSummary, type ProductSummary } from "@/lib/products";
 import { formatPrice, getSaleInfo } from "@/lib/format";
@@ -11,6 +11,8 @@ import { useWishlist } from "./WishlistProvider";
 import { StarRating } from "./StarRating";
 
 export function ProductCard({ product }: { product: ProductSummary }) {
+  const t = useTranslations("productCard");
+  const locale = useLocale();
   const { addItem } = useCart();
   const router = useRouter();
   const wishlist = useWishlist();
@@ -54,7 +56,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         <button
           type="button"
           onClick={handleToggleWishlist}
-          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          aria-label={wishlisted ? t("removeFromWishlist") : t("addToWishlist")}
           aria-pressed={wishlisted}
           className={`flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
             wishlisted
@@ -66,14 +68,14 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         </button>
         <Link
           href={`/products/${product.slug}`}
-          aria-label="Quick view"
+          aria-label={t("quickView")}
           className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <SearchIcon />
         </Link>
         <Link
           href="/account"
-          aria-label="Sign in to save this to your wishlist"
+          aria-label={t("signInToSave")}
           className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-foreground shadow-sm transition-colors hover:bg-accent hover:text-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <CompareIcon />
@@ -86,12 +88,12 @@ export function ProductCard({ product }: { product: ProductSummary }) {
             <div className="absolute left-3 top-3 z-10 flex gap-1.5">
               {sale.onSale && (
                 <span className="rounded-full bg-sale px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-background">
-                  Sale
+                  {t("sale")}
                 </span>
               )}
               {product.is_popular && (
                 <span className="rounded-full bg-accent px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-background">
-                  Popular
+                  {t("popular")}
                 </span>
               )}
             </div>
@@ -139,7 +141,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         <button
           type="button"
           onClick={handleAddToCart}
-          aria-label={`Add ${product.name} to cart`}
+          aria-label={t("addToCart", { name: product.name })}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent text-accent transition-colors hover:bg-accent hover:text-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <CartPlusIcon />
@@ -147,11 +149,11 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         <span className="flex items-baseline gap-2">
           {sale.onSale && (
             <span className="text-xs text-muted line-through">
-              {formatPrice(product.compare_at_price_cents!, product.currency)}
+              {formatPrice(product.compare_at_price_cents!, product.currency, locale)}
             </span>
           )}
           <span className="text-sm font-bold text-foreground">
-            {formatPrice(product.price_cents, product.currency)}
+            {formatPrice(product.price_cents, product.currency, locale)}
           </span>
         </span>
       </div>

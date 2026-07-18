@@ -7,10 +7,20 @@ export function MagicLinkForm({
   next,
   heading = "Sign in",
   description = "Enter your email and we'll send a one-time sign-in link. No password to manage.",
+  emailPlaceholder = "you@example.com",
+  checkEmailText = "Check your email for a sign-in link.",
+  sendingText = "Sending…",
+  sendButtonText = "Send magic link",
+  errorText = "Something went wrong. Please try again.",
 }: {
   next: string;
   heading?: string;
   description?: string;
+  emailPlaceholder?: string;
+  checkEmailText?: string;
+  sendingText?: string;
+  sendButtonText?: string;
+  errorText?: string;
 }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
@@ -37,14 +47,14 @@ export function MagicLinkForm({
 
       {status === "sent" ? (
         <p className="mt-6 text-sm text-foreground">
-          Check your email for a sign-in link.
+          {checkEmailText}
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
           <input
             type="email"
             required
-            placeholder="you@example.com"
+            placeholder={emailPlaceholder}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="border border-line bg-transparent px-3 py-2 text-sm"
@@ -54,11 +64,11 @@ export function MagicLinkForm({
             disabled={status === "sending"}
             className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {status === "sending" ? "Sending…" : "Send magic link"}
+            {status === "sending" ? sendingText : sendButtonText}
           </button>
           {status === "error" && (
             <p className="text-sm text-red-700">
-              Something went wrong. Please try again.
+              {errorText}
             </p>
           )}
         </form>

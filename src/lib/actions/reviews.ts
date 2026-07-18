@@ -3,20 +3,9 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminUser } from "@/lib/auth";
-
-const reviewSchema = z.object({
-  reviewer_name: z.string().min(1, "Name is required"),
-  reviewer_email: z.string().email("Enter a valid email address"),
-  rating: z.coerce.number().int().min(1).max(5),
-  body: z.string().min(1, "Review is required"),
-  // Honeypot -- real visitors never see or fill this field (hidden via
-  // CSS in the form), so a non-empty value means a bot filled every field
-  // it could find. Silently accept-and-drop rather than telling the bot
-  // it was caught.
-  website: z.string().optional(),
-});
 
 /**
  * Public submission -- no auth required, matches the guest-checkout /
@@ -32,6 +21,19 @@ export async function submitReview(
   productId: string,
   formData: FormData
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const t = await getTranslations("reviewForm");
+  const reviewSchema = z.object({
+    reviewer_name: z.string().min(1, t("nameRequired")),
+    reviewer_email: z.string().email(t("emailInvalid")),
+    rating: z.coerce.number().int().min(1).max(5),
+    body: z.string().min(1, t("reviewRequired")),
+    // Honeypot -- real visitors never see or fill this field (hidden via
+    // CSS in the form), so a non-empty value means a bot filled every field
+    // it could find. Silently accept-and-drop rather than telling the bot
+    // it was caught.
+    website: z.string().optional(),
+  });
+
   const parsed = reviewSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
@@ -55,7 +57,7 @@ export async function submitReview(
   if (error) {
     return {
       ok: false,
-      error: "Something went wrong submitting your review. Please try again.",
+      error: t("genericError"),
     };
   }
 

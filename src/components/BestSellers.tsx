@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { ProductCard } from "./ProductCard";
 import type { Category, ProductSummary } from "@/lib/products";
 
@@ -35,6 +36,7 @@ export function BestSellers({
   products: ProductSummary[];
   categories: Category[];
 }) {
+  const t = useTranslations("bestSellers");
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [spotlight, setSpotlight] = useState<ProductSummary[]>(() =>
     pickOnePerCategory(products, categories)
@@ -64,10 +66,10 @@ export function BestSellers({
     <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-16">
       <div className="text-center">
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-          Everything you may need
+          {t("eyebrow")}
         </span>
         <h2 className="mt-2 font-display text-4xl font-bold text-foreground">
-          Top Bestsellers
+          {t("heading")}
         </h2>
       </div>
 
@@ -81,7 +83,7 @@ export function BestSellers({
               : "bg-surface text-foreground hover:bg-line/60"
           }`}
         >
-          Show all
+          {t("showAll")}
         </button>
         {categories.map((category) => (
           <button
@@ -107,7 +109,7 @@ export function BestSellers({
         </div>
       ) : (
         <p className="mt-10 text-center text-sm text-muted">
-          No products in this category yet.
+          {t("emptyCategory")}
         </p>
       )}
 
@@ -116,7 +118,7 @@ export function BestSellers({
           href="/products"
           className="inline-block rounded-full border border-foreground px-8 py-3.5 text-xs font-semibold uppercase tracking-wide text-foreground transition-colors hover:bg-foreground hover:text-background"
         >
-          View all
+          {t("viewAll")}
         </Link>
       </div>
     </section>

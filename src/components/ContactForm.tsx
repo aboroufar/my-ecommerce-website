@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { sendContactMessage } from "@/lib/actions/contact";
 
 export function ContactForm() {
+  const t = useTranslations("contactForm");
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +24,7 @@ export function ContactForm() {
   if (status === "done") {
     return (
       <p className="text-sm text-foreground" role="status" aria-live="polite">
-        Thanks — your message has been sent. We&apos;ll get back to you soon.
+        {t("success")}
       </p>
     );
   }
@@ -31,7 +33,7 @@ export function ContactForm() {
     <form action={handleSubmit} className="flex flex-col gap-4" aria-live="polite">
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-muted">
-          Name
+          {t("name")}
         </span>
         <input
           name="name"
@@ -41,19 +43,19 @@ export function ContactForm() {
       </label>
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-muted">
-          Email
+          {t("email")}
         </span>
         <input
           type="email"
           name="email"
           required
-          placeholder="you@example.com"
+          placeholder={t("emailPlaceholder")}
           className="rounded-md border border-line bg-surface px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
       </label>
       <label className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-wide text-muted">
-          Message
+          {t("message")}
         </span>
         <textarea
           name="message"
@@ -70,7 +72,7 @@ export function ContactForm() {
         disabled={status === "loading"}
         className="self-start rounded-full bg-accent px-8 py-3 text-sm font-semibold uppercase tracking-wide text-background transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        {status === "loading" ? "Sending…" : "Submit"}
+        {status === "loading" ? t("sending") : t("submit")}
       </button>
     </form>
   );

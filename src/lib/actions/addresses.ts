@@ -3,19 +3,23 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
-const addressSchema = z.object({
-  line1: z.string().min(1, "Address is required"),
-  line2: z.string().optional().default(""),
-  city: z.string().min(1, "City is required"),
-  region: z.string().optional().default(""),
-  postal_code: z.string().min(1, "Postal code is required"),
-  country: z.string().min(1, "Country is required"),
-  // Checkboxes are only present in FormData when checked ("on"), so a
-  // missing key means unchecked/false rather than a validation failure.
-  is_billing: z.preprocess((v) => v === "on", z.boolean()),
-});
+async function getAddressSchema() {
+  const t = await getTranslations("addressesErrors");
+  return z.object({
+    line1: z.string().min(1, t("addressRequired")),
+    line2: z.string().optional().default(""),
+    city: z.string().min(1, t("cityRequired")),
+    region: z.string().optional().default(""),
+    postal_code: z.string().min(1, t("postalCodeRequired")),
+    country: z.string().min(1, t("countryRequired")),
+    // Checkboxes are only present in FormData when checked ("on"), so a
+    // missing key means unchecked/false rather than a validation failure.
+    is_billing: z.preprocess((v) => v === "on", z.boolean()),
+  });
+}
 
 export async function addAddress(formData: FormData) {
   const supabase = await createClient();
@@ -24,6 +28,7 @@ export async function addAddress(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/account");
 
+  const addressSchema = await getAddressSchema();
   const parsed = addressSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     redirect(
@@ -68,6 +73,7 @@ export async function updateAddress(id: string, formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/account");
 
+  const addressSchema = await getAddressSchema();
   const parsed = addressSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     redirect(

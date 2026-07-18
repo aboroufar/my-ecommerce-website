@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 /**
  * Placeholder structure for a legal/policy page -- section headers a real
  * policy would need, with a hint about what belongs in each, but no actual
@@ -13,10 +15,11 @@ export function PolicyPlaceholder({
   title: string;
   sections: { heading: string; hint: string }[];
 }) {
+  const t = useTranslations("legal");
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
       <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-        Legal
+        {t("eyebrow")}
       </span>
       <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
         {title}
@@ -24,8 +27,7 @@ export function PolicyPlaceholder({
 
       <div className="mt-6 border border-dashed border-line bg-surface px-4 py-3">
         <p className="text-xs text-muted">
-          This page is a placeholder. Replace the sections below with your
-          actual {title.toLowerCase()} before launch.
+          {t("placeholderNotice", { title: title.toLowerCase() })}
         </p>
       </div>
 

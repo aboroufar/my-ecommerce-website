@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 
 export function BlogSearchBox({ initialQuery = "" }: { initialQuery?: string }) {
+  const t = useTranslations("blogSearchBox");
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
 
@@ -19,12 +21,12 @@ export function BlogSearchBox({ initialQuery = "" }: { initialQuery?: string }) 
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search posts…"
+        placeholder={t("placeholder")}
         className="w-full border border-line bg-background px-4 py-2.5 pr-11 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
       <button
         type="submit"
-        aria-label="Search"
+        aria-label={t("search")}
         className="absolute right-0 top-0 flex h-full w-10 items-center justify-center text-foreground transition-opacity hover:opacity-70"
       >
         <SearchIcon />

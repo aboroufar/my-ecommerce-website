@@ -1,28 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/lib/stripeCustomer";
 import { calculateShippingCents } from "@/lib/shipping";
-
-const requestSchema = z.object({
-  items: z
-    .array(
-      z.object({
-        productId: z.string().uuid(),
-        variantId: z.string().uuid().optional(),
-        quantity: z.number().int().positive().max(99),
-      })
-    )
-    .min(1, "Cart is empty"),
-});
+import { routing } from "@/i18n/routing";
 
 export async function POST(req: NextRequest) {
-  const parsed = requestSchema.safeParse(await req.json().catch(() => null));
+  const body = await req.json().catch(() => null);
+  const locale = routing.locales.includes(body?.locale) ? body.locale : routing.defaultLocale;
+  const t = await getTranslations({ locale, namespace: "checkoutErrors" });
+
+  const requestSchema = z.object({
+    locale: z.string().optional(),
+    items: z
+      .array(
+        z.object({
+          productId: z.string().uuid(),
+          variantId: z.string().uuid().optional(),
+          quantity: z.number().int().positive().max(99),
+        })
+      )
+      .min(1, t("cartEmpty")),
+  });
+
+  const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid request." },
+      { error: t("invalidRequest") },
       { status: 400 }
     );
   }
@@ -49,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   if (fetchError) {
     return NextResponse.json(
-      { error: "Could not load products." },
+      { error: t("couldNotLoadProducts") },
       { status: 500 }
     );
   }
@@ -74,7 +81,7 @@ export async function POST(req: NextRequest) {
 
   if (variantFetchError) {
     return NextResponse.json(
-      { error: "Could not load product options." },
+      { error: t("couldNotLoadOptions") },
       { status: 500 }
     );
   }
@@ -99,7 +106,7 @@ export async function POST(req: NextRequest) {
     const product = productMap.get(item.productId);
     if (!product || product.status !== "active") {
       return NextResponse.json(
-        { error: "One of the items in your cart is no longer available." },
+        { error: t("itemUnavailable") },
         { status: 409 }
       );
     }
@@ -108,19 +115,19 @@ export async function POST(req: NextRequest) {
       const variant = variantMap.get(item.variantId);
       if (!variant || variant.product_id !== item.productId) {
         return NextResponse.json(
-          { error: "One of the items in your cart is no longer available." },
+          { error: t("itemUnavailable") },
           { status: 409 }
         );
       }
       if (variant.stock_qty < item.quantity) {
         return NextResponse.json(
-          { error: `Not enough stock for "${product.name}".` },
+          { error: t("notEnoughStock", { name: product.name }) },
           { status: 409 }
         );
       }
     } else if (product.stock_qty < item.quantity) {
       return NextResponse.json(
-        { error: `Not enough stock for "${product.name}".` },
+        { error: t("notEnoughStock", { name: product.name }) },
         { status: 409 }
       );
     }
@@ -153,8 +160,7 @@ export async function POST(req: NextRequest) {
     if (!profileComplete) {
       return NextResponse.json(
         {
-          error:
-            "Please complete your profile (name, phone, date of birth, gender, and a billing address) before checking out.",
+          error: t("incompleteProfile"),
           code: "PROFILE_INCOMPLETE",
         },
         { status: 409 }
@@ -216,7 +222,7 @@ export async function POST(req: NextRequest) {
 
   if (orderError || !order) {
     return NextResponse.json(
-      { error: "Could not create order." },
+      { error: t("couldNotCreateOrder") },
       { status: 500 }
     );
   }
@@ -241,7 +247,7 @@ export async function POST(req: NextRequest) {
 
   if (itemsError) {
     return NextResponse.json(
-      { error: "Could not create order items." },
+      { error: t("couldNotCreateOrderItems") },
       { status: 500 }
     );
   }
@@ -333,8 +339,8 @@ export async function POST(req: NextRequest) {
       ...(stripeCustomerId
         ? { customer: stripeCustomerId, customer_update: { shipping: "auto" } }
         : { customer_email: user?.email ?? undefined }),
-      success_url: `${origin}/checkout/success?order_id=${order.id}`,
-      cancel_url: `${origin}/cart`,
+      success_url: `${origin}/${locale}/checkout/success?order_id=${order.id}`,
+      cancel_url: `${origin}/${locale}/cart`,
       metadata: { order_id: order.id },
     });
 
@@ -347,7 +353,7 @@ export async function POST(req: NextRequest) {
     await supabase.from("orders").delete().eq("id", order.id);
     console.error("Stripe session creation failed:", err);
     return NextResponse.json(
-      { error: "Could not start checkout. Please try again." },
+      { error: t("couldNotStartCheckout") },
       { status: 500 }
     );
   }

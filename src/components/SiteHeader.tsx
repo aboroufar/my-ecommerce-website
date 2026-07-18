@@ -1,16 +1,19 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { CartLink } from "./CartLink";
 import { AccountLink } from "./AccountLink";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MegaMenu, MegaMenuColumns } from "./MegaMenu";
 import { getCategories } from "@/lib/products";
 import { getSiteSettings } from "@/lib/siteSettings";
 import { getMenuColumns } from "@/lib/menu";
 
 export async function SiteHeader() {
-  const [allCategories, settings, menuColumns] = await Promise.all([
+  const [allCategories, settings, menuColumns, t] = await Promise.all([
     getCategories(),
     getSiteSettings(),
     getMenuColumns(),
+    getTranslations("nav"),
   ]);
   // Display-only categories are homepage-grid decoration, not real
   // navigation destinations -- keep them out of the menu/mobile nav.
@@ -40,7 +43,7 @@ export async function SiteHeader() {
               </span>
             )}
           </div>
-          <span className="text-xs font-medium">EN</span>
+          <LocaleSwitcher />
         </div>
       </div>
 
@@ -66,10 +69,10 @@ export async function SiteHeader() {
 
           <Link
             href="/search"
-            aria-label="Search"
+            aria-label={t("search")}
             className="hidden max-w-xl flex-1 items-center gap-3 rounded-full bg-surface px-5 py-2.5 text-sm text-muted transition-colors hover:bg-line/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:flex"
           >
-            <span className="flex-1">Search</span>
+            <span className="flex-1">{t("search")}</span>
             <SearchIcon />
           </Link>
 
@@ -85,7 +88,7 @@ export async function SiteHeader() {
             <AccountLink />
             <Link
               href="/account/wishlist"
-              aria-label="Wishlist"
+              aria-label={t("wishlist")}
               className="text-foreground transition-opacity hover:opacity-70"
             >
               <HeartIcon />
@@ -109,7 +112,7 @@ export async function SiteHeader() {
               href="/contact"
               className="hidden rounded-full bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-wide text-background transition-opacity hover:opacity-90 sm:inline-block"
             >
-              Contact us
+              {t("contactUs")}
             </Link>
           </div>
         </div>
@@ -126,7 +129,7 @@ export async function SiteHeader() {
           </Link>
         ))}
         <Link href="/products" className="shrink-0 transition-colors hover:text-accent">
-          Shop all
+          {t("shopAll")}
         </Link>
       </nav>
     </header>
