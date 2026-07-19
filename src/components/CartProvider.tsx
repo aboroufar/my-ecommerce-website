@@ -22,13 +22,10 @@ type CartAction =
   | { type: "ADD_ITEM"; item: CartItem }
   | { type: "REMOVE_ITEM"; lineKey: string }
   | { type: "SET_QUANTITY"; lineKey: string; quantity: number }
-  | { type: "CLEAR" }
-  | { type: "HYDRATE"; items: CartItem[] };
+  | { type: "CLEAR" };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
-    case "HYDRATE":
-      return { items: action.items };
     case "ADD_ITEM": {
       const key = cartLineKey(action.item);
       const existing = state.items.find((i) => cartLineKey(i) === key);
@@ -87,20 +84,27 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
+// Reads localStorage synchronously as the reducer's initial state, rather
+// than hydrating in a post-mount effect. CartProvider remounts on every
+// locale switch (it lives inside the [locale]-keyed root layout), and
+// Next.js's router can reconnect a cached fiber rather than doing a true
+// fresh mount -- in that case a `useRef` hydration guard survives the
+// "remount" as already-true even though useReducer's state was reset to
+// the initial `{items: []}`, so the persist effect fires with empty state
+// and clobbers localStorage before hydration can run. A lazy initializer
+// sidesteps the whole mount-effect race since there's nothing to race.
+function initCartState(): CartState {
+  if (typeof window === "undefined") return { items: [] };
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? { items: JSON.parse(raw) as CartItem[] } : { items: [] };
+  } catch {
+    return { items: [] };
+  }
+}
 
-  // Hydrate from localStorage on mount (client-only, so no SSR mismatch).
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        dispatch({ type: "HYDRATE", items: JSON.parse(raw) as CartItem[] });
-      }
-    } catch {
-      // corrupt/unavailable storage -- start with an empty cart
-    }
-  }, []);
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [state, dispatch] = useReducer(cartReducer, undefined, initCartState);
 
   // Persist on every change.
   useEffect(() => {
