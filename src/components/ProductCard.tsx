@@ -51,8 +51,8 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   }
 
   return (
-    <div className="group relative transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-1">
-      <div className="absolute right-3 top-3 z-10 flex flex-col gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+    <div className="group relative rounded-2xl bg-surface p-2 transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-1 hover:shadow-[0_16px_35px_rgba(32,30,28,0.10)]">
+      <div className="absolute right-5 top-5 z-10 flex flex-col gap-2 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
         <button
           type="button"
           onClick={handleToggleWishlist}
@@ -83,7 +83,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
       </div>
 
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden bg-surface">
+        <div className="relative aspect-square overflow-hidden rounded-xl bg-accent-soft">
           {(sale.onSale || product.is_popular) && (
             <div className="absolute left-3 top-3 z-10 flex gap-1.5">
               {sale.onSale && (
@@ -115,11 +115,11 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           )}
         </div>
 
-        <div className="mt-4">
+        <div className="px-2 pb-1 pt-4">
           {categoryName && (
             <span className="text-xs text-muted">{categoryName}</span>
           )}
-          <h3 className="mt-1 font-display text-lg font-bold text-foreground">
+          <h3 className="mt-1 font-display text-base font-bold text-foreground sm:text-lg">
             {product.name}
           </h3>
 
@@ -130,19 +130,19 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           )}
 
           {product.description && (
-            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">
               {product.description}
             </p>
           )}
         </div>
       </Link>
 
-      <div className="mt-3 flex items-center gap-3 border-t border-line pt-3">
+      <div className="mx-2 mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
         <button
           type="button"
           onClick={handleAddToCart}
           aria-label={t("addToCart", { name: product.name })}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent text-accent transition-colors hover:bg-accent hover:text-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <CartPlusIcon />
         </button>

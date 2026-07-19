@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { Category, ProductSummary } from "@/lib/products";
 import { getSaleInfo } from "@/lib/format";
 import { ProductCard } from "./ProductCard";
 
-const ROTATE_INTERVAL_MS = 2000;
-
 /**
- * One random product per category, keyed by category id. Mirrors the same
- * spotlight pattern used by BestSellers -- teases every department's sale
+ * One predictable product per category, keyed by category id. Mirrors the
+ * stable spotlight pattern used by BestSellers -- teases every department's sale
  * items without listing all of them; shoppers click "View all" (-> /promo)
  * for the full list.
  */
@@ -25,7 +23,7 @@ function pickOnePerCategory(
         p.product_categories.some((pc) => pc.categories?.slug === category.slug)
       );
       if (inCategory.length === 0) return null;
-      return inCategory[Math.floor(Math.random() * inCategory.length)];
+      return inCategory[0];
     })
     .filter((p): p is ProductSummary => p !== null);
 }
@@ -51,20 +49,10 @@ export function SaleSection({
     [products]
   );
 
-  const [spotlight, setSpotlight] = useState<ProductSummary[]>(() =>
-    pickOnePerCategory(saleProducts, categories)
+  const spotlight = useMemo(
+    () => pickOnePerCategory(saleProducts, categories),
+    [saleProducts, categories]
   );
-
-  // Only rotates the one-per-category spotlight, and only while "Show all"
-  // (no category filter) is active -- picking a specific category shows
-  // every matching sale product instead, which shouldn't shuffle underfoot.
-  useEffect(() => {
-    if (activeSlug) return;
-    const timer = setInterval(() => {
-      setSpotlight(pickOnePerCategory(saleProducts, categories));
-    }, ROTATE_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [activeSlug, saleProducts, categories]);
 
   const visibleProducts = useMemo(() => {
     if (!activeSlug) return spotlight;
@@ -76,7 +64,7 @@ export function SaleSection({
   if (saleProducts.length === 0 || categories.length === 0) return null;
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-16">
+    <section className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="text-center">
         <h2 className="font-display text-3xl font-bold text-foreground">
           {t("heading")}

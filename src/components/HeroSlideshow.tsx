@@ -31,7 +31,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
   const current = slides[active];
 
   return (
-    <section className="relative flex aspect-[7/3] items-center overflow-hidden">
+    <section className="relative flex min-h-[31rem] items-center overflow-hidden sm:min-h-[34rem] lg:min-h-[38rem]">
       {slides.map((slide, i) => (
         <Image
           key={slide.id}
@@ -45,10 +45,11 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
           }`}
         />
       ))}
-      <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/45 to-transparent" />
 
-      <div className="relative max-w-3xl px-6 text-background sm:px-16">
-        <h1 className="font-display text-5xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
+      <div className="relative max-w-3xl px-6 text-background sm:px-12 lg:px-16">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-background/75">Thoughtful everyday essentials</p>
+        <h1 className="font-display text-4xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl">
           {current.headline}
         </h1>
         {current.description && (
@@ -58,7 +59,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
         )}
         <Link
           href={current.link_url}
-          className="mt-8 inline-block rounded-full border border-background px-6 py-2.5 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:bg-background hover:text-foreground hover:shadow-md"
+          className="mt-8 inline-block rounded-full bg-background px-6 py-3 text-sm font-semibold text-foreground transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] hover:-translate-y-0.5 hover:bg-background/90 hover:shadow-md"
         >
           {t("readMore")}
         </Link>
@@ -70,7 +71,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
             type="button"
             aria-label={t("previousSlide")}
             onClick={() => goTo(active - 1)}
-            className="absolute left-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-background transition-opacity hover:opacity-70 sm:left-8"
+            className="absolute bottom-6 left-6 flex h-10 w-10 items-center justify-center rounded-full border border-background/40 bg-foreground/15 text-background transition-colors hover:bg-background hover:text-foreground sm:bottom-auto sm:left-8 sm:top-1/2 sm:-translate-y-1/2"
           >
             <ChevronIcon direction="left" />
           </button>
@@ -78,7 +79,7 @@ export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
             type="button"
             aria-label={t("nextSlide")}
             onClick={() => goTo(active + 1)}
-            className="absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-background transition-opacity hover:opacity-70 sm:right-8"
+            className="absolute bottom-6 left-20 flex h-10 w-10 items-center justify-center rounded-full border border-background/40 bg-foreground/15 text-background transition-colors hover:bg-background hover:text-foreground sm:bottom-auto sm:left-auto sm:right-8 sm:top-1/2 sm:-translate-y-1/2"
           >
             <ChevronIcon direction="right" />
           </button>

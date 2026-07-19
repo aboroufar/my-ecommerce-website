@@ -20,22 +20,17 @@ const placeholderImages = [
 const BRAND_HIGHLIGHTS_SLOTS = 5;
 
 /**
- * Picks up to `count` categories at random, without repeats. Fisher-Yates
- * on a copy of the input so the caller's array/order is never mutated.
+ * Picks up to `count` categories in their configured order. A stable grid
+ * helps repeat visitors build a spatial memory of each department.
  */
-function pickRandom<T>(items: T[], count: number): T[] {
-  const shuffled = [...items];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled.slice(0, count);
+function takeInOrder<T>(items: T[], count: number): T[] {
+  return items.slice(0, count);
 }
 
 /**
  * One card per category, up to BRAND_HIGHLIGHTS_SLOTS (5) tiles. Categories
  * marked `featured_in_grid` (set via /admin/categories) are the eligible
- * pool and a fresh random subset is drawn on every render/request -- if
+ * pool and are displayed in their configured order -- if
  * fewer than 5 are marked eligible, the remaining slots are filled from the
  * rest of the category list so the section is never sparse. Prefers the
  * admin-uploaded category photo (categories.image_url); falls back to
@@ -58,10 +53,10 @@ export async function CategoryGrid({
   const remaining = categories.filter((c) => !pool.includes(c));
   const selected =
     pool.length >= BRAND_HIGHLIGHTS_SLOTS
-      ? pickRandom(pool, BRAND_HIGHLIGHTS_SLOTS)
+      ? takeInOrder(pool, BRAND_HIGHLIGHTS_SLOTS)
       : [
           ...pool,
-          ...pickRandom(remaining, BRAND_HIGHLIGHTS_SLOTS - pool.length),
+          ...takeInOrder(remaining, BRAND_HIGHLIGHTS_SLOTS - pool.length),
         ];
 
   const cards = selected.map((category, i) => {
@@ -106,13 +101,13 @@ export async function CategoryGrid({
     }[cards.length] ?? "lg:grid-cols-5";
 
   return (
-    <section className="w-full px-2 pt-8 sm:px-4">
-      <div className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${lgColsClass}`}>
+    <section className="mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6">
+      <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 ${lgColsClass}`}>
         {cards.map(({ category, url, alt, isPlaceholder }) =>
           category.display_only ? (
             <div
               key={category.id}
-              className="relative aspect-square cursor-default overflow-hidden"
+              className="relative aspect-[4/5] cursor-default overflow-hidden rounded-2xl sm:aspect-square"
             >
               <Image
                 src={url}
@@ -135,7 +130,7 @@ export async function CategoryGrid({
             <Link
               key={category.id}
               href={`/products?category=${category.slug}`}
-              className="group relative aspect-square overflow-hidden"
+              className="group relative aspect-[4/5] overflow-hidden rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent sm:aspect-square"
             >
               <Image
                 src={url}

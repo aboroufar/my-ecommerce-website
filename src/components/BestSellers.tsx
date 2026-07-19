@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ProductCard } from "./ProductCard";
 import type { Category, ProductSummary } from "@/lib/products";
 
-const ROTATE_INTERVAL_MS = 2000;
-
 /**
- * One random product per category, keyed by category id. Used for the
+ * One predictable product per category, keyed by category id. Used for the
  * "Show all" spotlight view so the section teases every department
  * without listing every product -- shoppers click "View all" for the
  * full catalog.
@@ -24,7 +22,7 @@ function pickOnePerCategory(
         p.product_categories.some((pc) => pc.categories?.slug === category.slug)
       );
       if (inCategory.length === 0) return null;
-      return inCategory[Math.floor(Math.random() * inCategory.length)];
+      return inCategory[0];
     })
     .filter((p): p is ProductSummary => p !== null);
 }
@@ -38,20 +36,7 @@ export function BestSellers({
 }) {
   const t = useTranslations("bestSellers");
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
-  const [spotlight, setSpotlight] = useState<ProductSummary[]>(() =>
-    pickOnePerCategory(products, categories)
-  );
-
-  // Only rotates the one-per-category spotlight, and only while "Show all"
-  // (no category filter) is active -- picking a specific category shows
-  // every matching product instead, which shouldn't shuffle underfoot.
-  useEffect(() => {
-    if (activeSlug) return;
-    const timer = setInterval(() => {
-      setSpotlight(pickOnePerCategory(products, categories));
-    }, ROTATE_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [activeSlug, products, categories]);
+  const spotlight = useMemo(() => pickOnePerCategory(products, categories), [products, categories]);
 
   const visibleProducts = useMemo(() => {
     if (!activeSlug) return spotlight;
@@ -63,7 +48,7 @@ export function BestSellers({
   if (categories.length === 0) return null;
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-16">
+    <section className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="text-center">
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
           {t("eyebrow")}

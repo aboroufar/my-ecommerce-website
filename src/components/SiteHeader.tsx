@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { CartLink } from "./CartLink";
 import { AccountLink } from "./AccountLink";
 import { LocaleSwitcher } from "./LocaleSwitcher";
+import { InlineSearch } from "./InlineSearch";
 import { MegaMenu, MegaMenuColumns } from "./MegaMenu";
 import { getCategories } from "@/lib/products";
 import { getSiteSettings } from "@/lib/siteSettings";
@@ -20,8 +21,8 @@ export async function SiteHeader() {
   const categories = allCategories.filter((c) => !c.display_only);
 
   return (
-    <header className="sticky top-0 z-40 bg-background">
-      <div className="bg-accent px-6 py-2 text-xs text-background">
+    <header className="sticky top-0 z-40 border-b border-line/80 bg-background/95 shadow-[0_1px_0_rgba(32,30,28,0.03)] backdrop-blur">
+      <div className="bg-foreground px-6 py-2 text-xs text-background">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="hidden items-center gap-6 sm:flex">
             {settings.header_email && (
@@ -47,36 +48,31 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6">
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-2.5 font-display text-2xl font-bold uppercase tracking-wide text-foreground"
-          >
-            {settings.site_logo_url && (
-              // eslint-disable-next-line @next/next/no-img-element -- brand
-              // logo comes from an admin-controlled external URL/Storage
-              // bucket; not worth routing through next/image for a single
-              // small header mark.
-              <img
-                src={settings.site_logo_url}
-                alt=""
-                className="h-9 w-9 shrink-0 rounded-full object-cover"
-              />
-            )}
-            {settings.site_name}
-          </Link>
+      <div className="px-4 py-3 sm:px-6 sm:py-4">
+        <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,36rem)_auto] items-center gap-4 sm:gap-6">
+          <div className="flex justify-start">
+            <Link
+              href="/"
+              className="flex shrink-0 items-center gap-2 font-display text-xl font-bold uppercase tracking-[0.06em] text-foreground sm:gap-3 sm:text-3xl"
+            >
+              {settings.site_logo_url && (
+                // eslint-disable-next-line @next/next/no-img-element -- brand
+                // logo comes from an admin-controlled external URL/Storage
+                // bucket; not worth routing through next/image for a single
+                // small header mark.
+                <img
+                  src={settings.site_logo_url}
+                  alt=""
+                  className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-12 sm:w-12"
+                />
+              )}
+              {settings.site_name}
+            </Link>
+          </div>
 
-          <Link
-            href="/search"
-            aria-label={t("search")}
-            className="hidden max-w-xl flex-1 items-center gap-3 rounded-full bg-surface px-5 py-2.5 text-sm text-muted transition-colors hover:bg-line/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:flex"
-          >
-            <span className="flex-1">{t("search")}</span>
-            <SearchIcon />
-          </Link>
+          <InlineSearch />
 
-          <div className="flex shrink-0 items-center gap-5">
+          <div className="flex shrink-0 items-center justify-end gap-3 sm:gap-5">
             {settings.header_email && (
               <Link
                 href={`mailto:${settings.header_email}`}
@@ -98,7 +94,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="border-t border-line px-6 py-3">
+      <div className="hidden border-t border-line px-6 py-3 sm:block">
         <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-6">
           <div className="flex justify-start">
             <MegaMenu
@@ -118,7 +114,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <nav className="flex items-center gap-6 overflow-x-auto border-t border-line px-6 py-3 text-sm font-normal tracking-normal text-foreground sm:hidden">
+      <nav aria-label="Product categories" className="flex items-center gap-6 overflow-x-auto border-t border-line px-4 py-3 text-sm font-normal tracking-normal text-foreground sm:hidden">
         {categories.filter((category) => !category.parent_id).map((category) => (
           <Link
             key={category.id}
@@ -162,15 +158,6 @@ function PinIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-3.5 w-3.5">
       <path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="12" cy="9" r="2.5" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m21 21-4.3-4.3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
