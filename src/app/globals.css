@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAF8F4;
-  --foreground: #222222;
-  --accent: #B48A63;
+  --background: #FCFBF9;
+  --foreground: #201E1C;
+  --accent: #A97C52;
   /* Darker than --accent specifically for small static text/links on
      --background -- --accent itself is only ~2.9:1 there, which fails
      WCAG AA (4.5:1) for normal text. Used for links/labels; --accent
      stays the token for backgrounds, borders, and large/bold text where
      the 3:1 (or no) contrast minimum applies. */
-  --accent-text: #96693F;
-  --accent-soft: #F4EFE8;
-  --secondary-accent: #7A9D8C;
+  --accent-text: #865B35;
+  --accent-soft: #F5EEE6;
+  --secondary-accent: #5F806F;
   --surface: #FFFFFF;
-  --muted: #666666;
-  --line: #E8E2DB;
-  --sale: #C4694F;
+  --muted: #625D57;
+  --line: #E6E0D9;
+  --sale: #B94F3B;
 }
 
 @theme inline {
@@ -40,6 +40,23 @@ body {
   font-family: var(--font-sans);
 }
 
+/* A consistent, visible focus treatment gives keyboard users the same
+   certainty as pointer users without requiring each component to reinvent it. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
+  outline-offset: 3px;
+}
+
+/* Motion should never be required to understand or use the storefront. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -51,4 +68,44 @@ body {
 
 .animate-marquee {
   animation: marquee 30s linear infinite;
+}
+
+/* Single-handle price slider (PriceRangeSlider) -- native <input
+   type="range"> restyled since pseudo-element thumb styling can't be done
+   with Tailwind utilities alone across browsers. */
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.range-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.range-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: transparent;
 }

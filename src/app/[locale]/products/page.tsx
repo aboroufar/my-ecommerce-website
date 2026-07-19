@@ -3,15 +3,16 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import {
   getActiveProducts,
+  getBrands,
   getCategories,
+  getMaxProductPriceCents,
   getTags,
   parsePriceParam,
-  type Category,
   type ProductSort,
 } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { SortDropdown } from "@/components/SortDropdown";
-import { CategoryFilterBar } from "@/components/CategoryFilterBar";
+import { ShopSidebar } from "@/components/ShopSidebar";
 
 export const revalidate = 60;
 
@@ -29,47 +30,38 @@ export default async function ProductsPage({
     category?: string;
     tag?: string;
     sort?: string;
-    minPrice?: string;
     maxPrice?: string;
+    brand?: string;
+    gender?: string;
   }>;
 }) {
-  const { category, tag, sort, minPrice, maxPrice } = await searchParams;
+  const { category, tag, sort, maxPrice, brand, gender } = await searchParams;
   const activeSort = validSorts.includes(sort as ProductSort)
     ? (sort as ProductSort)
     : "newest";
-  const minPriceCents = parsePriceParam(minPrice);
   const maxPriceCents = parsePriceParam(maxPrice);
 
-  const [products, allCategories, allTags, t] = await Promise.all([
+  const [products, allCategories, allTags, brands, catalogMaxPriceCents, t] = await Promise.all([
     getActiveProducts({
       categorySlug: category,
       tagSlug: tag,
       sort: activeSort,
-      minPriceCents,
       maxPriceCents,
+      brandId: brand,
+      gender,
     }),
     getCategories(),
     tag ? getTags() : Promise.resolve([]),
+    getBrands(),
+    getMaxProductPriceCents(),
     getTranslations("productsPage"),
   ]);
   const activeTag = allTags.find((t) => t.slug === tag);
   // Display-only categories are homepage-grid decoration, not real
-  // filters -- keep them out of the filter bar/category tree.
+  // filters -- keep them out of the sidebar/category tree.
   const categories = allCategories.filter((c) => !c.display_only);
 
   const activeCategory = categories.find((c) => c.slug === category);
-  const topLevelAncestor = activeCategory
-    ? findTopLevelAncestor(categories, activeCategory)
-    : undefined;
-
-  // Scope the filter bar to just the active category's top-level department
-  // (its direct sibling groups), rather than the entire site's category
-  // tree -- it reads as "filter within this department" instead of a full
-  // site nav duplicate. Falls back to top-level categories when nothing is
-  // selected yet.
-  const filterCategories = topLevelAncestor
-    ? categories.filter((c) => c.parent_id === topLevelAncestor.id)
-    : categories.filter((c) => !c.parent_id);
 
   return (
     <main className="w-full flex-1">
@@ -80,53 +72,41 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      <CategoryFilterBar
-        categories={filterCategories}
-        activeSlug={category}
-        allCategorySlug={topLevelAncestor?.slug}
-        minPrice={minPrice}
-        maxPrice={maxPrice}
-      />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 lg:flex-row">
+        <ShopSidebar
+          categories={categories}
+          activeSlug={category}
+          maxPrice={maxPrice}
+          maxPriceCents={catalogMaxPriceCents}
+          brands={brands}
+          activeBrandId={brand}
+          showGender
+          activeGender={gender}
+        />
 
-      <div className="mx-auto w-full max-w-6xl px-6 py-12">
-        <div className="mb-10">
-          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-            {t("catalog")}
-          </span>
-          <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
-            {activeCategory?.name ?? activeTag?.name ?? t("shopAll")}
-          </h1>
-        </div>
-
-        {products.length === 0 ? (
-          <EmptyState hasFilter={!!category || !!tag} t={t} />
-        ) : (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+        <div className="min-w-0 flex-1">
+          <div className="mb-10">
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+              {t("catalog")}
+            </span>
+            <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
+              {activeCategory?.name ?? activeTag?.name ?? t("shopAll")}
+            </h1>
           </div>
-        )}
+
+          {products.length === 0 ? (
+            <EmptyState hasFilter={!!category || !!tag || !!brand || !!gender} t={t} />
+          ) : (
+            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
-}
-
-/**
- * Walks up parent_id links from the given category to find its top-level
- * ancestor (or itself, if it's already top-level) -- e.g. "Sun Care"
- * (a group) resolves to "Skincare", so the filter bar can be scoped to the
- * right department regardless of which tier of the tree is active.
- */
-function findTopLevelAncestor(categories: Category[], category: Category): Category {
-  const byId = new Map(categories.map((c) => [c.id, c]));
-  let current = category;
-  while (current.parent_id) {
-    const parent = byId.get(current.parent_id);
-    if (!parent) break;
-    current = parent;
-  }
-  return current;
 }
 
 function Breadcrumb({

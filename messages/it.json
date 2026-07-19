@@ -363,7 +363,10 @@
   },
   "searchBox": {
     "placeholder": "Cerca prodotti…",
-    "search": "Cerca"
+    "search": "Cerca",
+    "searching": "Ricerca in corso…",
+    "noneFoundFor": "Nessun prodotto trovato per “{query}”.",
+    "viewAllResults": "Vedi tutti i {count} risultati"
   },
   "blogSearchBox": {
     "placeholder": "Cerca articoli…",
@@ -382,10 +385,6 @@
     "emptyHeading": "Ancora nessun prodotto.",
     "emptyBody": "Una volta che il tuo progetto Supabase è connesso e migrato, i prodotti contrassegnati {statusActive} appariranno qui automaticamente. Esegui {seedCommand} per dati di esempio."
   },
-  "categoryFilterBar": {
-    "allProducts": "Tutti",
-    "price": "Prezzo"
-  },
   "promoPage": {
     "title": "Promo — Storefront",
     "description": "Scopri le promozioni attive e i prodotti scontati.",
@@ -395,14 +394,6 @@
     "emptyFilteredHeading": "Ancora nessun prodotto in saldo in questa categoria.",
     "viewAllPromos": "Vedi tutte le promo",
     "emptyHeading": "Nessun prodotto in saldo al momento — torna a trovarci presto."
-  },
-  "priceRangeFilter": {
-    "price": "Prezzo",
-    "minPrice": "Prezzo minimo",
-    "min": "Min",
-    "maxPrice": "Prezzo massimo",
-    "max": "Max",
-    "apply": "Applica"
   },
   "bestSellers": {
     "eyebrow": "Tutto ciò di cui hai bisogno",
@@ -505,7 +496,18 @@
   },
   "shopSidebar": {
     "categories": "Categorie",
-    "allProducts": "Tutti i prodotti"
+    "allProducts": "Tutti",
+    "selectPrice": "Seleziona il prezzo",
+    "minimum": "Minimo",
+    "maximum": "Massimo",
+    "chooseCategories": "Scegli le categorie",
+    "chooseBrand": "Scegli il brand",
+    "allBrands": "Tutti i brand",
+    "gender": "Genere",
+    "allGenders": "Tutti",
+    "genderWomen": "Donna",
+    "genderMen": "Uomo",
+    "genderUnisex": "Unisex"
   },
   "blogSidebar": {
     "categories": "Categorie",

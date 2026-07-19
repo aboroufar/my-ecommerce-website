@@ -820,11 +820,13 @@ export type Database = {
       }
       products: {
         Row: {
+          brand_id: string | null
           compare_at_price_cents: number | null
           created_at: string
           currency: string
           description: string | null
           dimensions_text: string | null
+          gender: string | null
           id: string
           is_popular: boolean
           name: string
@@ -837,11 +839,13 @@ export type Database = {
           weight_text: string | null
         }
         Insert: {
+          brand_id?: string | null
           compare_at_price_cents?: number | null
           created_at?: string
           currency?: string
           description?: string | null
           dimensions_text?: string | null
+          gender?: string | null
           id?: string
           is_popular?: boolean
           name: string
@@ -854,11 +858,13 @@ export type Database = {
           weight_text?: string | null
         }
         Update: {
+          brand_id?: string | null
           compare_at_price_cents?: number | null
           created_at?: string
           currency?: string
           description?: string | null
           dimensions_text?: string | null
+          gender?: string | null
           id?: string
           is_popular?: boolean
           name?: string
@@ -870,7 +876,15 @@ export type Database = {
           updated_at?: string
           weight_text?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_option_types: {
         Row: {
@@ -1440,6 +1454,7 @@ export const Constants = {
 // not real Postgres enums), so `supabase gen types` outputs `string` for
 // them. This literal union is hand-added for stricter typing at call sites.
 export type ProductStatus = "draft" | "active" | "archived"
+export type ProductGender = "women" | "men" | "unisex"
 export type OrderStatus =
   | "pending"
   | "paid"

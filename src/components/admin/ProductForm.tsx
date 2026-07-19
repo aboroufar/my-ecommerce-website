@@ -1,4 +1,4 @@
-import type { ProductStatus } from "@/lib/supabase/types";
+import type { ProductGender, ProductStatus } from "@/lib/supabase/types";
 import { ImageUploadField } from "./ImageUploadField";
 import { ProductOptionsManager, type ProductOptionsDefaults } from "./ProductOptionsManager";
 import {
@@ -13,6 +13,11 @@ interface CategoryOption {
 }
 
 interface TagOption {
+  id: string;
+  name: string;
+}
+
+interface BrandOption {
   id: string;
   name: string;
 }
@@ -119,6 +124,8 @@ interface ProductFormValues {
   stock_qty?: number;
   status?: ProductStatus;
   is_popular?: boolean;
+  brandId?: string | null;
+  gender?: ProductGender | null;
   image_url?: string;
   categoryIds?: string[];
   tagIds?: string[];
@@ -134,6 +141,7 @@ export function ProductForm({
   extraAction,
   categories,
   tags,
+  brands,
 }: {
   action: (formData: FormData) => void;
   defaultValues?: ProductFormValues;
@@ -142,6 +150,7 @@ export function ProductForm({
   extraAction?: React.ReactNode;
   categories: CategoryOption[];
   tags: TagOption[];
+  brands: BrandOption[];
 }) {
   return (
     <form action={action} className="mt-8 flex max-w-lg flex-col gap-5">
@@ -247,6 +256,38 @@ export function ProductForm({
         />
         Show a &quot;Popular&quot; badge on this product
       </label>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Brand" hint="Optional. Manage the brand list from Admin → Brands.">
+          <select
+            name="brand_id"
+            defaultValue={defaultValues?.brandId ?? ""}
+            className="border border-line bg-transparent px-3 py-2 text-sm"
+          >
+            <option value="">No brand</option>
+            {brands.map((brand) => (
+              <option key={brand.id} value={brand.id}>
+                {brand.name}
+              </option>
+            ))}
+          </select>
+          {brands.length === 0 && (
+            <p className="mt-1 text-xs text-muted">No brands yet -- add some in Admin → Brands.</p>
+          )}
+        </Field>
+        <Field label="Gender" hint="Optional. Used for storefront filtering.">
+          <select
+            name="gender"
+            defaultValue={defaultValues?.gender ?? ""}
+            className="border border-line bg-transparent px-3 py-2 text-sm"
+          >
+            <option value="">Not specified</option>
+            <option value="women">Women</option>
+            <option value="men">Men</option>
+            <option value="unisex">Unisex</option>
+          </select>
+        </Field>
+      </div>
 
       <Field
         label="Product image"

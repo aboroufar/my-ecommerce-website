@@ -12,7 +12,7 @@ export default async function WishlistPage() {
   const { data } = await supabase
     .from("wishlist_items")
     .select(
-      "product_id, products(id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating))"
+      "product_id, products(id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, brand_id, gender, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating))"
     )
     .order("created_at", { ascending: false });
 

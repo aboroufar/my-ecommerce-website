@@ -26,6 +26,8 @@ export interface ProductSummary {
   currency: string;
   stock_qty: number;
   is_popular: boolean;
+  brand_id: string | null;
+  gender: string | null;
   product_images: ProductImage[];
   product_categories: ProductCategoryRef[];
   product_reviews: ProductRatingRef[];
@@ -205,6 +207,8 @@ export async function getActiveProducts(options?: {
   sort?: ProductSort;
   minPriceCents?: number;
   maxPriceCents?: number;
+  brandId?: string;
+  gender?: string;
 }): Promise<ProductSummary[]> {
   try {
     const supabase = createPublicClient();
@@ -213,7 +217,7 @@ export async function getActiveProducts(options?: {
     let query = supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating), product_tags(tags(slug))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, brand_id, gender, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating), product_tags(tags(slug))"
       )
       .eq("status", "active");
 
@@ -222,6 +226,12 @@ export async function getActiveProducts(options?: {
     }
     if (options?.maxPriceCents !== undefined) {
       query = query.lte("price_cents", options.maxPriceCents);
+    }
+    if (options?.brandId) {
+      query = query.eq("brand_id", options.brandId);
+    }
+    if (options?.gender) {
+      query = query.eq("gender", options.gender);
     }
 
     const { data, error } = await query.order(column, { ascending });
@@ -388,13 +398,72 @@ export async function getTags(): Promise<Tag[]> {
   }
 }
 
+export interface FilterBrand {
+  id: string;
+  name: string;
+}
+
+/**
+ * Fetches all brands, alphabetically -- used by the /products filter
+ * sidebar's Brand dropdown. Unlike the homepage brand bar (which uses
+ * sort_order for a curated visual arrangement), a filter picklist should
+ * read alphabetically, matching how getTags() is ordered.
+ */
+export async function getBrands(): Promise<FilterBrand[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("brands")
+      .select("id, name")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("getBrands error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("getBrands failed (Supabase not configured?):", err);
+    return [];
+  }
+}
+
+/**
+ * Highest price_cents among active products -- used as the upper bound for
+ * the sidebar's single-handle price slider, so the slider's range tracks
+ * the real catalog instead of a number that silently goes stale as
+ * products are added. Falls back to 0 (slider hidden/disabled by the
+ * caller) if there are no active products or Supabase isn't configured.
+ */
+export async function getMaxProductPriceCents(): Promise<number> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select("price_cents")
+      .eq("status", "active")
+      .order("price_cents", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("getMaxProductPriceCents error:", error.message);
+      return 0;
+    }
+    return data?.price_cents ?? 0;
+  } catch (err) {
+    console.error("getMaxProductPriceCents failed (Supabase not configured?):", err);
+    return 0;
+  }
+}
+
 /**
  * Searches active products by name/description substring match.
  * Returns an empty array for a blank query, on error, or if Supabase isn't
  * configured yet.
  */
 const PRODUCT_SEARCH_SELECT =
-  "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating)";
+  "id, name, slug, description, price_cents, compare_at_price_cents, currency, stock_qty, is_popular, brand_id, gender, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_reviews(rating)";
 
 export async function searchProducts(query: string): Promise<ProductSummary[]> {
   const trimmed = query.trim();
@@ -479,7 +548,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at), product_highlights(id, label, icon, sort_order), product_tags(tags(name, slug))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, brand_id, gender, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at), product_highlights(id, label, icon, sort_order), product_tags(tags(name, slug))"
       )
       .eq("slug", slug)
       .eq("status", "active")

@@ -35,6 +35,8 @@ const productSchema = z.object({
   // Checkboxes are only present in FormData when checked ("on"), so a
   // missing key means unchecked/false rather than a validation failure.
   is_popular: z.preprocess((v) => v === "on", z.boolean()),
+  brand_id: z.union([z.string().uuid(), z.literal("")]).optional().default(""),
+  gender: z.union([z.enum(["women", "men", "unisex"]), z.literal("")]).optional().default(""),
 });
 
 /**
@@ -57,7 +59,7 @@ export async function createProduct(formData: FormData) {
     );
   }
 
-  const { image_url, price, compare_at_price, description, sku, ...rest } =
+  const { image_url, price, compare_at_price, description, sku, brand_id, gender, ...rest } =
     parsed.data;
   const supabase = createAdminClient();
 
@@ -70,6 +72,8 @@ export async function createProduct(formData: FormData) {
         compare_at_price === "" ? null : Math.round(compare_at_price * 100),
       description: description || null,
       sku: sku || null,
+      brand_id: brand_id || null,
+      gender: gender || null,
     })
     .select("id")
     .single();
@@ -107,7 +111,7 @@ export async function updateProduct(id: string, formData: FormData) {
     );
   }
 
-  const { image_url, price, compare_at_price, description, sku, ...rest } =
+  const { image_url, price, compare_at_price, description, sku, brand_id, gender, ...rest } =
     parsed.data;
   const supabase = createAdminClient();
 
@@ -120,6 +124,8 @@ export async function updateProduct(id: string, formData: FormData) {
         compare_at_price === "" ? null : Math.round(compare_at_price * 100),
       description: description || null,
       sku: sku || null,
+      brand_id: brand_id || null,
+      gender: gender || null,
     })
     .eq("id", id);
 

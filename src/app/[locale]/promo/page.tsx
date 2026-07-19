@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import {
   getActiveProducts,
   getCategories,
+  getMaxProductPriceCents,
   parsePriceParam,
   type ProductSort,
 } from "@/lib/products";
@@ -39,7 +40,7 @@ export default async function PromoPage({
   const minPriceCents = parsePriceParam(minPrice);
   const maxPriceCents = parsePriceParam(maxPrice);
 
-  const [products, allCategories, t] = await Promise.all([
+  const [products, allCategories, t, catalogMaxPriceCents] = await Promise.all([
     getActiveProducts({
       categorySlug: category,
       tagSlug: tag,
@@ -49,6 +50,7 @@ export default async function PromoPage({
     }),
     getCategories(),
     getTranslations("promoPage"),
+    getMaxProductPriceCents(),
   ]);
 
   // /promo is not scoped to a single department -- the sidebar shows the
@@ -75,8 +77,8 @@ export default async function PromoPage({
         <ShopSidebar
           categories={categories}
           activeSlug={category}
-          minPrice={minPrice}
           maxPrice={maxPrice}
+          maxPriceCents={catalogMaxPriceCents}
         />
 
         <div className="min-w-0 flex-1">

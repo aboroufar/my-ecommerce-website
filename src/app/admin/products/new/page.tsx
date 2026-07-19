@@ -9,9 +9,10 @@ export default async function NewProductPage({
 }) {
   const { error } = await searchParams;
   const supabase = createAdminClient();
-  const [{ data: categories }, { data: tags }] = await Promise.all([
+  const [{ data: categories }, { data: tags }, { data: brands }] = await Promise.all([
     supabase.from("categories").select("id, name, parent_id").order("name", { ascending: true }),
     supabase.from("tags").select("id, name").order("name", { ascending: true }),
+    supabase.from("brands").select("id, name").order("name", { ascending: true }),
   ]);
 
   return (
@@ -23,6 +24,7 @@ export default async function NewProductPage({
         submitLabel="Create product"
         categories={categories ?? []}
         tags={tags ?? []}
+        brands={brands ?? []}
       />
     </div>
   );
