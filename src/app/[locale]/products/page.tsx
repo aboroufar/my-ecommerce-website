@@ -11,8 +11,7 @@ import {
 } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { SortDropdown } from "@/components/SortDropdown";
-import { ShopSidebar } from "@/components/ShopSidebar";
-import { CategoryHero } from "@/components/CategoryHero";
+import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 
 export const revalidate = 60;
 
@@ -55,25 +54,22 @@ export default async function ProductsPage({
   ]);
   const activeTag = allTags.find((t) => t.slug === tag);
   // Display-only categories are homepage-grid decoration, not real
-  // filters -- keep them out of the shop sidebar/category tree.
+  // filters -- keep them out of the filter bar/category tree.
   const categories = allCategories.filter((c) => !c.display_only);
 
   const activeCategory = categories.find((c) => c.slug === category);
-  const isTopLevelCategory = !!activeCategory && !activeCategory.parent_id;
   const topLevelAncestor = activeCategory
     ? findTopLevelAncestor(categories, activeCategory)
     : undefined;
 
-  // Scope the sidebar to just the active category's top-level department
-  // (its full subtree of groups/items), rather than the entire site's
-  // category tree -- it reads as "filter within this category" instead
-  // of a full site nav duplicate. This applies whether the active filter
-  // is the top-level category itself (e.g. Skincare) or one of its
-  // groups/items (e.g. Sun Care), since both should show the same scoped
-  // Skincare subtree, not just fall back to everything.
-  const sidebarCategories = topLevelAncestor
-    ? categorySubtree(categories, topLevelAncestor)
-    : categories;
+  // Scope the filter bar to just the active category's top-level department
+  // (its direct sibling groups), rather than the entire site's category
+  // tree -- it reads as "filter within this department" instead of a full
+  // site nav duplicate. Falls back to top-level categories when nothing is
+  // selected yet.
+  const filterCategories = topLevelAncestor
+    ? categories.filter((c) => c.parent_id === topLevelAncestor.id)
+    : categories.filter((c) => !c.parent_id);
 
   return (
     <main className="w-full flex-1">
@@ -84,43 +80,33 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      {isTopLevelCategory && (
-        <div className="mx-auto w-full max-w-6xl px-6 pt-6">
-          <CategoryHero
-            category={activeCategory}
-            groups={categories.filter((c) => c.parent_id === activeCategory.id)}
-          />
+      <CategoryFilterBar
+        categories={filterCategories}
+        activeSlug={category}
+        allCategorySlug={topLevelAncestor?.slug}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+      />
+
+      <div className="mx-auto w-full max-w-6xl px-6 py-12">
+        <div className="mb-10">
+          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+            {t("catalog")}
+          </span>
+          <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
+            {activeCategory?.name ?? activeTag?.name ?? t("shopAll")}
+          </h1>
         </div>
-      )}
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 lg:flex-row">
-        <ShopSidebar
-          categories={sidebarCategories}
-          activeSlug={category}
-          minPrice={minPrice}
-          maxPrice={maxPrice}
-        />
-
-        <div className="min-w-0 flex-1">
-          <div className="mb-10">
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-              {t("catalog")}
-            </span>
-            <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
-              {activeCategory?.name ?? activeTag?.name ?? t("shopAll")}
-            </h1>
+        {products.length === 0 ? (
+          <EmptyState hasFilter={!!category || !!tag} t={t} />
+        ) : (
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
-
-          {products.length === 0 ? (
-            <EmptyState hasFilter={!!category || !!tag} t={t} />
-          ) : (
-            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </main>
   );
@@ -129,7 +115,7 @@ export default async function ProductsPage({
 /**
  * Walks up parent_id links from the given category to find its top-level
  * ancestor (or itself, if it's already top-level) -- e.g. "Sun Care"
- * (a group) resolves to "Skincare", so the sidebar can be scoped to the
+ * (a group) resolves to "Skincare", so the filter bar can be scoped to the
  * right department regardless of which tier of the tree is active.
  */
 function findTopLevelAncestor(categories: Category[], category: Category): Category {
@@ -141,32 +127,6 @@ function findTopLevelAncestor(categories: Category[], category: Category): Categ
     current = parent;
   }
   return current;
-}
-
-/**
- * Returns the given top-level category plus every descendant (groups,
- * items), so the sidebar can show just "this category's own tree" instead
- * of every category on the site.
- */
-function categorySubtree(categories: Category[], root: Category): Category[] {
-  const childrenByParent = new Map<string, Category[]>();
-  for (const c of categories) {
-    if (!c.parent_id) continue;
-    const siblings = childrenByParent.get(c.parent_id) ?? [];
-    siblings.push(c);
-    childrenByParent.set(c.parent_id, siblings);
-  }
-
-  const result: Category[] = [root];
-  const stack = [root];
-  while (stack.length > 0) {
-    const current = stack.pop()!;
-    for (const child of childrenByParent.get(current.id) ?? []) {
-      result.push(child);
-      stack.push(child);
-    }
-  }
-  return result;
 }
 
 function Breadcrumb({

@@ -382,6 +382,10 @@
     "emptyHeading": "Ancora nessun prodotto.",
     "emptyBody": "Una volta che il tuo progetto Supabase è connesso e migrato, i prodotti contrassegnati {statusActive} appariranno qui automaticamente. Esegui {seedCommand} per dati di esempio."
   },
+  "categoryFilterBar": {
+    "allProducts": "Tutti",
+    "price": "Prezzo"
+  },
   "promoPage": {
     "title": "Promo — Storefront",
     "description": "Scopri le promozioni attive e i prodotti scontati.",
@@ -502,10 +506,6 @@
   "shopSidebar": {
     "categories": "Categorie",
     "allProducts": "Tutti i prodotti"
-  },
-  "categoryHero": {
-    "eyebrowDefault": "Tutto ciò di cui hai bisogno",
-    "viewMore": "Scopri di più"
   },
   "blogSidebar": {
     "categories": "Categorie",
