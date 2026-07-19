@@ -107,8 +107,8 @@ export function ProductCard({ product }: { product: ProductSummary }) {
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <span className="font-display text-2xl text-accent/40">
+            <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,white,transparent_35%),linear-gradient(135deg,var(--accent-soft),#e8ddd1)]">
+              <span className="font-display text-5xl font-bold text-accent/40" aria-hidden="true">
                 {product.name.charAt(0)}
               </span>
             </div>

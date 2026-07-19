@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 interface Tab {
   label: string;
@@ -14,17 +14,29 @@ interface Tab {
  */
 export function ProductInfoTabs({ tabs }: { tabs: Tab[] }) {
   const [active, setActive] = useState(0);
+  const tabIdPrefix = useId();
 
   if (tabs.length === 0) return null;
 
   return (
     <div className="mt-16 border-t border-line pt-8">
-      <div className="flex gap-8 border-b border-line">
+      <div className="flex gap-6 overflow-x-auto border-b border-line" role="tablist" aria-label="Product information">
         {tabs.map((tab, i) => (
           <button
-            key={tab.label}
+            key={`${tabIdPrefix}-${tab.label}`}
             type="button"
             onClick={() => setActive(i)}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowRight") setActive((active + 1) % tabs.length);
+              if (event.key === "ArrowLeft") setActive((active - 1 + tabs.length) % tabs.length);
+              if (event.key === "Home") setActive(0);
+              if (event.key === "End") setActive(tabs.length - 1);
+            }}
+            id={`${tabIdPrefix}-tab-${i}`}
+            aria-controls={`${tabIdPrefix}-panel-${i}`}
+            aria-selected={active === i}
+            role="tab"
+            tabIndex={active === i ? 0 : -1}
             className={`-mb-px border-b-2 pb-3 text-sm font-medium transition-colors ${
               active === i
                 ? "border-foreground text-foreground"
@@ -35,7 +47,13 @@ export function ProductInfoTabs({ tabs }: { tabs: Tab[] }) {
           </button>
         ))}
       </div>
-      <div className="pt-6 text-sm leading-relaxed text-muted">
+      <div
+        id={`${tabIdPrefix}-panel-${active}`}
+        aria-labelledby={`${tabIdPrefix}-tab-${active}`}
+        role="tabpanel"
+        tabIndex={0}
+        className="pt-6 text-sm leading-relaxed text-muted"
+      >
         {tabs[active].content}
       </div>
     </div>
