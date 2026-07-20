@@ -5,14 +5,9 @@ import {
   ProductHighlightsManager,
   type ProductHighlightsDefaults,
 } from "./ProductHighlightsManager";
+import { TagChecklist, type TagOption } from "./TagChecklist";
 
 interface CategoryOption {
-  id: string;
-  name: string;
-  parent_id: string | null;
-}
-
-interface TagOption {
   id: string;
   name: string;
 }
@@ -27,51 +22,6 @@ interface PackageOption {
   name: string;
 }
 
-function TagChecklist({
-  tags,
-  checkedIds,
-}: {
-  tags: TagOption[];
-  checkedIds?: string[];
-}) {
-  if (tags.length === 0) {
-    return <p className="text-sm text-muted">No tags yet -- add some in Admin → Tags.</p>;
-  }
-
-  return (
-    <div className="flex flex-wrap gap-x-4 gap-y-2 rounded-md border border-line bg-background p-3">
-      {tags.map((tag) => (
-        <label key={tag.id} className="flex items-center gap-2 text-sm text-foreground">
-          <input
-            type="checkbox"
-            name="tag_ids"
-            value={tag.id}
-            defaultChecked={checkedIds?.includes(tag.id)}
-          />
-          {tag.name}
-        </label>
-      ))}
-    </div>
-  );
-}
-
-const TIER_LABELS = ["Category", "Group", "Item"] as const;
-const TIER_STYLES = [
-  "bg-foreground text-background",
-  "bg-accent/15 text-accent",
-  "bg-surface text-muted",
-] as const;
-
-function TierBadge({ depth }: { depth: number }) {
-  return (
-    <span
-      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${TIER_STYLES[depth] ?? TIER_STYLES[2]}`}
-    >
-      {TIER_LABELS[depth] ?? "Item"}
-    </span>
-  );
-}
-
 function CategoryTree({
   categories,
   checkedIds,
@@ -79,42 +29,23 @@ function CategoryTree({
   categories: CategoryOption[];
   checkedIds?: string[];
 }) {
-  const topLevel = categories.filter((c) => !c.parent_id);
-  const childrenByParent = new Map<string, CategoryOption[]>();
-  for (const c of categories) {
-    if (!c.parent_id) continue;
-    const siblings = childrenByParent.get(c.parent_id) ?? [];
-    siblings.push(c);
-    childrenByParent.set(c.parent_id, siblings);
-  }
-
-  const renderNode = (category: CategoryOption, depth: number): React.ReactNode => (
-    <div key={category.id} className={depth === 0 ? "space-y-1.5" : "mt-1.5 space-y-1.5"}>
-      <label className="flex items-center gap-2 text-sm text-foreground">
-        <input
-          type="checkbox"
-          name="category_ids"
-          value={category.id}
-          defaultChecked={checkedIds?.includes(category.id)}
-        />
-        <TierBadge depth={depth} />
-        {category.name}
-      </label>
-      {(childrenByParent.get(category.id) ?? []).length > 0 && (
-        <div className="ml-6 space-y-1.5 border-l border-line pl-4">
-          {childrenByParent.get(category.id)!.map((child) => renderNode(child, depth + 1))}
-        </div>
-      )}
-    </div>
-  );
-
-  if (topLevel.length === 0) {
+  if (categories.length === 0) {
     return <p className="text-sm text-muted">No categories yet.</p>;
   }
 
   return (
-    <div className="space-y-4 rounded-md border border-line bg-background p-3">
-      {topLevel.map((category) => renderNode(category, 0))}
+    <div className="space-y-1.5 rounded-md border border-line bg-background p-3">
+      {categories.map((category) => (
+        <label key={category.id} className="flex items-center gap-2 text-sm text-foreground">
+          <input
+            type="checkbox"
+            name="category_ids"
+            value={category.id}
+            defaultChecked={checkedIds?.includes(category.id)}
+          />
+          {category.name}
+        </label>
+      ))}
     </div>
   );
 }
@@ -359,7 +290,7 @@ export function ProductForm({
             {categories.length > 0 && (
               <Field
                 label="Collections"
-                hint="Tag at whichever level fits -- a top-level Category, a Group, or a specific Item underneath it."
+                hint="Which categories this product belongs to."
               >
                 <CategoryTree categories={categories} checkedIds={defaultValues?.categoryIds} />
               </Field>

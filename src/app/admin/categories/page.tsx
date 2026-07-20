@@ -15,7 +15,7 @@ export default async function AdminCategoriesPage({
     supabase
       .from("categories")
       .select(
-        "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only, featured_in_grid"
+        "id, name, slug, image_url, hero_image_url, hero_headline, hero_eyebrow, display_only, featured_in_grid"
       )
       .order("name", { ascending: true }),
     supabase
@@ -41,23 +41,22 @@ export default async function AdminCategoriesPage({
       <p className="mt-2 max-w-lg text-sm text-muted">
         The homepage category grid and header menu update automatically
         when you add, edit, or delete a category here -- just add a photo
-        so it doesn&apos;t fall back to a placeholder image. Give a category
-        a parent to nest it as a Group under a top-level Category (for
-        anything finer-grained, use a tag instead -- manage those from
-        Admin → Tags). Top-level categories can also have a hero
+        so it doesn&apos;t fall back to a placeholder image. For
+        finer-grained groupings within a category, use a tag instead --
+        manage those from Admin → Tags. Categories can also have a hero
         photo/headline shown at the top of their /products page. A category
-        only appears on the storefront once it (or one of its groups) has
-        at least one product set to Active -- categories marked &quot;Not
-        visible&quot; below are hidden until then. Mark a top-level category
-        &quot;Display only&quot; to show it as a plain image tile on the
-        homepage grid without a product requirement -- it won&apos;t be
-        clickable and won&apos;t appear in the header menu or /products
-        filters. Check &quot;Show in Brand Highlights&quot; to make a
-        top-level category eligible for the homepage&apos;s Brand
-        Highlights section, which always shows 5 tiles picked at random
-        from every eligible category on each page load. Use &quot;Manage
-        products&quot; on any category to assign or remove products
-        directly, without opening each product&apos;s edit page.
+        only appears on the storefront once it has at least one product set
+        to Active -- categories marked &quot;Not visible&quot; below are
+        hidden until then. Mark a category &quot;Display only&quot; to show
+        it as a plain image tile on the homepage grid without a product
+        requirement -- it won&apos;t be clickable and won&apos;t appear in
+        the header menu or /products filters. Check &quot;Show in Brand
+        Highlights&quot; to make a category eligible for the
+        homepage&apos;s Brand Highlights section, which always shows 5
+        tiles picked at random from every eligible category on each page
+        load. Use &quot;Manage products&quot; on any category to assign or
+        remove products directly, without opening each product&apos;s edit
+        page.
       </p>
 
       {error && (

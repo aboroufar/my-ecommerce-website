@@ -17,10 +17,7 @@ export default async function Home() {
     getBrands(),
   ]);
 
-  // The homepage category grid and bestseller filters are meant to
-  // showcase top-level departments (Skincare, Apparel, ...), not every
-  // group/product-line underneath them.
-  const categories = allCategories.filter((c) => !c.parent_id);
+  const categories = allCategories;
   // Display-only categories are decorative image tiles for the grid --
   // they never have products, so they'd only ever show "No products in
   // this category yet." as a bestseller filter. Keep them out of that

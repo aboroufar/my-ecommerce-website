@@ -11,7 +11,7 @@ export default async function NewProductPage({
   const supabase = createAdminClient();
   const [{ data: categories }, { data: tags }, { data: brands }, { data: packageProfiles }] =
     await Promise.all([
-      supabase.from("categories").select("id, name, parent_id").order("name", { ascending: true }),
+      supabase.from("categories").select("id, name").order("name", { ascending: true }),
       supabase.from("tags").select("id, name").order("name", { ascending: true }),
       supabase.from("brands").select("id, name").order("name", { ascending: true }),
       supabase.from("package_profiles").select("id, name").order("name", { ascending: true }),

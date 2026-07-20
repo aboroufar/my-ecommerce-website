@@ -6,24 +6,6 @@ interface Category {
   id: string;
   name: string;
   slug: string;
-  parent_id: string | null;
-}
-
-const TIER_STYLES = [
-  "bg-foreground text-background",
-  "bg-accent/15 text-accent",
-  "bg-surface text-muted",
-] as const;
-
-function TierBadge({ depth }: { depth: number }) {
-  const labels = ["Category", "Group", "Item"] as const;
-  return (
-    <span
-      className={`shrink-0 rounded px-1 py-0.5 text-[9px] font-medium uppercase tracking-wide ${TIER_STYLES[depth] ?? TIER_STYLES[2]}`}
-    >
-      {labels[depth] ?? "Item"}
-    </span>
-  );
 }
 
 /**
@@ -92,34 +74,6 @@ export function AdminProductsSidebar({ categories }: { categories: Category[] })
     });
   }
 
-  const topLevel = categories.filter((c) => !c.parent_id);
-  const childrenByParent = new Map<string, Category[]>();
-  for (const c of categories) {
-    if (!c.parent_id) continue;
-    const siblings = childrenByParent.get(c.parent_id) ?? [];
-    siblings.push(c);
-    childrenByParent.set(c.parent_id, siblings);
-  }
-
-  const renderCategoryNode = (category: Category, depth: number): React.ReactNode => (
-    <div key={category.id} className={depth === 0 ? "space-y-1.5" : "mt-1.5 space-y-1.5"}>
-      <label className="flex items-center gap-1.5 text-sm text-foreground">
-        <input
-          type="checkbox"
-          checked={selectedCategorySlugs.has(category.slug)}
-          onChange={() => toggleCategory(category.slug)}
-        />
-        <TierBadge depth={depth} />
-        <span className="truncate">{category.name}</span>
-      </label>
-      {(childrenByParent.get(category.id) ?? []).length > 0 && (
-        <div className="ml-5 space-y-1.5 border-l border-line pl-3">
-          {childrenByParent.get(category.id)!.map((child) => renderCategoryNode(child, depth + 1))}
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <aside className="w-full shrink-0 space-y-6 border border-line bg-surface p-4 lg:w-64">
       <div className="flex items-center justify-between">
@@ -158,10 +112,19 @@ export function AdminProductsSidebar({ categories }: { categories: Category[] })
       {categories.length > 0 && (
         <div>
           <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
-            Categories &amp; Groups
+            Categories
           </h3>
-          <div className="mt-2 max-h-72 space-y-2.5 overflow-y-auto pr-1">
-            {topLevel.map((category) => renderCategoryNode(category, 0))}
+          <div className="mt-2 max-h-72 space-y-1.5 overflow-y-auto pr-1">
+            {categories.map((category) => (
+              <label key={category.id} className="flex items-center gap-1.5 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={selectedCategorySlugs.has(category.slug)}
+                  onChange={() => toggleCategory(category.slug)}
+                />
+                <span className="truncate">{category.name}</span>
+              </label>
+            ))}
           </div>
         </div>
       )}

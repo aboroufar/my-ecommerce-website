@@ -45,23 +45,8 @@ export function MegaMenu({
   extraColumns?: MenuColumnData[];
 }) {
   const t = useTranslations("nav");
-  const topLevelCategories = categories.filter((c) => !c.parent_id);
-  const childrenByParent = new Map<string, Category[]>();
-  for (const c of categories) {
-    if (!c.parent_id) continue;
-    const siblings = childrenByParent.get(c.parent_id) ?? [];
-    siblings.push(c);
-    childrenByParent.set(c.parent_id, siblings);
-  }
 
-  return (
-    <CategoriesDropdown
-      label={categoriesLabel ?? t("categories")}
-      noSubcategoriesLabel={t("noSubcategories")}
-      topLevelCategories={topLevelCategories}
-      childrenByParent={childrenByParent}
-    />
-  );
+  return <CategoriesDropdown label={categoriesLabel ?? t("categories")} categories={categories} />;
 }
 
 export function MegaMenuColumns({
@@ -71,7 +56,7 @@ export function MegaMenuColumns({
   categories: Category[];
   extraColumns?: MenuColumnData[];
 }) {
-  const topLevelCategories = categories.filter((c) => !c.parent_id);
+  const topLevelCategories = categories;
 
   return (
     <nav className="hidden items-center gap-8 text-sm font-normal tracking-normal text-foreground sm:flex">
@@ -102,28 +87,14 @@ export function MegaMenuColumns({
 
 function CategoriesDropdown({
   label,
-  noSubcategoriesLabel,
-  topLevelCategories,
-  childrenByParent,
+  categories,
 }: {
   label: string;
-  noSubcategoriesLabel: string;
-  topLevelCategories: Category[];
-  childrenByParent: Map<string, Category[]>;
+  categories: Category[];
 }) {
   const { open, setOpen, containerRef } = useMenuDisclosure();
-  const [activeId, setActiveId] = useState<string | null>(
-    topLevelCategories[0]?.id ?? null
-  );
 
-  // The active top-level category's direct children are "groups" (e.g.
-  // "Face Cream Set"), each rendered as its own column headed by the
-  // group name, listing that group's own children (e.g. "Matte
-  // Foundation") underneath -- a true 3-level drill-down, not just a
-  // flat list chunked into columns.
-  const activeGroups = activeId ? childrenByParent.get(activeId) ?? [] : [];
-
-  if (topLevelCategories.length === 0) return null;
+  if (categories.length === 0) return null;
 
   return (
     <div
@@ -143,73 +114,19 @@ function CategoriesDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 flex w-max max-w-[95vw] gap-8 rounded-lg border border-line bg-background p-6 shadow-md">
-          <ul className="w-52 shrink-0 space-y-0.5">
-            {topLevelCategories.map((category) => {
-              const hasChildren = (childrenByParent.get(category.id) ?? []).length > 0;
-              const isActive = activeId === category.id;
-              return (
-                <li key={category.id} className="relative">
-                  <span
-                    className={`absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent transition-all duration-200 ease-out ${
-                      isActive ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                  <Link
-                    href={`/products?category=${category.slug}`}
-                    onMouseEnter={() => setActiveId(category.id)}
-                    onFocus={() => setActiveId(category.id)}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                      isActive
-                        ? "translate-x-1.5 text-accent"
-                        : "text-foreground hover:translate-x-1.5 hover:text-accent"
-                    }`}
-                  >
-                    {category.name}
-                    {hasChildren && (
-                      <ChevronRightIcon
-                        className={`transition-transform duration-200 ease-out ${isActive ? "translate-x-0.5" : ""}`}
-                      />
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
+        <div className="absolute left-0 top-full z-50 w-52 rounded-lg border border-line bg-background p-3 shadow-md">
+          <ul className="space-y-0.5">
+            {categories.map((category) => (
+              <li key={category.id}>
+                <Link
+                  href={`/products?category=${category.slug}`}
+                  className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-all duration-200 ease-out hover:translate-x-1.5 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  {category.name}
+                </Link>
+              </li>
+            ))}
           </ul>
-
-          <div className="flex flex-1 items-start gap-10 border-l border-line/50 pl-8">
-            {activeGroups.length === 0 ? (
-              <p className="text-sm text-muted">{noSubcategoriesLabel}</p>
-            ) : (
-              activeGroups.map((group) => {
-                const items = childrenByParent.get(group.id) ?? [];
-                return (
-                  <div key={group.id} className="w-40 shrink-0">
-                    <Link
-                      href={`/products?category=${group.slug}`}
-                      className="font-display text-sm font-medium normal-case tracking-normal text-foreground transition-colors duration-200 hover:text-accent"
-                    >
-                      {group.name}
-                    </Link>
-                    {items.length > 0 && (
-                      <ul className="mt-3 space-y-2.5 normal-case tracking-normal text-muted">
-                        {items.map((item) => (
-                          <li key={item.id}>
-                            <Link
-                              href={`/products?category=${item.slug}`}
-                              className="inline-block text-sm transition-all duration-200 ease-out hover:translate-x-1 hover:text-foreground"
-                            >
-                              {item.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
         </div>
       )}
     </div>
@@ -289,10 +206,3 @@ function ChevronDownIcon() {
   );
 }
 
-function ChevronRightIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`h-3.5 w-3.5 text-muted ${className}`}>
-      <path d="m9 6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}

@@ -6,10 +6,8 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import type { Category } from "@/lib/products";
 
 /**
- * "Choose Categories" dropdown -- flattens the category tree into a single
- * select (top-level categories indented-free, children prefixed) since a
- * dropdown can't render the nested tree the old always-expanded sidebar
- * list did. Selecting an option navigates with ?category=<slug>.
+ * "Choose Categories" dropdown. Selecting an option navigates with
+ * ?category=<slug>.
  */
 export function CategorySelect({
   categories,
@@ -23,22 +21,7 @@ export function CategorySelect({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const topLevel = categories.filter((c) => !c.parent_id);
-  const childrenByParent = new Map<string, Category[]>();
-  for (const c of categories) {
-    if (!c.parent_id) continue;
-    const siblings = childrenByParent.get(c.parent_id) ?? [];
-    siblings.push(c);
-    childrenByParent.set(c.parent_id, siblings);
-  }
-
-  const options: { slug: string; label: string }[] = [];
-  for (const top of topLevel) {
-    options.push({ slug: top.slug, label: top.name });
-    for (const child of childrenByParent.get(top.id) ?? []) {
-      options.push({ slug: child.slug, label: `— ${child.name}` });
-    }
-  }
+  const options = categories.map((c) => ({ slug: c.slug, label: c.name }));
 
   function handleChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());

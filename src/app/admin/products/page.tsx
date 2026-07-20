@@ -7,48 +7,6 @@ import { AdminProductsSidebar } from "@/components/admin/AdminProductsSidebar";
 // no ISR caching here.
 export const dynamic = "force-dynamic";
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  parent_id: string | null;
-}
-
-/**
- * Returns the given category slugs plus every descendant slug (so
- * filtering by a top-level Category also matches products tagged on its
- * Groups/Items underneath) -- same approach as the storefront's
- * descendantSlugs() in src/lib/products.ts, duplicated here rather than
- * imported since that helper is scoped to the public client/active-only
- * product view and this needs to work against the admin client with no
- * status filter.
- */
-function expandToDescendants(categories: Category[], slugs: string[]): Set<string> {
-  const bySlug = new Map(categories.map((c) => [c.slug, c]));
-  const childrenByParent = new Map<string, Category[]>();
-  for (const c of categories) {
-    if (!c.parent_id) continue;
-    const siblings = childrenByParent.get(c.parent_id) ?? [];
-    siblings.push(c);
-    childrenByParent.set(c.parent_id, siblings);
-  }
-
-  const result = new Set<string>();
-  for (const slug of slugs) {
-    const root = bySlug.get(slug);
-    if (!root) continue;
-    const stack = [root];
-    while (stack.length > 0) {
-      const current = stack.pop()!;
-      result.add(current.slug);
-      for (const child of childrenByParent.get(current.id) ?? []) {
-        stack.push(child);
-      }
-    }
-  }
-  return result;
-}
-
 export default async function AdminProductsPage({
   searchParams,
 }: {
@@ -78,7 +36,7 @@ export default async function AdminProductsPage({
   const [{ data: categories }, { data: allProducts }] = await Promise.all([
     supabase
       .from("categories")
-      .select("id, name, slug, parent_id")
+      .select("id, name, slug")
       .order("name", { ascending: true }),
     supabase
       .from("products")
@@ -93,10 +51,7 @@ export default async function AdminProductsPage({
       ? category
       : [category]
     : [];
-  const matchSlugs =
-    categorySlugs.length > 0
-      ? expandToDescendants(categories ?? [], categorySlugs)
-      : null;
+  const matchSlugs = categorySlugs.length > 0 ? new Set(categorySlugs) : null;
 
   const minCents = min_price ? Math.round(parseFloat(min_price) * 100) : null;
   const maxCents = max_price ? Math.round(parseFloat(max_price) * 100) : null;

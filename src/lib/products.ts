@@ -143,35 +143,6 @@ export interface Category {
   featured_in_grid: boolean;
 }
 
-/**
- * Returns the slug set of the given category plus every descendant
- * (children, grandchildren, ...), so filtering by a top-level or
- * group-level category also picks up products tagged on the categories
- * nested underneath it.
- */
-function descendantSlugs(categories: Category[], rootSlug: string): Set<string> {
-  const root = categories.find((c) => c.slug === rootSlug);
-  if (!root) return new Set([rootSlug]);
-
-  const childrenByParent = new Map<string, Category[]>();
-  for (const c of categories) {
-    if (!c.parent_id) continue;
-    const siblings = childrenByParent.get(c.parent_id) ?? [];
-    siblings.push(c);
-    childrenByParent.set(c.parent_id, siblings);
-  }
-
-  const slugs = new Set<string>([root.slug]);
-  const stack = [root];
-  while (stack.length > 0) {
-    const current = stack.pop()!;
-    for (const child of childrenByParent.get(current.id) ?? []) {
-      slugs.add(child.slug);
-      stack.push(child);
-    }
-  }
-  return slugs;
-}
 
 export type ProductSort = "newest" | "price-asc" | "price-desc" | "name-asc";
 
@@ -255,20 +226,14 @@ export async function getActiveProducts(options?: {
 
     if (!options?.categorySlug) return withoutTags;
 
-    // Filtering by category needs to match not just the exact category but
-    // also its descendants -- picking "Skincare" (a group-level category)
-    // should also surface products tagged directly on "Face Cream Set" or
-    // "Matte Foundation" underneath it. Client-side filtering (rather than
-    // a dynamic !inner select string) avoids the type-inference breakage
-    // postgrest-js has with computed select strings (see
-    // src/lib/supabase/types.ts notes on Insert/Update literal shapes --
-    // the same "computed types silently collapse to never" trap applies
-    // to select-string interpolation here).
-    const categories = await getCategories();
-    const matchSlugs = descendantSlugs(categories, options.categorySlug);
+    // Client-side filtering (rather than a dynamic !inner select string)
+    // avoids the type-inference breakage postgrest-js has with computed
+    // select strings (see src/lib/supabase/types.ts notes on Insert/Update
+    // literal shapes -- the same "computed types silently collapse to
+    // never" trap applies to select-string interpolation here).
     return withoutTags.filter((p) =>
       p.product_categories.some(
-        (pc) => pc.categories && matchSlugs.has(pc.categories.slug)
+        (pc) => pc.categories?.slug === options.categorySlug
       )
     );
   } catch (err) {
@@ -279,15 +244,15 @@ export async function getActiveProducts(options?: {
 
 /**
  * Given the full category list and a Supabase client, returns the set of
- * category IDs that have at least one *active* product assigned -- either
- * directly, or on a descendant category. Shared by getCategories() (which
- * uses it to hide dead-end categories from the storefront) and the admin
- * categories page (which uses it to flag categories that exist but aren't
- * visible anywhere yet, e.g. because their only product is still a draft).
+ * category IDs that have at least one *active* product assigned directly.
+ * Shared by getCategories() (which uses it to hide dead-end categories from
+ * the storefront) and the admin categories page (which uses it to flag
+ * categories that exist but aren't visible anywhere yet, e.g. because their
+ * only product is still a draft).
  */
 export async function getCategoryIdsWithActiveProducts(
   supabase: ReturnType<typeof createPublicClient>,
-  categories: Category[]
+  categories: { id: string }[]
 ): Promise<Set<string>> {
   const { data: productCategories, error } = await supabase
     .from("product_categories")
@@ -299,28 +264,7 @@ export async function getCategoryIdsWithActiveProducts(
     return new Set(categories.map((c) => c.id));
   }
 
-  const directlyAssigned = new Set(
-    (productCategories ?? []).map((pc) => pc.category_id)
-  );
-
-  const childrenByParent = new Map<string, Category[]>();
-  for (const c of categories) {
-    if (!c.parent_id) continue;
-    const siblings = childrenByParent.get(c.parent_id) ?? [];
-    siblings.push(c);
-    childrenByParent.set(c.parent_id, siblings);
-  }
-
-  function hasProductsInSubtree(category: Category): boolean {
-    if (directlyAssigned.has(category.id)) return true;
-    return (childrenByParent.get(category.id) ?? []).some(hasProductsInSubtree);
-  }
-
-  const result = new Set<string>();
-  for (const c of categories) {
-    if (hasProductsInSubtree(c)) result.add(c.id);
-  }
-  return result;
+  return new Set((productCategories ?? []).map((pc) => pc.category_id));
 }
 
 /**
@@ -329,9 +273,9 @@ export async function getCategoryIdsWithActiveProducts(
  * yet or the request fails.
  *
  * By default, only returns categories that have at least one active product
- * assigned -- directly, or on a descendant category -- so an empty
- * subcategory (created but not yet assigned any products) doesn't show up
- * as a dead end in the header menu, homepage grid, or /products filters.
+ * assigned directly, so an empty category (created but not yet assigned
+ * any products) doesn't show up as a dead end in the header menu, homepage
+ * grid, or /products filters.
  * Categories marked `display_only` are exempt from that product
  * requirement -- they exist purely as a decorative homepage tile (see
  * CategoryGrid, which renders them unlinked) and are never expected to

@@ -54,6 +54,39 @@ export async function createTag(formData: FormData) {
   redirect("/admin/tags");
 }
 
+/**
+ * Same insert as createTag, but returns a result instead of redirecting --
+ * for creating a tag inline from the product form's tag checklist, where a
+ * redirect would blow away all the other in-progress product edits on the
+ * page. createTag itself stays redirect-based since /admin/tags's own "Add
+ * tag" form relies on that to land back on the (revalidated) tags list.
+ */
+export async function createTagInline(
+  name: string
+): Promise<{ id: string; name: string } | { error: string }> {
+  await requireAdmin();
+
+  const parsed = tagSchema.safeParse({ name });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("tags")
+    .insert({ name: parsed.data.name, slug: slugify(parsed.data.name) })
+    .select("id, name")
+    .single();
+
+  if (error || !data) {
+    return { error: error?.code === "23505" ? "That tag already exists." : (error?.message ?? "Could not create tag.") };
+  }
+
+  revalidatePath("/admin/tags");
+  revalidatePath("/products", "layout");
+  return data;
+}
+
 export async function deleteTag(id: string) {
   await requireAdmin();
 

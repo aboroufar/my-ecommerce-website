@@ -30,7 +30,7 @@ export default async function EditProductPage({
         .single(),
       supabase
         .from("categories")
-        .select("id, name, parent_id")
+        .select("id, name")
         .order("name", { ascending: true }),
       supabase.from("tags").select("id, name").order("name", { ascending: true }),
       supabase.from("brands").select("id, name").order("name", { ascending: true }),

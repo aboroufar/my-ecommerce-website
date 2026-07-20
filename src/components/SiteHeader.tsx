@@ -122,7 +122,7 @@ export async function SiteHeader() {
       </div>
 
       <nav aria-label="Product categories" className="flex items-center gap-6 overflow-x-auto border-t border-line px-4 py-3 text-sm font-normal tracking-normal text-foreground sm:hidden">
-        {categories.filter((category) => !category.parent_id).map((category) => (
+        {categories.map((category) => (
           <Link
             key={category.id}
             href={`/products?category=${category.slug}`}
