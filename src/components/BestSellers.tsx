@@ -48,7 +48,7 @@ export function BestSellers({
   if (categories.length === 0) return null;
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
       <div className="text-center">
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
           {t("eyebrow")}

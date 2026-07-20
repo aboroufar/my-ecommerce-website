@@ -64,7 +64,7 @@ export function SaleSection({
   if (saleProducts.length === 0 || categories.length === 0) return null;
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
       <div className="text-center">
         <h2 className="font-display text-3xl font-bold text-foreground">
           {t("heading")}
