@@ -19,21 +19,23 @@ export default async function EditProductPage({
   const { error } = await searchParams;
 
   const supabase = createAdminClient();
-  const [{ data: product }, { data: categories }, { data: tags }, { data: brands }] = await Promise.all([
-    supabase
-      .from("products")
-      .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, sku, weight_text, dimensions_text, stock_qty, status, is_popular, brand_id, gender, product_images(url, alt_text, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id)), product_highlights(id, label, icon, sort_order), product_tags(tag_id)"
-      )
-      .eq("id", id)
-      .single(),
-    supabase
-      .from("categories")
-      .select("id, name, parent_id")
-      .order("name", { ascending: true }),
-    supabase.from("tags").select("id, name").order("name", { ascending: true }),
-    supabase.from("brands").select("id, name").order("name", { ascending: true }),
-  ]);
+  const [{ data: product }, { data: categories }, { data: tags }, { data: brands }, { data: packageProfiles }] =
+    await Promise.all([
+      supabase
+        .from("products")
+        .select(
+          "id, name, slug, description, price_cents, compare_at_price_cents, sku, weight_text, dimensions_text, package_profile_id, stock_qty, status, is_popular, brand_id, gender, product_images(url, alt_text, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id)), product_highlights(id, label, icon, sort_order), product_tags(tag_id)"
+        )
+        .eq("id", id)
+        .single(),
+      supabase
+        .from("categories")
+        .select("id, name, parent_id")
+        .order("name", { ascending: true }),
+      supabase.from("tags").select("id, name").order("name", { ascending: true }),
+      supabase.from("brands").select("id, name").order("name", { ascending: true }),
+      supabase.from("package_profiles").select("id, name").order("name", { ascending: true }),
+    ]);
 
   if (!product) notFound();
 
@@ -95,6 +97,7 @@ export default async function EditProductPage({
         categories={categories ?? []}
         tags={tags ?? []}
         brands={brands ?? []}
+        packageProfiles={packageProfiles ?? []}
         defaultValues={{
           name: product.name,
           slug: product.slug,
@@ -106,6 +109,7 @@ export default async function EditProductPage({
           sku: product.sku,
           weight_text: product.weight_text,
           dimensions_text: product.dimensions_text,
+          packageProfileId: product.package_profile_id,
           stock_qty: product.stock_qty,
           status: product.status as ProductStatus,
           is_popular: product.is_popular,

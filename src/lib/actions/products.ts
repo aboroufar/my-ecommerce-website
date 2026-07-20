@@ -35,6 +35,7 @@ const productSchema = z.object({
   is_popular: z.preprocess((v) => v === "on", z.boolean()),
   brand_id: z.union([z.string().uuid(), z.literal("")]).optional().default(""),
   gender: z.union([z.enum(["women", "men", "unisex"]), z.literal("")]).optional().default(""),
+  package_profile_id: z.union([z.string().uuid(), z.literal("")]).optional().default(""),
 });
 
 /**
@@ -100,8 +101,18 @@ export async function createProduct(formData: FormData) {
     );
   }
 
-  const { price, compare_at_price, description, sku, weight_text, dimensions_text, brand_id, gender, ...rest } =
-    parsed.data;
+  const {
+    price,
+    compare_at_price,
+    description,
+    sku,
+    weight_text,
+    dimensions_text,
+    brand_id,
+    gender,
+    package_profile_id,
+    ...rest
+  } = parsed.data;
   const supabase = createAdminClient();
 
   const { data: product, error } = await supabase
@@ -117,6 +128,7 @@ export async function createProduct(formData: FormData) {
       dimensions_text: dimensions_text || null,
       brand_id: brand_id || null,
       gender: gender || null,
+      package_profile_id: package_profile_id || null,
     })
     .select("id")
     .single();
@@ -149,8 +161,18 @@ export async function updateProduct(id: string, formData: FormData) {
     );
   }
 
-  const { price, compare_at_price, description, sku, weight_text, dimensions_text, brand_id, gender, ...rest } =
-    parsed.data;
+  const {
+    price,
+    compare_at_price,
+    description,
+    sku,
+    weight_text,
+    dimensions_text,
+    brand_id,
+    gender,
+    package_profile_id,
+    ...rest
+  } = parsed.data;
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -166,6 +188,7 @@ export async function updateProduct(id: string, formData: FormData) {
       dimensions_text: dimensions_text || null,
       brand_id: brand_id || null,
       gender: gender || null,
+      package_profile_id: package_profile_id || null,
     })
     .eq("id", id);
 

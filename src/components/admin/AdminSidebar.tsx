@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/blog", label: "Blog", icon: DocumentIcon },
   { href: "/admin/menu", label: "Menu", icon: MenuIcon },
   { href: "/admin/brands", label: "Brands", icon: BadgeIcon },
+  { href: "/admin/packages", label: "Packages", icon: BoxIcon },
   { href: "/admin/content", label: "Content", icon: ImageIcon },
   { href: "/admin/discounts", label: "Discounts", icon: DiscountIcon },
 ];
@@ -186,6 +187,16 @@ function BadgeIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
       <circle cx="12" cy="9" r="5" />
       <path d="M9 13.5 7 20l5-2.5 5 2.5-2-6.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BoxIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
+      <path d="M3.5 8 12 4l8.5 4-8.5 4-8.5-4Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3.5 8v8L12 20l8.5-4V8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 12v8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

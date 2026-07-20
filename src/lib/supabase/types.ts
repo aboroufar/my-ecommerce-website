@@ -756,6 +756,39 @@ export type Database = {
           },
         ]
       }
+      package_profiles: {
+        Row: {
+          created_at: string
+          empty_weight_grams: number | null
+          height_cm: number | null
+          id: string
+          length_cm: number | null
+          name: string
+          package_type: string
+          width_cm: number | null
+        }
+        Insert: {
+          created_at?: string
+          empty_weight_grams?: number | null
+          height_cm?: number | null
+          id?: string
+          length_cm?: number | null
+          name: string
+          package_type?: string
+          width_cm?: number | null
+        }
+        Update: {
+          created_at?: string
+          empty_weight_grams?: number | null
+          height_cm?: number | null
+          id?: string
+          length_cm?: number | null
+          name?: string
+          package_type?: string
+          width_cm?: number | null
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           category_id: string
@@ -830,6 +863,7 @@ export type Database = {
           id: string
           is_popular: boolean
           name: string
+          package_profile_id: string | null
           price_cents: number
           sku: string | null
           slug: string
@@ -849,6 +883,7 @@ export type Database = {
           id?: string
           is_popular?: boolean
           name: string
+          package_profile_id?: string | null
           price_cents: number
           sku?: string | null
           slug: string
@@ -868,6 +903,7 @@ export type Database = {
           id?: string
           is_popular?: boolean
           name?: string
+          package_profile_id?: string | null
           price_cents?: number
           sku?: string | null
           slug?: string
@@ -882,6 +918,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_package_profile_id_fkey"
+            columns: ["package_profile_id"]
+            isOneToOne: false
+            referencedRelation: "package_profiles"
             referencedColumns: ["id"]
           },
         ]

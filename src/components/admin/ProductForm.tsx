@@ -22,6 +22,11 @@ interface BrandOption {
   name: string;
 }
 
+interface PackageOption {
+  id: string;
+  name: string;
+}
+
 function TagChecklist({
   tags,
   checkedIds,
@@ -123,6 +128,7 @@ interface ProductFormValues {
   sku?: string | null;
   weight_text?: string | null;
   dimensions_text?: string | null;
+  packageProfileId?: string | null;
   stock_qty?: number;
   status?: ProductStatus;
   is_popular?: boolean;
@@ -144,6 +150,7 @@ export function ProductForm({
   categories,
   tags,
   brands,
+  packageProfiles,
 }: {
   action: (formData: FormData) => void;
   defaultValues?: ProductFormValues;
@@ -153,6 +160,7 @@ export function ProductForm({
   categories: CategoryOption[];
   tags: TagOption[];
   brands: BrandOption[];
+  packageProfiles: PackageOption[];
 }) {
   return (
     <form action={action} className="mt-8 flex flex-col gap-6">
@@ -258,6 +266,24 @@ export function ProductForm({
                 />
               </Field>
             </div>
+
+            <Field
+              label="Package"
+              hint="Optional. Manage reusable package profiles from Admin → Packages."
+            >
+              <select
+                name="package_profile_id"
+                defaultValue={defaultValues?.packageProfileId ?? ""}
+                className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+              >
+                <option value="">None</option>
+                {packageProfiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
           </Card>
 
           <Card
