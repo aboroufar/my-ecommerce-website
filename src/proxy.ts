@@ -8,9 +8,20 @@ const handleLocale = createMiddleware(routing);
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Admin/API routes stay unprefixed and untouched by locale detection --
-  // only the Supabase session refresh applies to them.
-  if (pathname.startsWith("/admin") || pathname.startsWith("/api")) {
+  // Admin/API routes, and the Supabase OAuth/magic-link callback, stay
+  // unprefixed and untouched by locale detection -- only the Supabase
+  // session refresh applies to them. /auth/callback's URL is registered
+  // as a fixed redirect target in the Supabase dashboard (and burned into
+  // every email/OAuth redirectTo call in this codebase), so without this
+  // exclusion next-intl's middleware rewrites it to /en/auth/callback --
+  // a path with no matching route -- and the whole callback 404s before
+  // it can exchange the auth code, breaking Google sign-in and magic
+  // links alike.
+  if (
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/auth/callback")
+  ) {
     return await updateSession(request);
   }
 

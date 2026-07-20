@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -8,10 +9,27 @@ import { GoogleButton } from "./SignInForm";
 
 export function SignUpForm() {
   const t = useTranslations("signUpForm");
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
+
+  // Surfaces OAuth failures redirected back from /auth/callback (e.g. the
+  // user cancelled the Google consent screen) -- otherwise silently
+  // discarded, and "Continue with Google" just looked like it did nothing.
+  useEffect(() => {
+    const oauthError = searchParams.get("error");
+    if (oauthError) {
+      setError(oauthError);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      window.history.replaceState({}, "", url);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on
+    // mount only; re-reading searchParams on every render would fight the
+    // replaceState cleanup above.
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
