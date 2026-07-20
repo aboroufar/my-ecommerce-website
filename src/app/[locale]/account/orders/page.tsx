@@ -1,9 +1,19 @@
+import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+interface OrderItemThumbnail {
+  id: string;
+  product_name: string;
+  products: {
+    slug: string;
+    product_images: { url: string; alt_text: string | null; sort_order: number }[];
+  } | null;
+}
 
 export default async function OrdersPage({
   searchParams,
@@ -20,7 +30,8 @@ export default async function OrdersPage({
     { key: "all", label: t("tabAll"), statuses: null },
     { key: "processing", label: t("tabProcessing"), statuses: ["pending", "paid"] },
     { key: "shipped", label: t("tabShipped"), statuses: ["fulfilled"] },
-    { key: "cancelled", label: t("tabCancelled"), statuses: ["cancelled", "refunded"] },
+    { key: "returned", label: t("tabReturned"), statuses: ["refunded"] },
+    { key: "cancelled", label: t("tabCancelled"), statuses: ["cancelled"] },
   ] as const;
 
   const activeTab = TABS.find((tab) => tab.key === status) ?? TABS[0];
@@ -37,12 +48,29 @@ export default async function OrdersPage({
 
   const { data: orders } = await query;
 
+  // One thumbnail per order (the first line item's primary image), fetched
+  // in a single batched query keyed by order id rather than N+1 per row.
+  const orderIds = (orders ?? []).map((o) => o.id);
+  const thumbnailsByOrder = new Map<string, OrderItemThumbnail>();
+  if (orderIds.length > 0) {
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("id, order_id, product_name, products(slug, product_images(url, alt_text, sort_order))")
+      .in("order_id", orderIds);
+
+    for (const item of (items ?? []) as unknown as (OrderItemThumbnail & { order_id: string })[]) {
+      if (!thumbnailsByOrder.has(item.order_id)) {
+        thumbnailsByOrder.set(item.order_id, item);
+      }
+    }
+  }
+
   const STATUS_LABELS: Record<string, string> = {
     pending: t("statusPending"),
     paid: t("statusPaid"),
     fulfilled: t("statusFulfilled"),
     cancelled: t("statusCancelled"),
-    refunded: t("statusRefunded"),
+    refunded: t("statusReturned"),
   };
 
   return (
@@ -84,25 +112,58 @@ export default async function OrdersPage({
         </p>
       ) : (
         <ul className="mt-8 divide-y divide-line">
-          {orders.map((order) => (
-            <li key={order.id} className="flex items-center justify-between py-4">
-              <div>
+          {orders.map((order) => {
+            const thumbnail = thumbnailsByOrder.get(order.id);
+            const image = thumbnail?.products?.product_images
+              ? [...thumbnail.products.product_images].sort(
+                  (a, b) => a.sort_order - b.sort_order
+                )[0]
+              : undefined;
+
+            return (
+              <li key={order.id} className="flex items-center gap-4 py-4">
                 <Link
-                  href={`/account/orders/${order.id}`}
-                  className="text-sm text-foreground hover:underline"
+                  href={
+                    thumbnail?.products?.slug
+                      ? `/products/${thumbnail.products.slug}`
+                      : `/account/orders/${order.id}`
+                  }
+                  className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-surface"
                 >
-                  {t("orderNumber", { id: order.id.slice(0, 8) })}
+                  {image ? (
+                    <Image
+                      src={image.url}
+                      alt={image.alt_text ?? thumbnail?.product_name ?? ""}
+                      width={56}
+                      height={56}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center font-display text-sm text-accent/40">
+                      {(thumbnail?.product_name ?? "?").charAt(0)}
+                    </div>
+                  )}
                 </Link>
-                <p className="mt-1 text-xs text-muted">
-                  {formatDate(order.created_at, locale)} ·{" "}
-                  <span>{STATUS_LABELS[order.status] ?? order.status}</span>
-                </p>
-              </div>
-              <span className="text-sm text-foreground">
-                {formatPrice(order.total_cents, order.currency, locale)}
-              </span>
-            </li>
-          ))}
+
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/account/orders/${order.id}`}
+                    className="text-sm text-foreground hover:underline"
+                  >
+                    {t("orderNumber", { id: order.id.slice(0, 8) })}
+                  </Link>
+                  <p className="mt-1 text-xs text-muted">
+                    {formatDate(order.created_at, locale)} ·{" "}
+                    <span>{STATUS_LABELS[order.status] ?? order.status}</span>
+                  </p>
+                </div>
+
+                <span className="shrink-0 text-sm text-foreground">
+                  {formatPrice(order.total_cents, order.currency, locale)}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -42,7 +43,9 @@ export default async function OrderDetailPage({
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("id, product_name, quantity, unit_price_cents")
+    .select(
+      "id, product_name, quantity, unit_price_cents, variant_label, products(slug, product_images(url, alt_text, sort_order))"
+    )
     .eq("order_id", id);
 
   const shipping = order.shipping_address as ShippingAddress | null;
@@ -52,7 +55,7 @@ export default async function OrderDetailPage({
     paid: t("statusPaid"),
     fulfilled: t("statusFulfilled"),
     cancelled: t("statusCancelled"),
-    refunded: t("statusRefunded"),
+    refunded: t("statusReturned"),
   };
 
   return (
@@ -73,19 +76,55 @@ export default async function OrderDetailPage({
       </p>
 
       <ul className="mt-8 divide-y divide-line">
-        {(items ?? []).map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center justify-between py-3 text-sm"
-          >
-            <span className="text-foreground">
-              {item.product_name} × {item.quantity}
-            </span>
-            <span className="text-foreground">
-              {formatPrice(item.unit_price_cents * item.quantity, order.currency, locale)}
-            </span>
-          </li>
-        ))}
+        {(items ?? []).map((item) => {
+          const image = item.products?.product_images
+            ? [...item.products.product_images].sort(
+                (a, b) => a.sort_order - b.sort_order
+              )[0]
+            : undefined;
+          const thumbnail = (
+            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-surface">
+              {image ? (
+                <Image
+                  src={image.url}
+                  alt={image.alt_text ?? item.product_name}
+                  width={56}
+                  height={56}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center font-display text-sm text-accent/40">
+                  {item.product_name.charAt(0)}
+                </div>
+              )}
+            </div>
+          );
+
+          return (
+            <li key={item.id} className="flex items-center gap-4 py-3 text-sm">
+              {item.products?.slug ? (
+                <Link href={`/products/${item.products.slug}`} className="shrink-0">
+                  {thumbnail}
+                </Link>
+              ) : (
+                thumbnail
+              )}
+
+              <div className="min-w-0 flex-1">
+                <span className="text-foreground">
+                  {item.product_name} × {item.quantity}
+                </span>
+                {item.variant_label && (
+                  <p className="mt-0.5 text-xs text-muted">{item.variant_label}</p>
+                )}
+              </div>
+
+              <span className="shrink-0 text-foreground">
+                {formatPrice(item.unit_price_cents * item.quantity, order.currency, locale)}
+              </span>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="mt-6 flex items-center justify-between border-t border-line pt-4">
