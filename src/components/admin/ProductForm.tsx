@@ -121,6 +121,8 @@ interface ProductFormValues {
   price?: number; // dollars, not cents -- this is a display/input concern
   compare_at_price?: number | null; // dollars, same reasoning
   sku?: string | null;
+  weight_text?: string | null;
+  dimensions_text?: string | null;
   stock_qty?: number;
   status?: ProductStatus;
   is_popular?: boolean;
@@ -228,6 +230,30 @@ export function ProductForm({
                   min="0"
                   required
                   defaultValue={defaultValues?.stock_qty ?? 0}
+                  className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </Field>
+            </div>
+          </Card>
+
+          <Card
+            title="Shipping"
+            hint="Used when this product has no variants (or as a fallback for variants that don't set their own)."
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Weight" hint="e.g. 0.5 kg">
+                <input
+                  name="weight_text"
+                  defaultValue={defaultValues?.weight_text ?? ""}
+                  placeholder="0.5 kg"
+                  className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </Field>
+              <Field label="Dimensions" hint="e.g. 10 × 5 × 3 cm">
+                <input
+                  name="dimensions_text"
+                  defaultValue={defaultValues?.dimensions_text ?? ""}
+                  placeholder="10 × 5 × 3 cm"
                   className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
                 />
               </Field>

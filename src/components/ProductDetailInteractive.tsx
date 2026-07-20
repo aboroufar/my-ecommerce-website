@@ -74,9 +74,9 @@ export function ProductAddToCart() {
 
 /** "Additional information" tab content -- weight/dimensions of the currently-selected variant. */
 export function SelectedVariantInfo() {
-  const { matchedVariant } = useProductDetail();
-  const weightText = matchedVariant?.weight_text;
-  const dimensionsText = matchedVariant?.dimensions_text;
+  const { product, matchedVariant } = useProductDetail();
+  const weightText = matchedVariant?.weight_text ?? product.weight_text;
+  const dimensionsText = matchedVariant?.dimensions_text ?? product.dimensions_text;
 
   if (!weightText && !dimensionsText) {
     return <p>No additional information yet.</p>;

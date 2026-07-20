@@ -26,6 +26,8 @@ const productSchema = z.object({
     .optional()
     .default(""),
   sku: z.string().optional().default(""),
+  weight_text: z.string().optional().default(""),
+  dimensions_text: z.string().optional().default(""),
   stock_qty: z.coerce.number().int().nonnegative("Stock must be 0 or more"),
   status: z.enum(["draft", "active", "archived"]),
   // Checkboxes are only present in FormData when checked ("on"), so a
@@ -98,7 +100,8 @@ export async function createProduct(formData: FormData) {
     );
   }
 
-  const { price, compare_at_price, description, sku, brand_id, gender, ...rest } = parsed.data;
+  const { price, compare_at_price, description, sku, weight_text, dimensions_text, brand_id, gender, ...rest } =
+    parsed.data;
   const supabase = createAdminClient();
 
   const { data: product, error } = await supabase
@@ -110,6 +113,8 @@ export async function createProduct(formData: FormData) {
         compare_at_price === "" ? null : Math.round(compare_at_price * 100),
       description: description || null,
       sku: sku || null,
+      weight_text: weight_text || null,
+      dimensions_text: dimensions_text || null,
       brand_id: brand_id || null,
       gender: gender || null,
     })
@@ -144,7 +149,8 @@ export async function updateProduct(id: string, formData: FormData) {
     );
   }
 
-  const { price, compare_at_price, description, sku, brand_id, gender, ...rest } = parsed.data;
+  const { price, compare_at_price, description, sku, weight_text, dimensions_text, brand_id, gender, ...rest } =
+    parsed.data;
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -156,6 +162,8 @@ export async function updateProduct(id: string, formData: FormData) {
         compare_at_price === "" ? null : Math.round(compare_at_price * 100),
       description: description || null,
       sku: sku || null,
+      weight_text: weight_text || null,
+      dimensions_text: dimensions_text || null,
       brand_id: brand_id || null,
       gender: gender || null,
     })
