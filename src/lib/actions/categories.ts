@@ -158,3 +158,37 @@ export async function setProductCategories(
     );
   }
 }
+
+/**
+ * Same replace-all pattern as setProductCategories, but from the other
+ * direction -- replaces every product assigned to one category, for the
+ * "manage products" picker on the Categories admin page. Only touches this
+ * category's rows in product_categories, so a product's assignments to
+ * other categories are untouched.
+ */
+export async function setCategoryProducts(formData: FormData) {
+  await requireAdmin();
+
+  const categoryId = String(formData.get("category_id") ?? "");
+  if (!categoryId) {
+    redirect(`/admin/categories?error=${encodeURIComponent("Missing category.")}`);
+  }
+  const productIds = formData.getAll("product_ids") as string[];
+
+  const supabase = createAdminClient();
+  await supabase.from("product_categories").delete().eq("category_id", categoryId);
+
+  if (productIds.length > 0) {
+    await supabase.from("product_categories").insert(
+      productIds.map((product_id) => ({
+        product_id,
+        category_id: categoryId,
+      }))
+    );
+  }
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/products");
+  revalidatePath("/");
+  redirect("/admin/categories");
+}

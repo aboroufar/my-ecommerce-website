@@ -11,17 +11,29 @@ export default async function AdminCategoriesPage({
 }) {
   const { error } = await searchParams;
   const supabase = createAdminClient();
-  const { data: categories } = await supabase
-    .from("categories")
-    .select(
-      "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only, featured_in_grid"
-    )
-    .order("name", { ascending: true });
+  const [{ data: categories }, { data: products }] = await Promise.all([
+    supabase
+      .from("categories")
+      .select(
+        "id, name, slug, image_url, parent_id, hero_image_url, hero_headline, hero_eyebrow, display_only, featured_in_grid"
+      )
+      .order("name", { ascending: true }),
+    supabase
+      .from("products")
+      .select("id, name, product_categories(category_id)")
+      .order("name", { ascending: true }),
+  ]);
 
   const visibleIds = await getCategoryIdsWithActiveProducts(
     supabase,
     categories ?? []
   );
+
+  const productsWithCategoryIds = (products ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    categoryIds: p.product_categories.map((pc) => pc.category_id),
+  }));
 
   return (
     <div>
@@ -30,19 +42,22 @@ export default async function AdminCategoriesPage({
         The homepage category grid and header menu update automatically
         when you add, edit, or delete a category here -- just add a photo
         so it doesn&apos;t fall back to a placeholder image. Give a category
-        a parent to nest it as a Group or Item under a top-level Category.
-        Top-level categories can also have a hero photo/headline shown at
-        the top of their /products page. A category only appears on the
-        storefront once it (or one of its groups/items) has at least one
-        product set to Active -- categories marked &quot;Not visible&quot;
-        below are hidden until then. Mark a top-level category
+        a parent to nest it as a Group under a top-level Category (for
+        anything finer-grained, use a tag instead -- manage those from
+        Admin → Tags). Top-level categories can also have a hero
+        photo/headline shown at the top of their /products page. A category
+        only appears on the storefront once it (or one of its groups) has
+        at least one product set to Active -- categories marked &quot;Not
+        visible&quot; below are hidden until then. Mark a top-level category
         &quot;Display only&quot; to show it as a plain image tile on the
         homepage grid without a product requirement -- it won&apos;t be
         clickable and won&apos;t appear in the header menu or /products
         filters. Check &quot;Show in Brand Highlights&quot; to make a
         top-level category eligible for the homepage&apos;s Brand
         Highlights section, which always shows 5 tiles picked at random
-        from every eligible category on each page load.
+        from every eligible category on each page load. Use &quot;Manage
+        products&quot; on any category to assign or remove products
+        directly, without opening each product&apos;s edit page.
       </p>
 
       {error && (
@@ -55,6 +70,7 @@ export default async function AdminCategoriesPage({
         <CategoriesManager
           categories={categories ?? []}
           visibleIds={[...visibleIds]}
+          products={productsWithCategoryIds}
         />
       </div>
     </div>
