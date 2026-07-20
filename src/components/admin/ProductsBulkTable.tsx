@@ -8,6 +8,7 @@ import { bulkUpdateProductStatus, bulkDeleteProducts } from "@/lib/actions/produ
 interface ProductRow {
   id: string;
   name: string;
+  sku: string | null;
   status: string;
   price_cents: number;
   currency: string;
@@ -95,9 +96,14 @@ export function ProductsBulkTable({ products }: { products: ProductRow[] }) {
               />
             </th>
             <th className="py-2 font-medium">Name</th>
+            <th className="py-2 font-medium">SKU</th>
             <th className="py-2 font-medium">Status</th>
             <th className="py-2 font-medium">Price</th>
-            <th className="py-2 font-medium">Stock</th>
+            <th className="py-2 text-right font-medium">Unavailable</th>
+            <th className="py-2 text-right font-medium">Committed</th>
+            <th className="py-2 text-right font-medium">Available</th>
+            <th className="py-2 text-right font-medium">On hand</th>
+            <th className="py-2 text-right font-medium">Incoming</th>
             <th className="py-2" />
           </tr>
         </thead>
@@ -113,6 +119,7 @@ export function ProductsBulkTable({ products }: { products: ProductRow[] }) {
                 />
               </td>
               <td className="py-3 text-foreground">{p.name}</td>
+              <td className="py-3 text-muted">{p.sku || "No SKU"}</td>
               <td className="py-3">
                 <span
                   className={`rounded px-1.5 py-0.5 text-xs font-medium capitalize ${
@@ -129,7 +136,15 @@ export function ProductsBulkTable({ products }: { products: ProductRow[] }) {
               <td className="py-3 text-foreground">
                 {formatPrice(p.price_cents, p.currency)}
               </td>
-              <td className="py-3 text-foreground">{p.stock_qty}</td>
+              {/* Unavailable/Committed/Incoming have no backing data yet --
+                  this app tracks a single stock_qty per product, not
+                  reservations, multi-location counts, or inbound shipments.
+                  Available and On hand both reflect that same stock_qty. */}
+              <td className="py-3 text-right text-foreground">0</td>
+              <td className="py-3 text-right text-foreground">0</td>
+              <td className="py-3 text-right text-foreground">{p.stock_qty}</td>
+              <td className="py-3 text-right text-foreground">{p.stock_qty}</td>
+              <td className="py-3 text-right text-foreground">0</td>
               <td className="py-3 text-right">
                 <Link
                   href={`/admin/products/${p.id}/edit`}
