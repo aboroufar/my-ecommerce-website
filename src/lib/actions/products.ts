@@ -28,10 +28,6 @@ const productSchema = z.object({
   sku: z.string().optional().default(""),
   stock_qty: z.coerce.number().int().nonnegative("Stock must be 0 or more"),
   status: z.enum(["draft", "active", "archived"]),
-  image_url: z
-    .union([z.string().url("Image URL must be a valid URL"), z.literal("")])
-    .optional()
-    .default(""),
   // Checkboxes are only present in FormData when checked ("on"), so a
   // missing key means unchecked/false rather than a validation failure.
   is_popular: z.preprocess((v) => v === "on", z.boolean()),
@@ -49,6 +45,49 @@ async function requireAdmin() {
   if (!user) redirect("/admin");
 }
 
+const imagesPayloadSchema = z.array(
+  z.object({
+    url: z.string().url(),
+    alt_text: z.string(),
+  })
+);
+
+/**
+ * Replaces the full product_images set for a product from the
+ * ImageGalleryManager's serialized array, same delete-then-reinsert
+ * pattern as setProductHighlights/setProductOptions -- order in the
+ * array becomes sort_order, so the first image is always the primary
+ * one shown on the storefront.
+ */
+async function setProductImages(
+  productId: string,
+  supabase: ReturnType<typeof createAdminClient>,
+  imagesJson: string
+) {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(imagesJson);
+  } catch {
+    return;
+  }
+
+  const parsed = imagesPayloadSchema.safeParse(raw);
+  if (!parsed.success) return;
+
+  await supabase.from("product_images").delete().eq("product_id", productId);
+
+  if (parsed.data.length === 0) return;
+
+  await supabase.from("product_images").insert(
+    parsed.data.map((image, i) => ({
+      product_id: productId,
+      url: image.url,
+      alt_text: image.alt_text || null,
+      sort_order: i,
+    }))
+  );
+}
+
 export async function createProduct(formData: FormData) {
   await requireAdmin();
 
@@ -59,8 +98,7 @@ export async function createProduct(formData: FormData) {
     );
   }
 
-  const { image_url, price, compare_at_price, description, sku, brand_id, gender, ...rest } =
-    parsed.data;
+  const { price, compare_at_price, description, sku, brand_id, gender, ...rest } = parsed.data;
   const supabase = createAdminClient();
 
   const { data: product, error } = await supabase
@@ -84,12 +122,7 @@ export async function createProduct(formData: FormData) {
     );
   }
 
-  if (image_url) {
-    await supabase
-      .from("product_images")
-      .insert({ product_id: product.id, url: image_url, sort_order: 0 });
-  }
-
+  await setProductImages(product.id, supabase, String(formData.get("images_json") ?? ""));
   await setProductCategories(product.id, formData.getAll("category_ids") as string[]);
   await setProductOptions(product.id, String(formData.get("options_json") ?? ""));
   await setProductHighlights(product.id, String(formData.get("highlights_json") ?? ""));
@@ -111,8 +144,7 @@ export async function updateProduct(id: string, formData: FormData) {
     );
   }
 
-  const { image_url, price, compare_at_price, description, sku, brand_id, gender, ...rest } =
-    parsed.data;
+  const { price, compare_at_price, description, sku, brand_id, gender, ...rest } = parsed.data;
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -135,16 +167,7 @@ export async function updateProduct(id: string, formData: FormData) {
     );
   }
 
-  // Simple approach for v1: replace the single primary image if a new URL
-  // was given. Multi-image management can be added later without changing
-  // this schema.
-  if (image_url) {
-    await supabase.from("product_images").delete().eq("product_id", id);
-    await supabase
-      .from("product_images")
-      .insert({ product_id: id, url: image_url, sort_order: 0 });
-  }
-
+  await setProductImages(id, supabase, String(formData.get("images_json") ?? ""));
   await setProductCategories(id, formData.getAll("category_ids") as string[]);
   await setProductOptions(id, String(formData.get("options_json") ?? ""));
   await setProductHighlights(id, String(formData.get("highlights_json") ?? ""));

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateProduct, deleteProduct } from "@/lib/actions/products";
 import { ProductForm } from "@/components/admin/ProductForm";
+import type { GalleryImage } from "@/components/admin/ImageGalleryManager";
 import type { ProductOptionsDefaults } from "@/components/admin/ProductOptionsManager";
 import type { ProductHighlightsDefaults } from "@/components/admin/ProductHighlightsManager";
 import type { HighlightIconKey } from "@/components/highlightIcons";
@@ -22,7 +23,7 @@ export default async function EditProductPage({
     supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, brand_id, gender, product_images(url, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id)), product_highlights(id, label, icon, sort_order), product_tags(tag_id)"
+        "id, name, slug, description, price_cents, compare_at_price_cents, sku, stock_qty, status, is_popular, brand_id, gender, product_images(url, alt_text, sort_order), product_categories(category_id), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, price_cents, stock_qty, sku, weight_text, dimensions_text, product_variant_options(option_value_id)), product_highlights(id, label, icon, sort_order), product_tags(tag_id)"
       )
       .eq("id", id)
       .single(),
@@ -36,9 +37,9 @@ export default async function EditProductPage({
 
   if (!product) notFound();
 
-  const image = [...product.product_images].sort(
-    (a, b) => a.sort_order - b.sort_order
-  )[0];
+  const imagesDefaults: GalleryImage[] = [...product.product_images]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((img) => ({ url: img.url, alt_text: img.alt_text ?? "" }));
   const categoryIds = product.product_categories.map((pc) => pc.category_id);
   const tagIds = product.product_tags.map((pt) => pt.tag_id);
 
@@ -108,7 +109,7 @@ export default async function EditProductPage({
           is_popular: product.is_popular,
           brandId: product.brand_id,
           gender: product.gender as ProductGender | null,
-          image_url: image?.url ?? "",
+          images: imagesDefaults,
           categoryIds,
           tagIds,
           options: optionsDefaults,

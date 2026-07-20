@@ -263,7 +263,7 @@ export function ProductOptionsManager({
                     {t.name || `Option ${i + 1}`}
                   </th>
                 ))}
-                <th className="py-1.5 pr-3 font-medium">Price (USD)</th>
+                <th className="py-1.5 pr-3 font-medium">Price (EUR)</th>
                 <th className="py-1.5 pr-3 font-medium">Stock</th>
                 <th className="py-1.5 pr-3 font-medium">SKU</th>
                 <th className="py-1.5 pr-3 font-medium">Weight</th>

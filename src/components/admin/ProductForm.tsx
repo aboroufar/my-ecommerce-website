@@ -1,5 +1,5 @@
 import type { ProductGender, ProductStatus } from "@/lib/supabase/types";
-import { ImageUploadField } from "./ImageUploadField";
+import { ImageGalleryManager, type GalleryImage } from "./ImageGalleryManager";
 import { ProductOptionsManager, type ProductOptionsDefaults } from "./ProductOptionsManager";
 import {
   ProductHighlightsManager,
@@ -34,7 +34,7 @@ function TagChecklist({
   }
 
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-2 border border-line bg-surface p-4">
+    <div className="flex flex-wrap gap-x-4 gap-y-2 rounded-md border border-line bg-background p-3">
       {tags.map((tag) => (
         <label key={tag.id} className="flex items-center gap-2 text-sm text-foreground">
           <input
@@ -108,7 +108,7 @@ function CategoryTree({
   }
 
   return (
-    <div className="space-y-4 border border-line bg-surface p-4">
+    <div className="space-y-4 rounded-md border border-line bg-background p-3">
       {topLevel.map((category) => renderNode(category, 0))}
     </div>
   );
@@ -126,7 +126,7 @@ interface ProductFormValues {
   is_popular?: boolean;
   brandId?: string | null;
   gender?: ProductGender | null;
-  image_url?: string;
+  images?: GalleryImage[];
   categoryIds?: string[];
   tagIds?: string[];
   options?: ProductOptionsDefaults;
@@ -153,189 +153,205 @@ export function ProductForm({
   brands: BrandOption[];
 }) {
   return (
-    <form action={action} className="mt-8 flex max-w-lg flex-col gap-5">
+    <form action={action} className="mt-8 flex flex-col gap-6">
       {error && (
-        <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </p>
       )}
 
-      <Field label="Name">
-        <input
-          name="name"
-          required
-          defaultValue={defaultValues?.name}
-          className="border border-line bg-transparent px-3 py-2 text-sm"
-        />
-      </Field>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+        {/* Main column: title/description/media, pricing & inventory, variants */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card>
+            <Field label="Title">
+              <input
+                name="name"
+                required
+                defaultValue={defaultValues?.name}
+                className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </Field>
 
-      <Field label="Slug" hint="Used in the URL, e.g. classic-tee">
-        <input
-          name="slug"
-          required
-          pattern="[a-z0-9-]+"
-          defaultValue={defaultValues?.slug}
-          className="border border-line bg-transparent px-3 py-2 text-sm"
-        />
-      </Field>
+            <Field label="Slug" hint="Used in the URL, e.g. classic-tee">
+              <input
+                name="slug"
+                required
+                pattern="[a-z0-9-]+"
+                defaultValue={defaultValues?.slug}
+                className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </Field>
 
-      <Field label="Description">
-        <textarea
-          name="description"
-          rows={4}
-          defaultValue={defaultValues?.description ?? ""}
-          className="border border-line bg-transparent px-3 py-2 text-sm"
-        />
-      </Field>
+            <Field label="Description">
+              <textarea
+                name="description"
+                rows={5}
+                defaultValue={defaultValues?.description ?? ""}
+                className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+              />
+            </Field>
+          </Card>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Price (USD)">
-          <input
-            name="price"
-            type="number"
-            step="0.01"
-            min="0"
-            required
-            defaultValue={defaultValues?.price}
-            className="border border-line bg-transparent px-3 py-2 text-sm"
-          />
-        </Field>
-        <Field
-          label="Compare-at price (USD)"
-          hint="Optional. Set higher than price to show a sale badge."
-        >
-          <input
-            name="compare_at_price"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={defaultValues?.compare_at_price ?? ""}
-            className="border border-line bg-transparent px-3 py-2 text-sm"
-          />
-        </Field>
+          <Card title="Media" hint="First image is the primary one shown in the shop.">
+            <ImageGalleryManager defaults={defaultValues?.images} />
+          </Card>
+
+          <Card title="Pricing">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Price">
+                <PriceInput name="price" required defaultValue={defaultValues?.price} />
+              </Field>
+              <Field label="Compare-at price" hint="Optional. Higher than price to show a sale badge.">
+                <PriceInput
+                  name="compare_at_price"
+                  defaultValue={defaultValues?.compare_at_price ?? undefined}
+                />
+              </Field>
+            </div>
+          </Card>
+
+          <Card title="Inventory">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="SKU" hint="Optional">
+                <input
+                  name="sku"
+                  defaultValue={defaultValues?.sku ?? ""}
+                  className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </Field>
+              <Field label="Quantity">
+                <input
+                  name="stock_qty"
+                  type="number"
+                  step="1"
+                  min="0"
+                  required
+                  defaultValue={defaultValues?.stock_qty ?? 0}
+                  className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+                />
+              </Field>
+            </div>
+          </Card>
+
+          <Card
+            title="Variants"
+            hint="Add option types like Size or Skin type to sell this product in priced/stocked variants instead of one fixed price. Each combination gets its own price, stock, weight and dimensions."
+          >
+            <ProductOptionsManager defaults={defaultValues?.options} />
+          </Card>
+
+          <Card
+            title="Highlight bullets"
+            hint="Shown on the product page above Add to cart, e.g. &quot;Cruelty free&quot;."
+          >
+            <ProductHighlightsManager defaults={defaultValues?.highlights} />
+          </Card>
+        </div>
+
+        {/* Sidebar: status, product organization */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card title="Status">
+            <select
+              name="status"
+              defaultValue={defaultValues?.status ?? "draft"}
+              className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+            >
+              <option value="draft">Draft (hidden from shop)</option>
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+            </select>
+
+            <label className="mt-1 flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                name="is_popular"
+                defaultChecked={defaultValues?.is_popular ?? false}
+              />
+              Show a &quot;Popular&quot; badge
+            </label>
+          </Card>
+
+          <Card title="Product organization">
+            <Field label="Vendor" hint="Manage the vendor list from Admin → Brands.">
+              <select
+                name="brand_id"
+                defaultValue={defaultValues?.brandId ?? ""}
+                className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+              >
+                <option value="">None</option>
+                {brands.map((brand) => (
+                  <option key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+              {brands.length === 0 && (
+                <p className="mt-1 text-xs text-muted">No vendors yet -- add some in Admin → Brands.</p>
+              )}
+            </Field>
+
+            <Field label="Gender" hint="Used for storefront filtering.">
+              <select
+                name="gender"
+                defaultValue={defaultValues?.gender ?? ""}
+                className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
+              >
+                <option value="">Not specified</option>
+                <option value="women">Women</option>
+                <option value="men">Men</option>
+                <option value="unisex">Unisex</option>
+              </select>
+            </Field>
+
+            {categories.length > 0 && (
+              <Field
+                label="Collections"
+                hint="Tag at whichever level fits -- a top-level Category, a Group, or a specific Item underneath it."
+              >
+                <CategoryTree categories={categories} checkedIds={defaultValues?.categoryIds} />
+              </Field>
+            )}
+
+            <Field label="Tags">
+              <TagChecklist tags={tags} checkedIds={defaultValues?.tagIds} />
+            </Field>
+          </Card>
+        </div>
       </div>
 
-      <Field label="Stock quantity">
-        <input
-          name="stock_qty"
-          type="number"
-          step="1"
-          min="0"
-          required
-          defaultValue={defaultValues?.stock_qty ?? 0}
-          className="max-w-[calc(50%-8px)] border border-line bg-transparent px-3 py-2 text-sm"
-        />
-      </Field>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="SKU" hint="Optional">
-          <input
-            name="sku"
-            defaultValue={defaultValues?.sku ?? ""}
-            className="border border-line bg-transparent px-3 py-2 text-sm"
-          />
-        </Field>
-        <Field label="Status">
-          <select
-            name="status"
-            defaultValue={defaultValues?.status ?? "draft"}
-            className="border border-line bg-transparent px-3 py-2 text-sm"
-          >
-            <option value="draft">Draft (hidden from shop)</option>
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
-          </select>
-        </Field>
-      </div>
-
-      <label className="flex items-center gap-2 text-sm text-foreground">
-        <input
-          type="checkbox"
-          name="is_popular"
-          defaultChecked={defaultValues?.is_popular ?? false}
-        />
-        Show a &quot;Popular&quot; badge on this product
-      </label>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Brand" hint="Optional. Manage the brand list from Admin → Brands.">
-          <select
-            name="brand_id"
-            defaultValue={defaultValues?.brandId ?? ""}
-            className="border border-line bg-transparent px-3 py-2 text-sm"
-          >
-            <option value="">No brand</option>
-            {brands.map((brand) => (
-              <option key={brand.id} value={brand.id}>
-                {brand.name}
-              </option>
-            ))}
-          </select>
-          {brands.length === 0 && (
-            <p className="mt-1 text-xs text-muted">No brands yet -- add some in Admin → Brands.</p>
-          )}
-        </Field>
-        <Field label="Gender" hint="Optional. Used for storefront filtering.">
-          <select
-            name="gender"
-            defaultValue={defaultValues?.gender ?? ""}
-            className="border border-line bg-transparent px-3 py-2 text-sm"
-          >
-            <option value="">Not specified</option>
-            <option value="women">Women</option>
-            <option value="men">Men</option>
-            <option value="unisex">Unisex</option>
-          </select>
-        </Field>
-      </div>
-
-      <Field
-        label="Product image"
-        hint="Upload a file, or paste a URL below. Replaces the existing image if editing."
-      >
-        <ImageUploadField defaultValue={defaultValues?.image_url ?? ""} />
-      </Field>
-
-      {categories.length > 0 && (
-        <Field
-          label="Categories"
-          hint="Tag at whichever level fits -- a top-level Category, a Group, or a specific Item underneath it."
-        >
-          <CategoryTree categories={categories} checkedIds={defaultValues?.categoryIds} />
-        </Field>
-      )}
-
-      <Field
-        label="Tags"
-        hint="Shown as clickable labels on the product page. Manage the tag list from Admin → Tags."
-      >
-        <TagChecklist tags={tags} checkedIds={defaultValues?.tagIds} />
-      </Field>
-
-      <Field
-        label="Options"
-        hint="Optional. Add option types like Size or Skin type to sell this product in priced/stocked variants instead of one fixed price. Each combination gets its own price, stock, weight and dimensions."
-      >
-        <ProductOptionsManager defaults={defaultValues?.options} />
-      </Field>
-
-      <Field
-        label="Highlight bullets"
-        hint="Shown on the product page above Add to cart, e.g. &quot;Cruelty free&quot;."
-      >
-        <ProductHighlightsManager defaults={defaultValues?.highlights} />
-      </Field>
-
-      <div className="mt-2 flex items-center gap-4">
+      <div className="flex items-center gap-4">
         <button
           type="submit"
-          className="bg-accent px-6 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+          className="rounded-md bg-accent px-6 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
         >
           {submitLabel}
         </button>
         {extraAction}
       </div>
     </form>
+  );
+}
+
+function Card({
+  title,
+  hint,
+  children,
+}: {
+  title?: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-5">
+      {title && (
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
+        </div>
+      )}
+      {children}
+    </div>
   );
 }
 
@@ -356,5 +372,30 @@ function Field({
       {children}
       {hint && <span className="text-xs text-muted">{hint}</span>}
     </label>
+  );
+}
+
+function PriceInput({
+  name,
+  required,
+  defaultValue,
+}: {
+  name: string;
+  required?: boolean;
+  defaultValue?: number;
+}) {
+  return (
+    <div className="flex items-center rounded-md border border-line focus-within:ring-2 focus-within:ring-accent/40">
+      <span className="pl-3 text-sm text-muted">€</span>
+      <input
+        name={name}
+        type="number"
+        step="0.01"
+        min="0"
+        required={required}
+        defaultValue={defaultValue}
+        className="w-full bg-transparent px-2 py-2 text-sm focus:outline-none"
+      />
+    </div>
   );
 }
