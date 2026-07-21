@@ -11,29 +11,15 @@ export default async function AdminCategoriesPage({
 }) {
   const { error } = await searchParams;
   const supabase = createAdminClient();
-  const [{ data: categories }, { data: products }] = await Promise.all([
-    supabase
-      .from("categories")
-      .select(
-        "id, name, slug, image_url, hero_image_url, hero_headline, hero_eyebrow, display_only, featured_in_grid"
-      )
-      .order("name", { ascending: true }),
-    supabase
-      .from("products")
-      .select("id, name, product_categories(category_id)")
-      .order("name", { ascending: true }),
-  ]);
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, slug, image_url, display_only, featured_in_grid")
+    .order("name", { ascending: true });
 
   const visibleIds = await getCategoryIdsWithActiveProducts(
     supabase,
     categories ?? []
   );
-
-  const productsWithCategoryIds = (products ?? []).map((p) => ({
-    id: p.id,
-    name: p.name,
-    categoryIds: p.product_categories.map((pc) => pc.category_id),
-  }));
 
   return (
     <div>
@@ -43,20 +29,11 @@ export default async function AdminCategoriesPage({
         when you add, edit, or delete a category here -- just add a photo
         so it doesn&apos;t fall back to a placeholder image. For
         finer-grained groupings within a category, use a tag instead --
-        manage those from Admin → Tags. Categories can also have a hero
-        photo/headline shown at the top of their /products page. A category
-        only appears on the storefront once it has at least one product set
-        to Active -- categories marked &quot;Not visible&quot; below are
-        hidden until then. Mark a category &quot;Display only&quot; to show
-        it as a plain image tile on the homepage grid without a product
-        requirement -- it won&apos;t be clickable and won&apos;t appear in
-        the header menu or /products filters. Check &quot;Show in Brand
-        Highlights&quot; to make a category eligible for the
-        homepage&apos;s Brand Highlights section, which always shows 5
-        tiles picked at random from every eligible category on each page
-        load. Use &quot;Manage products&quot; on any category to assign or
-        remove products directly, without opening each product&apos;s edit
-        page.
+        manage those from Admin → Tags. Click a category to edit its
+        details, hero photo, and member products. A category only appears
+        on the storefront once it has at least one product set to Active
+        -- categories marked &quot;Not visible&quot; below are hidden
+        until then.
       </p>
 
       {error && (
@@ -66,11 +43,7 @@ export default async function AdminCategoriesPage({
       )}
 
       <div className="mt-8">
-        <CategoriesManager
-          categories={categories ?? []}
-          visibleIds={[...visibleIds]}
-          products={productsWithCategoryIds}
-        />
+        <CategoriesManager categories={categories ?? []} visibleIds={[...visibleIds]} />
       </div>
     </div>
   );

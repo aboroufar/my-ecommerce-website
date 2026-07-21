@@ -43,37 +43,41 @@ export async function createCategory(formData: FormData) {
   }
 
   const supabase = createAdminClient();
-  const { error } = await supabase.from("categories").insert({
-    name: parsed.data.name,
-    slug: parsed.data.slug,
-    image_url: parsed.data.image_url || null,
-    hero_image_url: parsed.data.hero_image_url || null,
-    hero_headline: parsed.data.hero_headline || null,
-    hero_eyebrow: parsed.data.hero_eyebrow || null,
-    display_only: parsed.data.display_only,
-    featured_in_grid: parsed.data.featured_in_grid,
-  });
+  const { data: category, error } = await supabase
+    .from("categories")
+    .insert({
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      image_url: parsed.data.image_url || null,
+      hero_image_url: parsed.data.hero_image_url || null,
+      hero_headline: parsed.data.hero_headline || null,
+      hero_eyebrow: parsed.data.hero_eyebrow || null,
+      display_only: parsed.data.display_only,
+      featured_in_grid: parsed.data.featured_in_grid,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !category) {
     const message =
-      error.code === "23505" ? "That slug is already in use." : error.message;
-    redirect(`/admin/categories?error=${encodeURIComponent(message)}`);
+      error?.code === "23505" ? "That slug is already in use." : error?.message ?? "Failed to create category";
+    redirect(`/admin/categories/new?error=${encodeURIComponent(message)}`);
   }
 
   revalidatePath("/admin/categories");
   revalidatePath("/products");
   revalidatePath("/");
-  redirect("/admin/categories");
+  redirect(`/admin/categories/${category.id}/edit`);
 }
 
 export async function updateCategory(id: string, formData: FormData) {
   await requireAdmin();
 
+  const editPath = `/admin/categories/${id}/edit`;
+
   const parsed = categorySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    redirect(
-      `/admin/categories?error=${encodeURIComponent(parsed.error.issues[0].message)}`
-    );
+    redirect(`${editPath}?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
   }
 
   const supabase = createAdminClient();
@@ -94,13 +98,14 @@ export async function updateCategory(id: string, formData: FormData) {
   if (error) {
     const message =
       error.code === "23505" ? "That slug is already in use." : error.message;
-    redirect(`/admin/categories?error=${encodeURIComponent(message)}`);
+    redirect(`${editPath}?error=${encodeURIComponent(message)}`);
   }
 
   revalidatePath("/admin/categories");
+  revalidatePath(editPath);
   revalidatePath("/products");
   revalidatePath("/");
-  redirect("/admin/categories");
+  redirect(editPath);
 }
 
 export async function deleteCategory(id: string) {
@@ -164,6 +169,7 @@ export async function setCategoryProducts(formData: FormData) {
   if (!categoryId) {
     redirect(`/admin/categories?error=${encodeURIComponent("Missing category.")}`);
   }
+  const editPath = `/admin/categories/${categoryId}/edit`;
   const productIds = formData.getAll("product_ids") as string[];
 
   const supabase = createAdminClient();
@@ -179,7 +185,8 @@ export async function setCategoryProducts(formData: FormData) {
   }
 
   revalidatePath("/admin/categories");
+  revalidatePath(editPath);
   revalidatePath("/products");
   revalidatePath("/");
-  redirect("/admin/categories");
+  redirect(editPath);
 }
