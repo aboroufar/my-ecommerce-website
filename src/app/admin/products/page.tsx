@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ProductsBulkTable } from "@/components/admin/ProductsBulkTable";
-import { AdminProductsSidebar } from "@/components/admin/AdminProductsSidebar";
+import { AdminProductsFilterBar } from "@/components/admin/AdminProductsFilterBar";
 
 // Admins need to see live data including drafts/just-changed stock --
 // no ISR caching here.
@@ -110,33 +110,30 @@ export default async function AdminProductsPage({
           No products yet. Click &quot;New product&quot; to add your first one.
         </p>
       ) : (
-        <div className="mt-8 flex flex-col gap-8 lg:flex-row">
-          <AdminProductsSidebar categories={categories ?? []} />
-
-          <div className="min-w-0 flex-1">
-            <p className="mb-3 text-xs text-muted">
-              {products.length} of {allProducts.length} product
-              {allProducts.length === 1 ? "" : "s"}
+        <div className="mt-8 flex flex-col gap-4">
+          <AdminProductsFilterBar categories={categories ?? []} />
+          <p className="text-xs text-muted">
+            {products.length} of {allProducts.length} product
+            {allProducts.length === 1 ? "" : "s"}
+          </p>
+          {products.length === 0 ? (
+            <p className="text-sm text-muted">
+              No products match these filters.
+              {hasAnyFilter && (
+                <>
+                  {" "}
+                  <Link
+                    href="/admin/products"
+                    className="text-accent underline underline-offset-4"
+                  >
+                    Clear filters
+                  </Link>
+                </>
+              )}
             </p>
-            {products.length === 0 ? (
-              <p className="text-sm text-muted">
-                No products match these filters.
-                {hasAnyFilter && (
-                  <>
-                    {" "}
-                    <Link
-                      href="/admin/products"
-                      className="text-accent underline underline-offset-4"
-                    >
-                      Clear filters
-                    </Link>
-                  </>
-                )}
-              </p>
-            ) : (
-              <ProductsBulkTable products={rows} />
-            )}
-          </div>
+          ) : (
+            <ProductsBulkTable products={rows} />
+          )}
         </div>
       )}
     </div>

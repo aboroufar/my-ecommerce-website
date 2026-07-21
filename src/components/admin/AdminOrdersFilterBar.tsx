@@ -6,10 +6,9 @@ const STATUS_OPTIONS = ["pending", "paid", "fulfilled", "cancelled", "refunded"]
 
 /**
  * Top search/filter bar for /admin/orders -- a horizontal bar above the
- * table (search box + Status/Date dropdowns), rather than the vertical
- * sidebar pattern AdminProductsSidebar uses for /admin/products. Every
- * control writes straight into the URL's search params (same
- * router.push-driven approach as AdminProductsSidebar), so filters are
+ * table (search box + Status/Date dropdowns), matching the pattern
+ * AdminProductsFilterBar uses for /admin/products. Every control writes
+ * straight into the URL's search params (router.push), so filters are
  * shareable/bookmarkable and survive a page refresh.
  */
 export function AdminOrdersFilterBar() {
