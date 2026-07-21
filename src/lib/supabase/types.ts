@@ -393,6 +393,30 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_segments: {
+        Row: {
+          condition_type: string
+          conditions: Json
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          condition_type?: string
+          conditions?: Json
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          condition_type?: string
+          conditions?: Json
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       discount_codes: {
         Row: {
           active: boolean

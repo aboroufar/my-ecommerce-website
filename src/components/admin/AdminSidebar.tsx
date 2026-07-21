@@ -14,6 +14,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/products", label: "Products", icon: TagIcon },
   { href: "/admin/orders", label: "Orders", icon: InboxIcon },
   { href: "/admin/customers", label: "Customers", icon: PersonIcon },
+  { href: "/admin/segments", label: "Segments", icon: SegmentIcon },
   { href: "/admin/reviews", label: "Reviews", icon: StarIcon },
   { href: "/admin/categories", label: "Categories", icon: FolderIcon },
   { href: "/admin/tags", label: "Tags", icon: HashIcon },
@@ -124,6 +125,16 @@ function PersonIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
       <circle cx="12" cy="8" r="3.25" />
       <path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SegmentIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
+      <circle cx="9" cy="7" r="2.75" />
+      <path d="M4.5 19c.9-2.7 2.5-4 4.5-4s3.6 1.3 4.5 4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 6h5M15 10h5M15 14h3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
