@@ -43,7 +43,10 @@ function parseConfig(configJson: string): DiscountConfig | null {
 // constraint is satisfied, but nothing reads these columns anymore.
 function legacyTypeAndValue(config: DiscountConfig): { type: "percent" | "fixed"; value: number } {
   if (config.discount_type === "free_shipping") return { type: "fixed", value: 0 };
-  if (config.discount_type === "buy_x_get_y") return { type: config.get.valueType, value: config.get.value };
+  if (config.discount_type === "buy_x_get_y") {
+    if (config.get.valueType === "free") return { type: "fixed", value: 0 };
+    return { type: config.get.valueType, value: config.get.value };
+  }
   return { type: config.valueType, value: config.value };
 }
 

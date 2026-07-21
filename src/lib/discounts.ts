@@ -27,8 +27,16 @@ export type MinimumPurchase =
   | { type: "amount"; minCents: number }
   | { type: "quantity"; minQuantity: number };
 
+// A Buy X Get Y "buy" condition, expressed the same way as a minimum
+// purchase requirement (minus "none" -- a buy condition always needs a
+// real threshold) so the admin form can reuse the same
+// amount-or-quantity radio pattern already used for Minimum Purchase
+// Requirements.
+export type BuyRequirement =
+  | { type: "amount"; minCents: number }
+  | { type: "quantity"; minQuantity: number };
+
 export interface UsageLimits {
-  totalLimit?: number;
   onePerCustomer: boolean;
 }
 
@@ -36,6 +44,16 @@ export interface Combinations {
   combinesWithProduct: boolean;
   combinesWithOrder: boolean;
   combinesWithShipping: boolean;
+}
+
+// Which "combination category" a discount type belongs to, for checking
+// two discounts' combinations flags against each other at checkout.
+// buy_x_get_y is itself a product discount (it discounts specific line
+// items), same category as amount_off_products.
+export function discountCategory(discountType: DiscountType): "product" | "order" | "shipping" {
+  if (discountType === "amount_off_order") return "order";
+  if (discountType === "free_shipping") return "shipping";
+  return "product";
 }
 
 interface SharedFields {
@@ -66,8 +84,13 @@ export type DiscountConfig =
     })
   | (SharedFields & {
       discount_type: "buy_x_get_y";
-      buy: { scope: Scope; quantity: number };
-      get: { scope: Scope; quantity: number; valueType: "percent" | "fixed"; value: number };
+      buy: { scope: Scope; requirement: BuyRequirement };
+      get: {
+        scope: Scope;
+        quantity: number;
+        valueType: "percent" | "fixed" | "free";
+        value: number;
+      };
     });
 
 const scopeAllSchema = z.object({ scope: z.literal("all") });
@@ -88,8 +111,12 @@ const minimumPurchaseSchema: z.ZodType<MinimumPurchase> = z.discriminatedUnion("
   z.object({ type: z.literal("quantity"), minQuantity: z.number().int().positive() }),
 ]);
 
+const buyRequirementSchema: z.ZodType<BuyRequirement> = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("amount"), minCents: z.number().int().nonnegative() }),
+  z.object({ type: z.literal("quantity"), minQuantity: z.number().int().positive() }),
+]);
+
 const usageLimitsSchema: z.ZodType<UsageLimits> = z.object({
-  totalLimit: z.number().int().positive().optional(),
   onePerCustomer: z.boolean(),
 });
 
@@ -131,12 +158,12 @@ export const discountConfigSchema = z
     }),
     z.object({
       discount_type: z.literal("buy_x_get_y"),
-      buy: z.object({ scope: scopeSchema, quantity: z.number().int().positive() }),
+      buy: z.object({ scope: scopeSchema, requirement: buyRequirementSchema }),
       get: z.object({
         scope: scopeSchema,
         quantity: z.number().int().positive(),
-        valueType: z.enum(["percent", "fixed"]),
-        value: z.number().positive(),
+        valueType: z.enum(["percent", "fixed", "free"]),
+        value: z.number().nonnegative(),
       }),
       ...sharedFieldsSchema,
     }),
@@ -166,7 +193,7 @@ export interface EligibilityContext {
   clientFacts: ClientFacts | null;
   cartLines: CartLine[];
   subtotalCents: number;
-  usage?: { totalUses: number; clientUses: number };
+  usage?: { clientUses: number };
 }
 
 export type EligibilityResult =
@@ -204,10 +231,23 @@ function checkEligibility(
 }
 
 function checkUsageLimits(usageLimits: UsageLimits, context: EligibilityContext): boolean {
-  const usage = context.usage ?? { totalUses: 0, clientUses: 0 };
-  if (usageLimits.totalLimit !== undefined && usage.totalUses >= usageLimits.totalLimit) return false;
+  const usage = context.usage ?? { clientUses: 0 };
   if (usageLimits.onePerCustomer && usage.clientUses > 0) return false;
   return true;
+}
+
+function checkBuyRequirement(
+  requirement: BuyRequirement,
+  scope: Scope,
+  context: EligibilityContext
+): boolean {
+  const matchingLines = context.cartLines.filter((l) => matchesScope(scope, l));
+  if (requirement.type === "amount") {
+    const matchingSubtotal = matchingLines.reduce((sum, l) => sum + l.unitPriceCents * l.quantity, 0);
+    return matchingSubtotal >= requirement.minCents;
+  }
+  const matchingQuantity = matchingLines.reduce((sum, l) => sum + l.quantity, 0);
+  return matchingQuantity >= requirement.minQuantity;
 }
 
 /**
@@ -256,15 +296,17 @@ export function evaluateDiscountEligibility(
     return { eligible: true, discountCents };
   }
 
-  // buy_x_get_y: buy-quantity requirement must be met by units in
-  // buy.scope; the discount applies to the cheapest get.quantity units in
-  // get.scope that aren't also counted toward the buy requirement (a unit
-  // can't be both a "buy" unit and a "get" unit).
-  const buyQualifyingQuantity = context.cartLines
-    .filter((l) => matchesScope(config.buy.scope, l))
-    .reduce((sum, l) => sum + l.quantity, 0);
-  if (buyQualifyingQuantity < config.buy.quantity) {
-    return { eligible: false, reason: "Buy quantity requirement not met" };
+  // buy_x_get_y: the buy condition (minimum quantity or minimum purchase
+  // amount within buy.scope) gates eligibility; the discount then applies
+  // to the cheapest get.quantity units in get.scope. When the buy
+  // requirement is quantity-based, that many units are reserved as
+  // "bought" first (most-expensive-first, so the discount targets the
+  // cheapest remaining units -- standard, customer-favorable BXGY
+  // behavior) so a unit can't count as both "buy" and "get". An
+  // amount-based buy requirement has no natural unit count to reserve,
+  // so every get.scope-matching unit remains eligible for the discount.
+  if (!checkBuyRequirement(config.buy.requirement, config.buy.scope, context)) {
+    return { eligible: false, reason: "Buy requirement not met" };
   }
 
   const getCandidateUnits: number[] = [];
@@ -272,14 +314,14 @@ export function evaluateDiscountEligibility(
     if (!matchesScope(config.get.scope, line)) continue;
     for (let i = 0; i < line.quantity; i++) getCandidateUnits.push(line.unitPriceCents);
   }
-  // Reserve `buy.quantity` units (cheapest-first is customer-unfavorable;
-  // reserve the most expensive units as "bought" so the discount targets
-  // the cheapest remaining units -- standard, customer-favorable BXGY
-  // behavior) before computing which units are actually discounted.
-  getCandidateUnits.sort((a, b) => b - a);
-  const remainingAfterBuy = getCandidateUnits.slice(config.buy.quantity);
-  remainingAfterBuy.sort((a, b) => a - b);
-  const discountedUnits = remainingAfterBuy.slice(0, config.get.quantity);
+
+  let discountableUnits = getCandidateUnits;
+  if (config.buy.requirement.type === "quantity") {
+    getCandidateUnits.sort((a, b) => b - a);
+    discountableUnits = getCandidateUnits.slice(config.buy.requirement.minQuantity);
+  }
+  discountableUnits.sort((a, b) => a - b);
+  const discountedUnits = discountableUnits.slice(0, config.get.quantity);
 
   if (discountedUnits.length === 0) {
     return { eligible: false, reason: "No matching 'get' items in cart" };
@@ -287,7 +329,11 @@ export function evaluateDiscountEligibility(
 
   const discountCents = discountedUnits.reduce((sum, unitCents) => {
     const off =
-      config.get.valueType === "percent" ? Math.round((unitCents * config.get.value) / 100) : Math.min(config.get.value, unitCents);
+      config.get.valueType === "free"
+        ? unitCents
+        : config.get.valueType === "percent"
+          ? Math.round((unitCents * config.get.value) / 100)
+          : Math.min(config.get.value, unitCents);
     return sum + off;
   }, 0);
 

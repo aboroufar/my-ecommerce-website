@@ -25,6 +25,7 @@ function formatValue(discountCode: DiscountCode) {
   const config = discountCode.config as DiscountConfig;
   if (config.discount_type === "free_shipping") return "Free shipping";
   if (config.discount_type === "buy_x_get_y") {
+    if (config.get.valueType === "free") return "Free";
     return config.get.valueType === "percent" ? `${config.get.value}% off` : `€${(config.get.value / 100).toFixed(2)} off`;
   }
   return config.valueType === "percent" ? `${config.value}%` : `€${(config.value / 100).toFixed(2)}`;

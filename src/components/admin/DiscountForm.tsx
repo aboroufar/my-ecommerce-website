@@ -163,19 +163,28 @@ export function DiscountForm({
     (initialConfig && "appliesTo" in initialConfig && initialConfig.appliesTo) || { scope: "all" }
   );
 
+  const initialBuyRequirement =
+    initialConfig?.discount_type === "buy_x_get_y" ? initialConfig.buy.requirement : undefined;
   const [buyScope, setBuyScope] = useState<Scope>(
     (initialConfig?.discount_type === "buy_x_get_y" && initialConfig.buy.scope) || { scope: "all" }
   );
-  const [buyQuantity, setBuyQuantity] = useState(
-    (initialConfig?.discount_type === "buy_x_get_y" && initialConfig.buy.quantity) || 1
+  const [buyRequirementType, setBuyRequirementType] = useState<"amount" | "quantity">(
+    initialBuyRequirement?.type ?? "quantity"
   );
+  const [buyAmountEuros, setBuyAmountEuros] = useState(
+    initialBuyRequirement?.type === "amount" ? initialBuyRequirement.minCents / 100 : 0
+  );
+  const [buyQuantity, setBuyQuantity] = useState(
+    initialBuyRequirement?.type === "quantity" ? initialBuyRequirement.minQuantity : 1
+  );
+
   const [getScope, setGetScope] = useState<Scope>(
     (initialConfig?.discount_type === "buy_x_get_y" && initialConfig.get.scope) || { scope: "all" }
   );
   const [getQuantity, setGetQuantity] = useState(
     (initialConfig?.discount_type === "buy_x_get_y" && initialConfig.get.quantity) || 1
   );
-  const [getValueType, setGetValueType] = useState<"percent" | "fixed">(
+  const [getValueType, setGetValueType] = useState<"percent" | "fixed" | "free">(
     (initialConfig?.discount_type === "buy_x_get_y" && initialConfig.get.valueType) || "percent"
   );
   const [getValue, setGetValue] = useState(
@@ -201,12 +210,14 @@ export function DiscountForm({
     initialConfig?.minimumPurchase.type === "quantity" ? initialConfig.minimumPurchase.minQuantity : 1
   );
 
-  const [totalLimitEnabled, setTotalLimitEnabled] = useState(
-    initialConfig?.usageLimits.totalLimit !== undefined
+  const [combinesWithProduct, setCombinesWithProduct] = useState(
+    initialConfig?.combinations.combinesWithProduct ?? false
   );
-  const [totalLimit, setTotalLimit] = useState(initialConfig?.usageLimits.totalLimit ?? 100);
-  const [onePerCustomer, setOnePerCustomer] = useState(
-    initialConfig?.usageLimits.onePerCustomer ?? false
+  const [combinesWithOrder, setCombinesWithOrder] = useState(
+    initialConfig?.combinations.combinesWithOrder ?? false
+  );
+  const [combinesWithShipping, setCombinesWithShipping] = useState(
+    initialConfig?.combinations.combinesWithShipping ?? false
   );
 
   const configJson = useMemo(() => {
@@ -223,17 +234,9 @@ export function DiscountForm({
           : minPurchaseType === "amount"
             ? { type: "amount" as const, minCents: Math.round(minAmountEuros * 100) }
             : { type: "quantity" as const, minQuantity },
-      usageLimits: {
-        totalLimit: totalLimitEnabled ? totalLimit : undefined,
-        onePerCustomer,
-      },
-      // Combinations are informational-only in v1 (see admin form section
-      // below) -- always false, and enforced as such by the checkout route.
-      combinations: {
-        combinesWithProduct: false,
-        combinesWithOrder: false,
-        combinesWithShipping: false,
-      },
+      // No UI control for usage limits currently -- always unrestricted.
+      usageLimits: { onePerCustomer: false },
+      combinations: { combinesWithProduct, combinesWithOrder, combinesWithShipping },
     };
 
     let config: DiscountConfig;
@@ -244,9 +247,13 @@ export function DiscountForm({
     } else if (discountType === "amount_off_products") {
       config = { discount_type: "amount_off_products", appliesTo, valueType, value, ...shared };
     } else {
+      const buyRequirement =
+        buyRequirementType === "amount"
+          ? { type: "amount" as const, minCents: Math.round(buyAmountEuros * 100) }
+          : { type: "quantity" as const, minQuantity: buyQuantity };
       config = {
         discount_type: "buy_x_get_y",
-        buy: { scope: buyScope, quantity: buyQuantity },
+        buy: { scope: buyScope, requirement: buyRequirement },
         get: { scope: getScope, quantity: getQuantity, valueType: getValueType, value: getValue },
         ...shared,
       };
@@ -261,13 +268,15 @@ export function DiscountForm({
     minPurchaseType,
     minAmountEuros,
     minQuantity,
-    totalLimitEnabled,
-    totalLimit,
-    onePerCustomer,
+    combinesWithProduct,
+    combinesWithOrder,
+    combinesWithShipping,
     valueType,
     value,
     appliesTo,
     buyScope,
+    buyRequirementType,
+    buyAmountEuros,
     buyQuantity,
     getScope,
     getQuantity,
@@ -386,15 +395,42 @@ export function DiscountForm({
 
           <div className="mt-3">
             <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Customer buys</h3>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-sm text-muted">Quantity</span>
-              <input
-                type="number"
-                min={1}
-                value={buyQuantity}
-                onChange={(e) => setBuyQuantity(parseInt(e.target.value, 10) || 1)}
-                className="w-20 border border-line bg-background px-2.5 py-1.5 text-sm"
-              />
+            <div className="mt-2 flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="radio"
+                  checked={buyRequirementType === "quantity"}
+                  onChange={() => setBuyRequirementType("quantity")}
+                />
+                Minimum quantity of items
+              </label>
+              {buyRequirementType === "quantity" && (
+                <input
+                  type="number"
+                  min={1}
+                  value={buyQuantity}
+                  onChange={(e) => setBuyQuantity(parseInt(e.target.value, 10) || 1)}
+                  className="ml-6 w-32 border border-line bg-background px-2.5 py-1.5 text-sm"
+                />
+              )}
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="radio"
+                  checked={buyRequirementType === "amount"}
+                  onChange={() => setBuyRequirementType("amount")}
+                />
+                Minimum purchase amount (€)
+              </label>
+              {buyRequirementType === "amount" && (
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={buyAmountEuros}
+                  onChange={(e) => setBuyAmountEuros(parseFloat(e.target.value) || 0)}
+                  className="ml-6 w-32 border border-line bg-background px-2.5 py-1.5 text-sm"
+                />
+              )}
             </div>
             <div className="mt-2">
               <ScopePicker
@@ -426,30 +462,36 @@ export function DiscountForm({
                 products={products}
               />
             </div>
-            <div className="mt-3 flex gap-2">
-              <select
-                value={getValueType}
-                onChange={(e) => setGetValueType(e.target.value as "percent" | "fixed")}
-                className="border border-line bg-background px-2.5 py-1.5 text-sm"
-              >
-                <option value="percent">Percentage off</option>
-                <option value="fixed">Fixed amount off</option>
-              </select>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={0}
-                  step={getValueType === "percent" ? 1 : 0.01}
-                  value={getValueType === "percent" ? getValue : getValue / 100}
-                  onChange={(e) => {
-                    const raw = parseFloat(e.target.value) || 0;
-                    setGetValue(getValueType === "percent" ? raw : Math.round(raw * 100));
-                  }}
-                  className="w-32 border border-line bg-background px-2.5 py-1.5 pr-7 text-sm"
-                />
-                <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted">
-                  {getValueType === "percent" ? "%" : "€"}
-                </span>
+            <div className="mt-3">
+              <span className="text-xs text-muted">At a discounted value</span>
+              <div className="mt-1.5 flex gap-2">
+                <select
+                  value={getValueType}
+                  onChange={(e) => setGetValueType(e.target.value as "percent" | "fixed" | "free")}
+                  className="border border-line bg-background px-2.5 py-1.5 text-sm"
+                >
+                  <option value="percent">Percentage off</option>
+                  <option value="fixed">Fixed amount off</option>
+                  <option value="free">Free</option>
+                </select>
+                {getValueType !== "free" && (
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={getValueType === "percent" ? 1 : 0.01}
+                      value={getValueType === "percent" ? getValue : getValue / 100}
+                      onChange={(e) => {
+                        const raw = parseFloat(e.target.value) || 0;
+                        setGetValue(getValueType === "percent" ? raw : Math.round(raw * 100));
+                      }}
+                      className="w-32 border border-line bg-background px-2.5 py-1.5 pr-7 text-sm"
+                    />
+                    <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted">
+                      {getValueType === "percent" ? "%" : "€"}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -543,44 +585,37 @@ export function DiscountForm({
       </section>
 
       <section className="border border-line bg-surface p-4">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
-          Maximum discount uses
-        </h2>
+        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Combinations</h2>
+        <p className="mt-2 text-sm text-muted">
+          Choose which other discount types this can combine with in the
+          customer&apos;s cart.
+        </p>
         <div className="mt-3 flex flex-col gap-2">
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
-              checked={totalLimitEnabled}
-              onChange={(e) => setTotalLimitEnabled(e.target.checked)}
+              checked={combinesWithProduct}
+              onChange={(e) => setCombinesWithProduct(e.target.checked)}
             />
-            Limit number of times this discount can be used in total
+            Product discounts
           </label>
-          {totalLimitEnabled && (
-            <input
-              type="number"
-              min={1}
-              value={totalLimit}
-              onChange={(e) => setTotalLimit(parseInt(e.target.value, 10) || 1)}
-              className="ml-6 w-32 border border-line bg-background px-2.5 py-1.5 text-sm"
-            />
-          )}
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
-              checked={onePerCustomer}
-              onChange={(e) => setOnePerCustomer(e.target.checked)}
+              checked={combinesWithOrder}
+              onChange={(e) => setCombinesWithOrder(e.target.checked)}
             />
-            Limit to one use per customer
+            Order discounts
+          </label>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={combinesWithShipping}
+              onChange={(e) => setCombinesWithShipping(e.target.checked)}
+            />
+            Shipping discounts
           </label>
         </div>
-      </section>
-
-      <section className="border border-line bg-surface p-4">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Combinations</h2>
-        <p className="mt-2 text-sm text-muted">
-          This discount won&apos;t combine with other product, order, or shipping
-          discounts in the customer&apos;s cart.
-        </p>
       </section>
 
       <section className="border border-line bg-surface p-4">

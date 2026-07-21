@@ -10,6 +10,7 @@ import { routing } from "@/i18n/routing";
 import { getClientFacts } from "@/lib/segments";
 import {
   evaluateDiscountEligibility,
+  discountCategory,
   type DiscountConfig,
   type CartLine,
 } from "@/lib/discounts";
@@ -223,9 +224,9 @@ export async function POST(req: NextRequest) {
     : null;
 
   // Usage counts, keyed by discount code, needed to enforce
-  // usageLimits.totalLimit/onePerCustomer -- derived from past orders
-  // rather than a dedicated counter column, consistent with this
-  // codebase's "aggregate in app code" preference elsewhere.
+  // usageLimits.onePerCustomer -- derived from past orders rather than a
+  // dedicated counter column, consistent with this codebase's
+  // "aggregate in app code" preference elsewhere.
   const candidateCodes = (activeDiscounts ?? []).map((d) => d.code);
   const { data: pastRedemptions } =
     candidateCodes.length > 0
@@ -238,10 +239,7 @@ export async function POST(req: NextRequest) {
 
   function usageFor(code: string) {
     const matching = (pastRedemptions ?? []).filter((o) => o.discount_code === code);
-    return {
-      totalUses: matching.length,
-      clientUses: user ? matching.filter((o) => o.client_id === user.id).length : 0,
-    };
+    return { clientUses: user ? matching.filter((o) => o.client_id === user.id).length : 0 };
   }
 
   const eligibilityContext = {
@@ -251,59 +249,92 @@ export async function POST(req: NextRequest) {
     subtotalCents,
   };
 
-  let discountCents = 0;
-  let freeShipping = false;
-  let appliedDiscountCode: string | null = null;
+  // Every eligible discount (automatic ones, plus the submitted code if
+  // it's eligible) becomes a candidate for stacking -- not just a single
+  // "best" pick. If the submitted code isn't found or isn't eligible,
+  // fail the whole checkout rather than silently proceeding without it,
+  // so a shopper never gets charged full price after entering a code
+  // they believed was applied.
+  const candidates: { code: string; discountType: DiscountConfig["discount_type"]; config: DiscountConfig; result: Extract<ReturnType<typeof evaluateDiscountEligibility>, { eligible: true }> }[] = [];
 
-  const automaticResults = (activeDiscounts ?? [])
-    .filter((d) => (d.config as unknown as DiscountConfig).method === "automatic")
-    .map((d) => ({
-      discount: d,
-      result: evaluateDiscountEligibility(d.config as unknown as DiscountConfig, {
-        ...eligibilityContext,
-        usage: usageFor(d.code),
-      }),
-    }))
-    .filter((r) => r.result.eligible);
+  for (const d of activeDiscounts ?? []) {
+    const config = d.config as unknown as DiscountConfig;
+    if (config.method !== "automatic") continue;
+    const result = evaluateDiscountEligibility(config, { ...eligibilityContext, usage: usageFor(d.code) });
+    if (result.eligible) {
+      candidates.push({ code: d.code, discountType: d.discount_type as DiscountConfig["discount_type"], config, result });
+    }
+  }
 
-  // v1 combinations always default to false (no interactive UI yet), so
-  // at most one discount is ever meant to apply -- take the largest.
-  const bestAutomatic = automaticResults.sort((a, b) => {
-    const aCents = a.result.eligible && "discountCents" in a.result ? a.result.discountCents : 0;
-    const bCents = b.result.eligible && "discountCents" in b.result ? b.result.discountCents : 0;
-    return bCents - aCents;
-  })[0];
-
-  if (bestAutomatic && bestAutomatic.result.eligible) {
-    if ("discountCents" in bestAutomatic.result) discountCents = bestAutomatic.result.discountCents;
-    if ("freeShipping" in bestAutomatic.result) freeShipping = true;
-  } else if (discountCode) {
+  if (discountCode) {
     const matchingDiscount = (activeDiscounts ?? []).find(
       (d) =>
         (d.config as unknown as DiscountConfig).method === "code" &&
         d.code.toUpperCase() === discountCode.trim().toUpperCase()
     );
-    if (matchingDiscount) {
-      const result = evaluateDiscountEligibility(
-        matchingDiscount.config as unknown as DiscountConfig,
-        { ...eligibilityContext, usage: usageFor(matchingDiscount.code) }
-      );
-      if (result.eligible) {
-        if ("discountCents" in result) discountCents = result.discountCents;
-        if ("freeShipping" in result) freeShipping = true;
-        appliedDiscountCode = matchingDiscount.code;
-      } else {
-        return NextResponse.json(
-          { error: t("discountNotApplicable"), code: "DISCOUNT_NOT_APPLICABLE" },
-          { status: 409 }
-        );
-      }
-    } else {
+    if (!matchingDiscount) {
       return NextResponse.json(
         { error: t("discountNotApplicable"), code: "DISCOUNT_NOT_APPLICABLE" },
         { status: 409 }
       );
     }
+    const config = matchingDiscount.config as unknown as DiscountConfig;
+    const result = evaluateDiscountEligibility(config, {
+      ...eligibilityContext,
+      usage: usageFor(matchingDiscount.code),
+    });
+    if (!result.eligible) {
+      return NextResponse.json(
+        { error: t("discountNotApplicable"), code: "DISCOUNT_NOT_APPLICABLE" },
+        { status: 409 }
+      );
+    }
+    candidates.push({
+      code: matchingDiscount.code,
+      discountType: matchingDiscount.discount_type as DiscountConfig["discount_type"],
+      config,
+      result,
+    });
+  }
+
+  // Greedily build the combined set: take candidates best-value-first,
+  // only adding one if it and every already-selected discount mutually
+  // allow combining across each other's category (product/order/
+  // shipping). This means each discount's own combinesWith* flags are
+  // checked both ways -- A must allow combining with B's category, and
+  // B must allow combining with A's category.
+  function candidateCents(c: (typeof candidates)[number]): number {
+    return "discountCents" in c.result ? c.result.discountCents : 0;
+  }
+  candidates.sort((a, b) => candidateCents(b) - candidateCents(a));
+
+  const selected: typeof candidates = [];
+  for (const candidate of candidates) {
+    const candidateCategory = discountCategory(candidate.discountType);
+    const combinesWithCategory = (combos: typeof candidate.config.combinations, category: ReturnType<typeof discountCategory>) =>
+      category === "product" ? combos.combinesWithProduct : category === "order" ? combos.combinesWithOrder : combos.combinesWithShipping;
+
+    const compatibleWithAllSelected = selected.every((s) => {
+      const selectedCategory = discountCategory(s.discountType);
+      return (
+        combinesWithCategory(candidate.config.combinations, selectedCategory) &&
+        combinesWithCategory(s.config.combinations, candidateCategory)
+      );
+    });
+
+    if (selected.length === 0 || compatibleWithAllSelected) {
+      selected.push(candidate);
+    }
+  }
+
+  let discountCents = 0;
+  let freeShipping = false;
+  let appliedDiscountCode: string | null = null;
+
+  for (const s of selected) {
+    if ("discountCents" in s.result) discountCents += s.result.discountCents;
+    if ("freeShipping" in s.result) freeShipping = true;
+    if (s.config.method === "code") appliedDiscountCode = s.code;
   }
 
   const { data: shippingSettings } = await supabase
