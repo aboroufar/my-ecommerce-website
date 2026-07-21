@@ -17,17 +17,23 @@ export default async function EditDiscountPage({
   const { error } = await searchParams;
   const supabase = createAdminClient();
 
-  const [{ data: discount }, { data: categories }, { data: products }, { data: segments }] =
-    await Promise.all([
-      supabase
-        .from("discount_codes")
-        .select("id, code, discount_type, config, active, starts_at, expires_at")
-        .eq("id", id)
-        .single(),
-      supabase.from("categories").select("id, name").order("name", { ascending: true }),
-      supabase.from("products").select("id, name, sku").order("name", { ascending: true }),
-      supabase.from("client_segments").select("id, name").order("name", { ascending: true }),
-    ]);
+  const [
+    { data: discount },
+    { data: categories },
+    { data: products },
+    { data: segments },
+    { data: tags },
+  ] = await Promise.all([
+    supabase
+      .from("discount_codes")
+      .select("id, code, discount_type, config, active, starts_at, expires_at")
+      .eq("id", id)
+      .single(),
+    supabase.from("categories").select("id, name").order("name", { ascending: true }),
+    supabase.from("products").select("id, name, sku").order("name", { ascending: true }),
+    supabase.from("client_segments").select("id, name").order("name", { ascending: true }),
+    supabase.from("tags").select("id, name").order("name", { ascending: true }),
+  ]);
 
   if (!discount) notFound();
 
@@ -47,6 +53,7 @@ export default async function EditDiscountPage({
           categories={categories ?? []}
           products={products ?? []}
           segments={segments ?? []}
+          tags={tags ?? []}
           initialValues={{
             code: discount.code,
             active: discount.active,

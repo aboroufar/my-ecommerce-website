@@ -189,15 +189,21 @@ export async function POST(req: NextRequest) {
   // own hosted page. This lets eligibility rules (minimum purchase,
   // specific products/collections, specific segments) actually be
   // enforced, which a Stripe Promotion Code alone can't encode.
-  const { data: categoryLinks } = await supabase
-    .from("product_categories")
-    .select("product_id, category_id")
-    .in("product_id", productIds);
+  const [{ data: categoryLinks }, { data: tagLinks }] = await Promise.all([
+    supabase.from("product_categories").select("product_id, category_id").in("product_id", productIds),
+    supabase.from("product_tags").select("product_id, tag_id").in("product_id", productIds),
+  ]);
   const categoriesByProduct = new Map<string, string[]>();
   for (const link of categoryLinks ?? []) {
     const existing = categoriesByProduct.get(link.product_id) ?? [];
     existing.push(link.category_id);
     categoriesByProduct.set(link.product_id, existing);
+  }
+  const tagsByProduct = new Map<string, string[]>();
+  for (const link of tagLinks ?? []) {
+    const existing = tagsByProduct.get(link.product_id) ?? [];
+    existing.push(link.tag_id);
+    tagsByProduct.set(link.product_id, existing);
   }
 
   const cartLines: CartLine[] = items.map((item) => {
@@ -206,6 +212,7 @@ export async function POST(req: NextRequest) {
     return {
       productId: item.productId,
       categoryIds: categoriesByProduct.get(item.productId) ?? [],
+      tagIds: tagsByProduct.get(item.productId) ?? [],
       quantity: item.quantity,
       unitPriceCents: variant?.price_cents ?? product.price_cents,
     };
@@ -242,11 +249,27 @@ export async function POST(req: NextRequest) {
     return { clientUses: user ? matching.filter((o) => o.client_id === user.id).length : 0 };
   }
 
+  // Computed before discount eligibility so a free_shipping discount's
+  // maxShippingCents cap ("exclude shipping rates over a certain amount")
+  // can be checked against the real pre-discount shipping cost.
+  const { data: shippingSettings } = await supabase
+    .from("site_settings")
+    .select("shipping_flat_rate_cents, free_shipping_threshold_cents")
+    .eq("id", true)
+    .maybeSingle();
+
+  const calculatedShippingCents = calculateShippingCents(
+    subtotalCents,
+    shippingSettings?.shipping_flat_rate_cents ?? 0,
+    shippingSettings?.free_shipping_threshold_cents ?? Infinity
+  );
+
   const eligibilityContext = {
     clientId: user?.id ?? null,
     clientFacts,
     cartLines,
     subtotalCents,
+    calculatedShippingCents,
   };
 
   // Every eligible discount (automatic ones, plus the submitted code if
@@ -337,23 +360,13 @@ export async function POST(req: NextRequest) {
     if (s.config.method === "code") appliedDiscountCode = s.code;
   }
 
-  const { data: shippingSettings } = await supabase
-    .from("site_settings")
-    .select("shipping_flat_rate_cents, free_shipping_threshold_cents")
-    .eq("id", true)
-    .maybeSingle();
-
   // Shipping is calculated on the pre-discount subtotal -- an amount/
   // percent discount brings the product total down but doesn't itself
   // unlock free shipping, matching standard practice. A free_shipping
-  // discount overrides this to 0 regardless.
-  const shippingCents = freeShipping
-    ? 0
-    : calculateShippingCents(
-        subtotalCents,
-        shippingSettings?.shipping_flat_rate_cents ?? 0,
-        shippingSettings?.free_shipping_threshold_cents ?? Infinity
-      );
+  // discount overrides this to 0 regardless (already validated against
+  // maxShippingCents, if set, using this same calculatedShippingCents
+  // figure, during eligibility evaluation above).
+  const shippingCents = freeShipping ? 0 : calculatedShippingCents;
 
   const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents;
 

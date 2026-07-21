@@ -17,11 +17,13 @@ export default async function NewDiscountPage({
   if (!type || !VALID_TYPES.includes(type)) notFound();
 
   const supabase = createAdminClient();
-  const [{ data: categories }, { data: products }, { data: segments }] = await Promise.all([
-    supabase.from("categories").select("id, name").order("name", { ascending: true }),
-    supabase.from("products").select("id, name, sku").order("name", { ascending: true }),
-    supabase.from("client_segments").select("id, name").order("name", { ascending: true }),
-  ]);
+  const [{ data: categories }, { data: products }, { data: segments }, { data: tags }] =
+    await Promise.all([
+      supabase.from("categories").select("id, name").order("name", { ascending: true }),
+      supabase.from("products").select("id, name, sku").order("name", { ascending: true }),
+      supabase.from("client_segments").select("id, name").order("name", { ascending: true }),
+      supabase.from("tags").select("id, name").order("name", { ascending: true }),
+    ]);
 
   return (
     <div>
@@ -39,6 +41,7 @@ export default async function NewDiscountPage({
           categories={categories ?? []}
           products={products ?? []}
           segments={segments ?? []}
+          tags={tags ?? []}
           action={createDiscountCode}
         />
       </div>

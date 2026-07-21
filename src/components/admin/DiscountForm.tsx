@@ -15,6 +15,11 @@ interface SegmentOption {
   name: string;
 }
 
+interface TagOption {
+  id: string;
+  name: string;
+}
+
 interface DiscountFormValues {
   code?: string;
   active?: boolean;
@@ -61,11 +66,13 @@ function ScopePicker({
   onChange,
   categories,
   products,
+  tags,
 }: {
   scope: Scope;
   onChange: (next: Scope) => void;
   categories: CategoryOption[];
   products: ProductOption[];
+  tags: TagOption[];
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -75,6 +82,7 @@ function ScopePicker({
           const next = e.target.value as Scope["scope"];
           if (next === "all") onChange({ scope: "all" });
           else if (next === "collections") onChange({ scope: "collections", categoryIds: [] });
+          else if (next === "tags") onChange({ scope: "tags", tagIds: [] });
           else onChange({ scope: "products", productIds: [] });
         }}
         className="border border-line bg-background px-2.5 py-1.5 text-sm"
@@ -82,6 +90,7 @@ function ScopePicker({
         <option value="all">All products</option>
         <option value="collections">Specific collections</option>
         <option value="products">Specific products</option>
+        <option value="tags">Specific tags</option>
       </select>
 
       {scope.scope === "collections" && (
@@ -115,6 +124,30 @@ function ScopePicker({
           onChange={(next) => onChange({ scope: "products", productIds: [...next] })}
         />
       )}
+
+      {scope.scope === "tags" && (
+        <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-md border border-line bg-background p-3">
+          {tags.length === 0 ? (
+            <p className="text-sm text-muted">No tags yet.</p>
+          ) : (
+            tags.map((tag) => (
+              <label key={tag.id} className="flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={scope.tagIds.includes(tag.id)}
+                  onChange={() => {
+                    const set = new Set(scope.tagIds);
+                    if (set.has(tag.id)) set.delete(tag.id);
+                    else set.add(tag.id);
+                    onChange({ scope: "tags", tagIds: [...set] });
+                  }}
+                />
+                {tag.name}
+              </label>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -124,6 +157,7 @@ export function DiscountForm({
   categories,
   products,
   segments,
+  tags,
   initialValues,
   action,
 }: {
@@ -131,6 +165,7 @@ export function DiscountForm({
   categories: CategoryOption[];
   products: ProductOption[];
   segments: SegmentOption[];
+  tags: TagOption[];
   initialValues?: DiscountFormValues;
   action: (formData: FormData) => void;
 }) {
@@ -210,6 +245,15 @@ export function DiscountForm({
     initialConfig?.minimumPurchase.type === "quantity" ? initialConfig.minimumPurchase.minQuantity : 1
   );
 
+  const [maxShippingEnabled, setMaxShippingEnabled] = useState(
+    (initialConfig?.discount_type === "free_shipping" && initialConfig.maxShippingCents !== undefined) ?? false
+  );
+  const [maxShippingEuros, setMaxShippingEuros] = useState(
+    initialConfig?.discount_type === "free_shipping" && initialConfig.maxShippingCents !== undefined
+      ? initialConfig.maxShippingCents / 100
+      : 0
+  );
+
   const [combinesWithProduct, setCombinesWithProduct] = useState(
     initialConfig?.combinations.combinesWithProduct ?? false
   );
@@ -241,9 +285,14 @@ export function DiscountForm({
 
     let config: DiscountConfig;
     if (discountType === "free_shipping") {
-      config = { discount_type: "free_shipping", appliesTo: { scope: "all" }, ...shared };
+      config = {
+        discount_type: "free_shipping",
+        appliesTo,
+        maxShippingCents: maxShippingEnabled ? Math.round(maxShippingEuros * 100) : undefined,
+        ...shared,
+      };
     } else if (discountType === "amount_off_order") {
-      config = { discount_type: "amount_off_order", appliesTo: { scope: "all" }, valueType, value, ...shared };
+      config = { discount_type: "amount_off_order", appliesTo, valueType, value, ...shared };
     } else if (discountType === "amount_off_products") {
       config = { discount_type: "amount_off_products", appliesTo, valueType, value, ...shared };
     } else {
@@ -274,6 +323,8 @@ export function DiscountForm({
     valueType,
     value,
     appliesTo,
+    maxShippingEnabled,
+    maxShippingEuros,
     buyScope,
     buyRequirementType,
     buyAmountEuros,
@@ -340,6 +391,47 @@ export function DiscountForm({
         )}
       </section>
 
+      {discountType === "free_shipping" && (
+        <section className="border border-line bg-surface p-4">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Applies to</h2>
+          <div className="mt-2">
+            <ScopePicker
+              scope={appliesTo}
+              onChange={setAppliesTo}
+              categories={categories}
+              products={products}
+              tags={tags}
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={maxShippingEnabled}
+                onChange={(e) => setMaxShippingEnabled(e.target.checked)}
+              />
+              Exclude shipping rates over a certain amount
+            </label>
+            {maxShippingEnabled && (
+              <div className="relative mt-2 ml-6 w-32">
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={maxShippingEuros}
+                  onChange={(e) => setMaxShippingEuros(parseFloat(e.target.value) || 0)}
+                  className="w-full border border-line bg-background px-2.5 py-1.5 pr-7 text-sm"
+                />
+                <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted">
+                  €
+                </span>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {discountType !== "free_shipping" && discountType !== "buy_x_get_y" && (
         <section className="border border-line bg-surface p-4">
           <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Discount value</h2>
@@ -373,19 +465,18 @@ export function DiscountForm({
             </div>
           </div>
 
-          {discountType === "amount_off_products" && (
-            <div className="mt-4">
-              <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Applies to</h3>
-              <div className="mt-2">
-                <ScopePicker
-                  scope={appliesTo}
-                  onChange={setAppliesTo}
-                  categories={categories}
-                  products={products}
-                />
-              </div>
+          <div className="mt-4">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Applies to</h3>
+            <div className="mt-2">
+              <ScopePicker
+                scope={appliesTo}
+                onChange={setAppliesTo}
+                categories={categories}
+                products={products}
+                tags={tags}
+              />
             </div>
-          )}
+          </div>
         </section>
       )}
 
@@ -438,6 +529,7 @@ export function DiscountForm({
                 onChange={setBuyScope}
                 categories={categories}
                 products={products}
+                tags={tags}
               />
             </div>
           </div>
@@ -460,6 +552,7 @@ export function DiscountForm({
                 onChange={setGetScope}
                 categories={categories}
                 products={products}
+                tags={tags}
               />
             </div>
             <div className="mt-3">

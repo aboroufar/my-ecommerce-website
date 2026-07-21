@@ -18,7 +18,11 @@ export interface ScopeProducts {
   scope: "products";
   productIds: string[];
 }
-export type Scope = ScopeAll | ScopeCollections | ScopeProducts;
+export interface ScopeTags {
+  scope: "tags";
+  tagIds: string[];
+}
+export type Scope = ScopeAll | ScopeCollections | ScopeProducts | ScopeTags;
 
 export type Eligibility = { scope: "all" } | { scope: "segments"; segmentIds: string[] };
 
@@ -74,13 +78,17 @@ export type DiscountConfig =
     })
   | (SharedFields & {
       discount_type: "amount_off_order";
-      appliesTo: ScopeAll;
+      appliesTo: Scope;
       valueType: "percent" | "fixed";
       value: number;
     })
   | (SharedFields & {
       discount_type: "free_shipping";
-      appliesTo: ScopeAll;
+      appliesTo: Scope;
+      // If set, the discount doesn't waive shipping when the actual
+      // calculated shipping cost exceeds this cap (Shopify calls this
+      // "Exclude shipping rates over a certain amount").
+      maxShippingCents?: number;
     })
   | (SharedFields & {
       discount_type: "buy_x_get_y";
@@ -98,6 +106,7 @@ const scopeSchema: z.ZodType<Scope> = z.discriminatedUnion("scope", [
   scopeAllSchema,
   z.object({ scope: z.literal("collections"), categoryIds: z.array(z.string()) }),
   z.object({ scope: z.literal("products"), productIds: z.array(z.string()) }),
+  z.object({ scope: z.literal("tags"), tagIds: z.array(z.string()) }),
 ]);
 
 const eligibilitySchema: z.ZodType<Eligibility> = z.discriminatedUnion("scope", [
@@ -146,14 +155,15 @@ export const discountConfigSchema = z
     }),
     z.object({
       discount_type: z.literal("amount_off_order"),
-      appliesTo: scopeAllSchema,
+      appliesTo: scopeSchema,
       valueType: z.enum(["percent", "fixed"]),
       value: z.number().positive(),
       ...sharedFieldsSchema,
     }),
     z.object({
       discount_type: z.literal("free_shipping"),
-      appliesTo: scopeAllSchema,
+      appliesTo: scopeSchema,
+      maxShippingCents: z.number().int().nonnegative().optional(),
       ...sharedFieldsSchema,
     }),
     z.object({
@@ -184,6 +194,7 @@ export const discountConfigSchema = z
 export interface CartLine {
   productId: string;
   categoryIds: string[];
+  tagIds: string[];
   quantity: number;
   unitPriceCents: number;
 }
@@ -193,6 +204,11 @@ export interface EligibilityContext {
   clientFacts: ClientFacts | null;
   cartLines: CartLine[];
   subtotalCents: number;
+  // The shipping cost that would apply before any free_shipping discount
+  // waives it -- needed to check maxShippingCents ("exclude shipping
+  // rates over a certain amount"). Callers must compute this
+  // independently of whether a discount ends up waiving it.
+  calculatedShippingCents?: number;
   usage?: { clientUses: number };
 }
 
@@ -204,6 +220,7 @@ export type EligibilityResult =
 function matchesScope(scope: Scope, line: CartLine): boolean {
   if (scope.scope === "all") return true;
   if (scope.scope === "products") return scope.productIds.includes(line.productId);
+  if (scope.scope === "tags") return line.tagIds.some((id) => scope.tagIds.includes(id));
   return line.categoryIds.some((id) => scope.categoryIds.includes(id));
 }
 
@@ -272,15 +289,31 @@ export function evaluateDiscountEligibility(
   }
 
   if (config.discount_type === "free_shipping") {
+    const matchingLines = context.cartLines.filter((l) => matchesScope(config.appliesTo, l));
+    if (matchingLines.length === 0) {
+      return { eligible: false, reason: "No matching products in cart" };
+    }
+    if (
+      config.maxShippingCents !== undefined &&
+      context.calculatedShippingCents !== undefined &&
+      context.calculatedShippingCents > config.maxShippingCents
+    ) {
+      return { eligible: false, reason: "Shipping rate exceeds this discount's cap" };
+    }
     return { eligible: true, freeShipping: true };
   }
 
   if (config.discount_type === "amount_off_order") {
+    const matchingLines = context.cartLines.filter((l) => matchesScope(config.appliesTo, l));
+    if (matchingLines.length === 0) {
+      return { eligible: false, reason: "No matching products in cart" };
+    }
+    const matchingSubtotal = matchingLines.reduce((sum, l) => sum + l.unitPriceCents * l.quantity, 0);
     const discountCents =
       config.valueType === "percent"
-        ? Math.round((context.subtotalCents * config.value) / 100)
-        : config.value;
-    return { eligible: true, discountCents: Math.min(discountCents, context.subtotalCents) };
+        ? Math.round((matchingSubtotal * config.value) / 100)
+        : Math.min(config.value, matchingSubtotal);
+    return { eligible: true, discountCents };
   }
 
   if (config.discount_type === "amount_off_products") {
