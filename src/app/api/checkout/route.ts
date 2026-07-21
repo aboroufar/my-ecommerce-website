@@ -7,6 +7,12 @@ import { getStripe } from "@/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/lib/stripeCustomer";
 import { calculateShippingCents } from "@/lib/shipping";
 import { routing } from "@/i18n/routing";
+import { getClientFacts } from "@/lib/segments";
+import {
+  evaluateDiscountEligibility,
+  type DiscountConfig,
+  type CartLine,
+} from "@/lib/discounts";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -24,6 +30,7 @@ export async function POST(req: NextRequest) {
         })
       )
       .min(1, t("cartEmpty")),
+    discountCode: z.string().optional(),
   });
 
   const parsed = requestSchema.safeParse(body);
@@ -33,7 +40,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const { items } = parsed.data;
+  const { items, discountCode } = parsed.data;
 
   const supabase = createAdminClient();
 
@@ -176,36 +183,150 @@ export async function POST(req: NextRequest) {
     return sum + unitPrice * item.quantity;
   }, 0);
 
-  // Discount codes are no longer applied here -- the shopper redeems one
-  // directly on Stripe's hosted Checkout page (allow_promotion_codes
-  // below), and the webhook reconciles orders.total_cents/discount_cents
-  // from the actual Stripe session once payment succeeds. The order is
-  // created here at the pre-discount total; see markOrderPaid in
-  // src/app/api/webhooks/stripe/route.ts for the reconciliation.
+  // Discounts are now evaluated and applied entirely server-side, before
+  // the Stripe Checkout Session is created -- never redeemed on Stripe's
+  // own hosted page. This lets eligibility rules (minimum purchase,
+  // specific products/collections, specific segments) actually be
+  // enforced, which a Stripe Promotion Code alone can't encode.
+  const { data: categoryLinks } = await supabase
+    .from("product_categories")
+    .select("product_id, category_id")
+    .in("product_id", productIds);
+  const categoriesByProduct = new Map<string, string[]>();
+  for (const link of categoryLinks ?? []) {
+    const existing = categoriesByProduct.get(link.product_id) ?? [];
+    existing.push(link.category_id);
+    categoriesByProduct.set(link.product_id, existing);
+  }
+
+  const cartLines: CartLine[] = items.map((item) => {
+    const product = productMap.get(item.productId)!;
+    const variant = item.variantId ? variantMap.get(item.variantId) : undefined;
+    return {
+      productId: item.productId,
+      categoryIds: categoriesByProduct.get(item.productId) ?? [],
+      quantity: item.quantity,
+      unitPriceCents: variant?.price_cents ?? product.price_cents,
+    };
+  });
+
+  const { data: activeDiscounts } = await supabase
+    .from("discount_codes")
+    .select("id, code, discount_type, config")
+    .eq("active", true)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+
+  const clientFacts = user
+    ? (await getClientFacts(supabase, [user.id]))[0] ?? null
+    : null;
+
+  // Usage counts, keyed by discount code, needed to enforce
+  // usageLimits.totalLimit/onePerCustomer -- derived from past orders
+  // rather than a dedicated counter column, consistent with this
+  // codebase's "aggregate in app code" preference elsewhere.
+  const candidateCodes = (activeDiscounts ?? []).map((d) => d.code);
+  const { data: pastRedemptions } =
+    candidateCodes.length > 0
+      ? await supabase
+          .from("orders")
+          .select("discount_code, client_id")
+          .in("discount_code", candidateCodes)
+          .in("status", ["paid", "fulfilled", "refunded"])
+      : { data: [] as { discount_code: string | null; client_id: string | null }[] };
+
+  function usageFor(code: string) {
+    const matching = (pastRedemptions ?? []).filter((o) => o.discount_code === code);
+    return {
+      totalUses: matching.length,
+      clientUses: user ? matching.filter((o) => o.client_id === user.id).length : 0,
+    };
+  }
+
+  const eligibilityContext = {
+    clientId: user?.id ?? null,
+    clientFacts,
+    cartLines,
+    subtotalCents,
+  };
+
+  let discountCents = 0;
+  let freeShipping = false;
+  let appliedDiscountCode: string | null = null;
+
+  const automaticResults = (activeDiscounts ?? [])
+    .filter((d) => (d.config as unknown as DiscountConfig).method === "automatic")
+    .map((d) => ({
+      discount: d,
+      result: evaluateDiscountEligibility(d.config as unknown as DiscountConfig, {
+        ...eligibilityContext,
+        usage: usageFor(d.code),
+      }),
+    }))
+    .filter((r) => r.result.eligible);
+
+  // v1 combinations always default to false (no interactive UI yet), so
+  // at most one discount is ever meant to apply -- take the largest.
+  const bestAutomatic = automaticResults.sort((a, b) => {
+    const aCents = a.result.eligible && "discountCents" in a.result ? a.result.discountCents : 0;
+    const bCents = b.result.eligible && "discountCents" in b.result ? b.result.discountCents : 0;
+    return bCents - aCents;
+  })[0];
+
+  if (bestAutomatic && bestAutomatic.result.eligible) {
+    if ("discountCents" in bestAutomatic.result) discountCents = bestAutomatic.result.discountCents;
+    if ("freeShipping" in bestAutomatic.result) freeShipping = true;
+  } else if (discountCode) {
+    const matchingDiscount = (activeDiscounts ?? []).find(
+      (d) =>
+        (d.config as unknown as DiscountConfig).method === "code" &&
+        d.code.toUpperCase() === discountCode.trim().toUpperCase()
+    );
+    if (matchingDiscount) {
+      const result = evaluateDiscountEligibility(
+        matchingDiscount.config as unknown as DiscountConfig,
+        { ...eligibilityContext, usage: usageFor(matchingDiscount.code) }
+      );
+      if (result.eligible) {
+        if ("discountCents" in result) discountCents = result.discountCents;
+        if ("freeShipping" in result) freeShipping = true;
+        appliedDiscountCode = matchingDiscount.code;
+      } else {
+        return NextResponse.json(
+          { error: t("discountNotApplicable"), code: "DISCOUNT_NOT_APPLICABLE" },
+          { status: 409 }
+        );
+      }
+    } else {
+      return NextResponse.json(
+        { error: t("discountNotApplicable"), code: "DISCOUNT_NOT_APPLICABLE" },
+        { status: 409 }
+      );
+    }
+  }
+
   const { data: shippingSettings } = await supabase
     .from("site_settings")
     .select("shipping_flat_rate_cents, free_shipping_threshold_cents")
     .eq("id", true)
     .maybeSingle();
 
-  // Shipping is calculated on the pre-discount subtotal -- a discount
-  // code brings the product total down but doesn't itself unlock free
-  // shipping, matching standard practice.
-  const shippingCents = calculateShippingCents(
-    subtotalCents,
-    shippingSettings?.shipping_flat_rate_cents ?? 0,
-    shippingSettings?.free_shipping_threshold_cents ?? Infinity
-  );
+  // Shipping is calculated on the pre-discount subtotal -- an amount/
+  // percent discount brings the product total down but doesn't itself
+  // unlock free shipping, matching standard practice. A free_shipping
+  // discount overrides this to 0 regardless.
+  const shippingCents = freeShipping
+    ? 0
+    : calculateShippingCents(
+        subtotalCents,
+        shippingSettings?.shipping_flat_rate_cents ?? 0,
+        shippingSettings?.free_shipping_threshold_cents ?? Infinity
+      );
 
-  const totalCents = subtotalCents + shippingCents;
+  const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents;
 
-  // Create a pending order first so the webhook has something to update
-  // once Stripe confirms payment -- avoids trusting anything from the
-  // client at confirmation time. total_cents/discount_cents/discount_code
-  // here are the pre-discount figures; markOrderPaid in the webhook
-  // overwrites them with what Stripe actually charged once payment
-  // succeeds, since a promotion code may be redeemed on Stripe's page
-  // after this row is created.
+  // The discount is now known before the order is created (no longer a
+  // 0/null placeholder later overwritten by the webhook), since it's
+  // computed here rather than redeemed on Stripe's own page.
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -213,8 +334,8 @@ export async function POST(req: NextRequest) {
       total_cents: totalCents,
       currency,
       client_id: user?.id ?? null,
-      discount_code: null,
-      discount_cents: 0,
+      discount_code: appliedDiscountCode,
+      discount_cents: discountCents,
       shipping_cents: shippingCents,
     })
     .select("id")
@@ -308,6 +429,16 @@ export async function POST(req: NextRequest) {
       shippingRateId = shippingRate.id;
     }
 
+    // A one-time Coupon minted fresh per checkout, carrying the exact
+    // amount_off this app computed -- never percent_off, since a
+    // product/collection-scoped or buy-x-get-y discount doesn't apply
+    // uniformly to the whole cart, so only a precomputed absolute cents
+    // figure is trustworthy at the Stripe session level.
+    const discountCoupon =
+      discountCents > 0
+        ? await stripe.coupons.create({ duration: "once", amount_off: discountCents, currency })
+        : null;
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: items.map((item) => {
@@ -327,12 +458,11 @@ export async function POST(req: NextRequest) {
       }),
       shipping_address_collection: { allowed_countries: ["IT"] },
       payment_method_types: ["card", "klarna", "satispay", "paypal"],
-      // Discount codes are now redeemed on Stripe's own hosted page --
-      // this surfaces Stripe's built-in "Add promotion code" field,
-      // which appears after the shopper enters their shipping address.
-      // Requires each discount_codes row to have a matching Stripe
-      // Promotion Code (see src/lib/actions/discounts.ts).
-      allow_promotion_codes: true,
+      // Discounts are computed by this app, never redeemed by the
+      // shopper on Stripe's page -- Stripe's own promo-code field is
+      // disabled so the two paths can never disagree about eligibility.
+      allow_promotion_codes: false,
+      ...(discountCoupon ? { discounts: [{ coupon: discountCoupon.id }] } : {}),
       ...(shippingRateId
         ? { shipping_options: [{ shipping_rate: shippingRateId }] }
         : {}),
@@ -341,7 +471,7 @@ export async function POST(req: NextRequest) {
         : { customer_email: user?.email ?? undefined }),
       success_url: `${origin}/${locale}/checkout/success?order_id=${order.id}`,
       cancel_url: `${origin}/${locale}/cart`,
-      metadata: { order_id: order.id },
+      metadata: { order_id: order.id, discount_code: appliedDiscountCode ?? "" },
     });
 
     if (!session.url) throw new Error("Stripe did not return a session URL");

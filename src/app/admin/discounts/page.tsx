@@ -13,15 +13,16 @@ export default async function AdminDiscountsPage({
 
   const { data: codes } = await supabase
     .from("discount_codes")
-    .select("id, code, type, value, active, expires_at")
+    .select("id, code, discount_type, config, active, expires_at")
     .order("created_at", { ascending: false });
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-foreground">Discount codes</h1>
+      <h1 className="font-display text-2xl text-foreground">Discounts</h1>
       <p className="mt-2 max-w-lg text-sm text-muted">
-        Codes shoppers can redeem on the payment page for a percentage or
-        fixed amount off their subtotal.
+        Percentage or fixed-amount discounts, buy-X-get-Y offers, and free
+        shipping -- redeemed by code on the cart page or applied
+        automatically when a client is eligible.
       </p>
 
       {error && (

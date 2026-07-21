@@ -49,16 +49,23 @@ const REAL_PURCHASE_STATUSES = ["paid", "fulfilled", "refunded"];
  * for order_count and email_subscribed.
  */
 export async function getClientFacts(
-  supabase: ReturnType<typeof createAdminClient>
+  supabase: ReturnType<typeof createAdminClient>,
+  clientIds?: string[]
 ): Promise<ClientFacts[]> {
   const [{ data: clients }, { data: orders }, { data: subscribers }, { data: categoryLinks }] =
     await Promise.all([
-      supabase.from("clients").select("id, email, name, created_at"),
-      supabase
-        .from("orders")
-        .select("id, client_id, status, total_cents, created_at")
-        .not("client_id", "is", null)
-        .in("status", REAL_PURCHASE_STATUSES),
+      clientIds
+        ? supabase.from("clients").select("id, email, name, created_at").in("id", clientIds)
+        : supabase.from("clients").select("id, email, name, created_at"),
+      (() => {
+        let query = supabase
+          .from("orders")
+          .select("id, client_id, status, total_cents, created_at")
+          .not("client_id", "is", null)
+          .in("status", REAL_PURCHASE_STATUSES);
+        if (clientIds) query = query.in("client_id", clientIds);
+        return query;
+      })(),
       supabase.from("newsletter_subscribers").select("email"),
       supabase.from("product_categories").select("product_id, category_id"),
     ]);

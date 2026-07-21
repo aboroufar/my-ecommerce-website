@@ -65,7 +65,8 @@
     "redirectingToPayment": "Redirecting to payment…",
     "proceedToPayment": "Proceed to payment",
     "secureCheckout": "Secure checkout",
-    "notReservedNotice": "Items in your cart are not reserved. You can enter a discount code on the payment page."
+    "notReservedNotice": "Items in your cart are not reserved.",
+    "discountCodePlaceholder": "Discount code"
   },
   "account": {
     "orders": "Orders",
@@ -258,7 +259,8 @@
     "incompleteProfile": "Please complete your profile (name, phone, date of birth, gender, and a billing address) before checking out.",
     "couldNotCreateOrder": "Could not create order.",
     "couldNotCreateOrderItems": "Could not create order items.",
-    "couldNotStartCheckout": "Could not start checkout. Please try again."
+    "couldNotStartCheckout": "Could not start checkout. Please try again.",
+    "discountNotApplicable": "This discount code doesn't apply to your order."
   },
   "shippingPage": {
     "title": "Shipping & Delivery — Storefront",

@@ -65,7 +65,8 @@
     "redirectingToPayment": "Reindirizzamento al pagamento…",
     "proceedToPayment": "Procedi al pagamento",
     "secureCheckout": "Pagamento sicuro",
-    "notReservedNotice": "Gli articoli nel tuo carrello non sono riservati. Puoi inserire un codice sconto nella pagina di pagamento."
+    "notReservedNotice": "Gli articoli nel tuo carrello non sono riservati.",
+    "discountCodePlaceholder": "Codice sconto"
   },
   "account": {
     "orders": "Ordini",
@@ -258,7 +259,8 @@
     "incompleteProfile": "Completa il tuo profilo (nome, telefono, data di nascita, genere e un indirizzo di fatturazione) prima di procedere al checkout.",
     "couldNotCreateOrder": "Impossibile creare l'ordine.",
     "couldNotCreateOrderItems": "Impossibile creare gli articoli dell'ordine.",
-    "couldNotStartCheckout": "Impossibile avviare il checkout. Riprova."
+    "couldNotStartCheckout": "Impossibile avviare il checkout. Riprova.",
+    "discountNotApplicable": "Questo codice sconto non si applica al tuo ordine."
   },
   "shippingPage": {
     "title": "Spedizioni e consegna — Storefront",

@@ -38,16 +38,15 @@ async function markOrderPaid(
 
   const shipping = session.collected_information?.shipping_details ?? null;
 
-  // A discount code is now redeemed on Stripe's own hosted page
-  // (allow_promotion_codes) rather than applied when the order row was
-  // first created, so the order's total_cents at creation time never
-  // reflects it. session.amount_total is what Stripe actually charged --
-  // always re-derive the order's final total from it here rather than
-  // trusting the pre-checkout figure, same "never trust a stale
-  // client-side/pre-payment price" principle as the rest of checkout.
-  // The webhook event payload doesn't include total_details.breakdown
-  // unless expanded, so re-fetch the session with that expansion to read
-  // back which promotion code (if any) was actually redeemed.
+  // The discount (if any) is now computed by this app before the Stripe
+  // session is created and attached as a one-time session-level Coupon --
+  // never a shopper-redeemed Promotion Code -- but session.amount_total
+  // is still the source of truth for what Stripe actually charged, so
+  // re-derive the order's final total from it rather than trusting the
+  // pre-checkout figure, same "never trust a stale client-side/pre-payment
+  // price" principle as the rest of checkout. The webhook event payload
+  // doesn't include total_details.breakdown unless expanded, so re-fetch
+  // the session with that expansion.
   const expandedSession = await getStripe().checkout.sessions.retrieve(session.id, {
     expand: ["total_details.breakdown.discounts"],
   });
@@ -56,6 +55,12 @@ async function markOrderPaid(
     expandedSession.total_details?.breakdown?.discounts?.[0]?.discount?.promotion_code;
   const promotionCodeString =
     typeof promotionCode === "string" ? promotionCode : promotionCode?.code ?? null;
+  // A session-level Coupon (this app's own discount path) has no
+  // associated Promotion Code, so promotionCodeString is null even when
+  // a code was applied -- fall back to the code string passed through
+  // session.metadata at creation time (see src/app/api/checkout/route.ts).
+  const discountCodeString =
+    promotionCodeString ?? (expandedSession.metadata?.discount_code || null);
 
   await supabase
     .from("orders")
@@ -68,7 +73,7 @@ async function markOrderPaid(
       shipping_address: shipping ? JSON.parse(JSON.stringify(shipping)) : null,
       total_cents: expandedSession.amount_total ?? order.total_cents,
       discount_cents: discountCents,
-      discount_code: promotionCodeString,
+      discount_code: discountCodeString,
     })
     .eq("id", orderId);
 

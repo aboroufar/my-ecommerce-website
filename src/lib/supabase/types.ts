@@ -424,7 +424,9 @@ export type Database = {
         Row: {
           active: boolean
           code: string
+          config: Json
           created_at: string
+          discount_type: string
           expires_at: string | null
           id: string
           stripe_coupon_id: string | null
@@ -435,7 +437,9 @@ export type Database = {
         Insert: {
           active?: boolean
           code: string
+          config?: Json
           created_at?: string
+          discount_type: string
           expires_at?: string | null
           id?: string
           stripe_coupon_id?: string | null
@@ -446,7 +450,9 @@ export type Database = {
         Update: {
           active?: boolean
           code?: string
+          config?: Json
           created_at?: string
+          discount_type?: string
           expires_at?: string | null
           id?: string
           stripe_coupon_id?: string | null

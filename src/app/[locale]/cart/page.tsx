@@ -17,6 +17,7 @@ export default function CartPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
+  const [discountCodeInput, setDiscountCodeInput] = useState("");
 
   const [shippingSettings, setShippingSettings] = useState({
     flatRateCents: 0,
@@ -68,6 +69,7 @@ export default function CartPage() {
             variantId: i.variantId,
             quantity: i.quantity,
           })),
+          discountCode: discountCodeInput.trim() || undefined,
         }),
       });
 
@@ -203,7 +205,17 @@ export default function CartPage() {
           })}
         </ul>
 
-        <div className="mt-8 rounded-2xl bg-surface p-5 shadow-sm">
+        <div className="mt-6 flex gap-2">
+          <input
+            type="text"
+            value={discountCodeInput}
+            onChange={(e) => setDiscountCodeInput(e.target.value)}
+            placeholder={t("discountCodePlaceholder")}
+            className="flex-1 rounded-full border border-line bg-surface px-4 py-2 text-sm uppercase text-foreground"
+          />
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-surface p-5 shadow-sm">
           <div className="flex items-center justify-between text-sm text-muted">
             <span>{tOrder("shipping")}:</span>
             <span className="font-medium text-foreground">
