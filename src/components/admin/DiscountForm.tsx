@@ -18,8 +18,29 @@ interface SegmentOption {
 interface DiscountFormValues {
   code?: string;
   active?: boolean;
+  starts_at?: string;
   expires_at?: string | null;
   config?: DiscountConfig;
+}
+
+// Splits an ISO timestamp into separate <input type="date">/<input
+// type="time"> values (local time, since that's what the admin is
+// setting the schedule in).
+function splitDateTime(iso?: string | null): { date: string; time: string } {
+  if (!iso) return { date: "", time: "" };
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return { date: "", time: "" };
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
+}
+
+function combineDateTime(date: string, time: string): string | null {
+  if (!date) return null;
+  const combined = new Date(`${date}T${time || "00:00"}`);
+  return Number.isNaN(combined.getTime()) ? null : combined.toISOString();
 }
 
 const VALUE_TYPE_LABELS = { percent: "Percentage", fixed: "Fixed amount" } as const;
@@ -118,7 +139,19 @@ export function DiscountForm({
   const [method, setMethod] = useState<"code" | "automatic">(initialConfig?.method ?? "code");
   const [code, setCode] = useState(initialValues?.code ?? initialConfig?.code ?? "");
   const [active, setActive] = useState(initialValues?.active ?? true);
-  const [expiresAt, setExpiresAt] = useState(initialValues?.expires_at?.slice(0, 10) ?? "");
+
+  const initialStart = splitDateTime(initialValues?.starts_at);
+  const [startDate, setStartDate] = useState(
+    initialStart.date || splitDateTime(new Date().toISOString()).date
+  );
+  const [startTime, setStartTime] = useState(
+    initialStart.time || splitDateTime(new Date().toISOString()).time
+  );
+
+  const initialEnd = splitDateTime(initialValues?.expires_at);
+  const [hasEndDate, setHasEndDate] = useState(!!initialValues?.expires_at);
+  const [endDate, setEndDate] = useState(initialEnd.date);
+  const [endTime, setEndTime] = useState(initialEnd.time || "23:59");
 
   const [valueType, setValueType] = useState<"percent" | "fixed">(
     (initialConfig && "valueType" in initialConfig && initialConfig.valueType) || "percent"
@@ -556,19 +589,68 @@ export function DiscountForm({
           <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
           Active
         </label>
-        <label className="mt-2 flex flex-col gap-1.5">
-          <span className="text-xs text-muted">End date (optional)</span>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Start date</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border border-line bg-background px-2.5 py-1.5 text-sm"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted">Start time</span>
+            <input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="border border-line bg-background px-2.5 py-1.5 text-sm"
+            />
+          </label>
+        </div>
+
+        <label className="mt-4 flex items-center gap-2 text-sm text-foreground">
           <input
-            type="date"
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            className="w-48 border border-line bg-background px-2.5 py-1.5 text-sm"
+            type="checkbox"
+            checked={hasEndDate}
+            onChange={(e) => setHasEndDate(e.target.checked)}
           />
+          Set end date
         </label>
+
+        {hasEndDate && (
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-muted">End date</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="border border-line bg-background px-2.5 py-1.5 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-muted">End time</span>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="border border-line bg-background px-2.5 py-1.5 text-sm"
+              />
+            </label>
+          </div>
+        )}
       </section>
 
       <input type="hidden" name="active" value={active ? "on" : ""} />
-      <input type="hidden" name="expires_at" value={expiresAt} />
+      <input type="hidden" name="starts_at" value={combineDateTime(startDate, startTime) ?? ""} />
+      <input
+        type="hidden"
+        name="expires_at"
+        value={hasEndDate ? combineDateTime(endDate, endTime) ?? "" : ""}
+      />
 
       <div className="flex gap-3">
         <button

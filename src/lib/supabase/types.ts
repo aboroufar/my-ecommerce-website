@@ -429,6 +429,7 @@ export type Database = {
           discount_type: string
           expires_at: string | null
           id: string
+          starts_at: string
           stripe_coupon_id: string | null
           stripe_promotion_code_id: string | null
           type: string
@@ -442,6 +443,7 @@ export type Database = {
           discount_type: string
           expires_at?: string | null
           id?: string
+          starts_at?: string
           stripe_coupon_id?: string | null
           stripe_promotion_code_id?: string | null
           type: string
@@ -455,6 +457,7 @@ export type Database = {
           discount_type?: string
           expires_at?: string | null
           id?: string
+          starts_at?: string
           stripe_coupon_id?: string | null
           stripe_promotion_code_id?: string | null
           type?: string

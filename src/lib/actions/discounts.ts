@@ -20,6 +20,7 @@ const discountFormSchema = z.object({
   // Checkboxes are only present in FormData when checked ("on"), so a
   // missing key means unchecked/false rather than a validation failure.
   active: z.preprocess((v) => v === "on", z.boolean()),
+  starts_at: z.string().min(1, "Start date is required"),
   expires_at: z
     .string()
     .optional()
@@ -127,6 +128,7 @@ export async function createDiscountCode(formData: FormData) {
     type: legacy.type,
     value: legacy.value,
     active: parsed.data.active,
+    starts_at: parsed.data.starts_at,
     expires_at: parsed.data.expires_at,
     ...stripeIds,
   });
@@ -186,6 +188,7 @@ export async function updateDiscountCode(id: string, formData: FormData) {
       type: legacy.type,
       value: legacy.value,
       active: parsed.data.active,
+      starts_at: parsed.data.starts_at,
       expires_at: parsed.data.expires_at,
       ...stripeIds,
     })

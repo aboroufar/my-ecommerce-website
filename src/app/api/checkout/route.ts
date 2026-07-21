@@ -210,11 +210,13 @@ export async function POST(req: NextRequest) {
     };
   });
 
+  const now = new Date().toISOString();
   const { data: activeDiscounts } = await supabase
     .from("discount_codes")
     .select("id, code, discount_type, config")
     .eq("active", true)
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+    .lte("starts_at", now)
+    .or(`expires_at.is.null,expires_at.gt.${now}`);
 
   const clientFacts = user
     ? (await getClientFacts(supabase, [user.id]))[0] ?? null

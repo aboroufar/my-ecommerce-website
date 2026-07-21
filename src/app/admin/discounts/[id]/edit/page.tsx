@@ -21,7 +21,7 @@ export default async function EditDiscountPage({
     await Promise.all([
       supabase
         .from("discount_codes")
-        .select("id, code, discount_type, config, active, expires_at")
+        .select("id, code, discount_type, config, active, starts_at, expires_at")
         .eq("id", id)
         .single(),
       supabase.from("categories").select("id, name").order("name", { ascending: true }),
@@ -50,6 +50,7 @@ export default async function EditDiscountPage({
           initialValues={{
             code: discount.code,
             active: discount.active,
+            starts_at: discount.starts_at,
             expires_at: discount.expires_at,
             config: discount.config as unknown as DiscountConfig,
           }}
