@@ -1,32 +1,37 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCustomerFacts, getMatchingCustomers, type Segment } from "@/lib/segments";
-import { deleteSegment } from "@/lib/actions/segments";
+import { getClientFacts, type Segment } from "@/lib/segments";
+import { serializeSegmentQuery } from "@/lib/segmentQuery";
+import { updateSegment, deleteSegment } from "@/lib/actions/segments";
+import { SegmentQueryEditor } from "@/components/admin/SegmentQueryEditor";
 
 export const dynamic = "force-dynamic";
 
 export default async function SegmentDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error } = await searchParams;
   const supabase = createAdminClient();
 
-  const [{ data: segmentRow }, customers] = await Promise.all([
+  const [{ data: segmentRow }, clients] = await Promise.all([
     supabase
-      .from("customer_segments")
-      .select("id, name, condition_type, conditions, created_at")
+      .from("client_segments")
+      .select("id, name, condition_type, conditions, created_at, query_text")
       .eq("id", id)
       .single(),
-    getCustomerFacts(supabase),
+    getClientFacts(supabase),
   ]);
 
   if (!segmentRow) notFound();
 
-  const segment = segmentRow as unknown as Segment;
-  const matching = getMatchingCustomers(customers, segment);
+  const segment = segmentRow as unknown as Segment & { query_text: string | null };
+  const queryText = segment.query_text ?? serializeSegmentQuery(segment.conditions);
 
   return (
     <div>
@@ -46,9 +51,11 @@ export default async function SegmentDetailPage({
         </form>
       </div>
 
-      <p className="mt-2 text-sm text-muted">
-        {matching.length} matching customer{matching.length === 1 ? "" : "s"}
-      </p>
+      {error && (
+        <p className="mt-6 max-w-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
       {segment.condition_type === "abandoned_checkout" && (
         <p className="mt-4 max-w-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -58,40 +65,14 @@ export default async function SegmentDetailPage({
         </p>
       )}
 
-      {matching.length === 0 ? (
-        <p className="mt-8 text-sm text-muted">No customers match this segment yet.</p>
-      ) : (
-        <table className="mt-8 w-full text-left text-sm">
-          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
-            <tr>
-              <th className="py-2 font-medium">Email</th>
-              <th className="py-2 font-medium">Joined</th>
-              <th className="py-2" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {matching.map((customer) => (
-              <tr key={customer.id}>
-                <td className="py-3 text-foreground">
-                  {customer.email}
-                  {customer.name && <span className="ml-2 text-muted">{customer.name}</span>}
-                </td>
-                <td className="py-3 text-muted">
-                  {new Date(customer.created_at).toLocaleDateString()}
-                </td>
-                <td className="py-3 text-right">
-                  <Link
-                    href={`/admin/customers/${customer.id}`}
-                    className="text-accent underline underline-offset-4"
-                  >
-                    View
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <div className="mt-8 max-w-2xl">
+        <SegmentQueryEditor
+          clients={clients}
+          initialName={segment.name}
+          initialQueryText={queryText}
+          action={updateSegment.bind(null, segment.id)}
+        />
+      </div>
     </div>
   );
 }

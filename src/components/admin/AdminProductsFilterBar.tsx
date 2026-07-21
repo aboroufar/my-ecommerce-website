@@ -9,6 +9,17 @@ interface Category {
   slug: string;
 }
 
+interface Vendor {
+  id: string;
+  name: string;
+}
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 /**
  * Top search/filter bar for /admin/products -- mirrors
  * AdminOrdersFilterBar's horizontal layout instead of a vertical sidebar.
@@ -16,12 +27,24 @@ interface Category {
  * (router.push), so filters stay shareable/bookmarkable and survive a
  * page refresh.
  */
-export function AdminProductsFilterBar({ categories }: { categories: Category[] }) {
+export function AdminProductsFilterBar({
+  categories,
+  vendors,
+  tags,
+}: {
+  categories: Category[];
+  vendors: Vendor[];
+  tags: Tag[];
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [vendorsOpen, setVendorsOpen] = useState(false);
+  const [tagsOpen, setTagsOpen] = useState(false);
 
   const selectedCategorySlugs = new Set(searchParams.getAll("category"));
+  const selectedVendorIds = new Set(searchParams.getAll("vendor"));
+  const selectedTagSlugs = new Set(searchParams.getAll("tag"));
   const status = searchParams.get("status") ?? "";
   const stock = searchParams.get("stock") ?? "";
   const popular = searchParams.get("popular") ?? "";
@@ -30,7 +53,15 @@ export function AdminProductsFilterBar({ categories }: { categories: Category[] 
   const q = searchParams.get("q") ?? "";
 
   const hasFilters =
-    selectedCategorySlugs.size > 0 || status || stock || popular || minPrice || maxPrice || q;
+    selectedCategorySlugs.size > 0 ||
+    selectedVendorIds.size > 0 ||
+    selectedTagSlugs.size > 0 ||
+    status ||
+    stock ||
+    popular ||
+    minPrice ||
+    maxPrice ||
+    q;
 
   function pushParams(mutate: (params: URLSearchParams) => void) {
     const params = new URLSearchParams(searchParams.toString());
@@ -38,14 +69,26 @@ export function AdminProductsFilterBar({ categories }: { categories: Category[] 
     router.push(`/admin/products?${params.toString()}`);
   }
 
-  function toggleCategory(slug: string) {
+  function toggleMultiValue(key: string, value: string) {
     pushParams((params) => {
-      const values = new Set(params.getAll("category"));
-      if (values.has(slug)) values.delete(slug);
-      else values.add(slug);
-      params.delete("category");
-      for (const v of values) params.append("category", v);
+      const values = new Set(params.getAll(key));
+      if (values.has(value)) values.delete(value);
+      else values.add(value);
+      params.delete(key);
+      for (const v of values) params.append(key, v);
     });
+  }
+
+  function toggleCategory(slug: string) {
+    toggleMultiValue("category", slug);
+  }
+
+  function toggleVendor(id: string) {
+    toggleMultiValue("vendor", id);
+  }
+
+  function toggleTag(slug: string) {
+    toggleMultiValue("tag", slug);
   }
 
   function setParam(key: string, value: string) {
@@ -109,6 +152,76 @@ export function AdminProductsFilterBar({ categories }: { categories: Category[] 
                         onChange={() => toggleCategory(category.slug)}
                       />
                       <span className="truncate">{category.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {vendors.length > 0 && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setVendorsOpen((open) => !open)}
+              className="border border-line bg-background px-2.5 py-1.5 text-sm"
+            >
+              Vendor{selectedVendorIds.size > 0 ? ` (${selectedVendorIds.size})` : ""}
+            </button>
+            {vendorsOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setVendorsOpen(false)}
+                />
+                <div className="absolute left-0 top-full z-20 mt-1 max-h-72 w-56 overflow-y-auto border border-line bg-surface p-2 shadow-md">
+                  {vendors.map((vendor) => (
+                    <label
+                      key={vendor.id}
+                      className="flex items-center gap-1.5 px-1 py-1 text-sm text-foreground"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedVendorIds.has(vendor.id)}
+                        onChange={() => toggleVendor(vendor.id)}
+                      />
+                      <span className="truncate">{vendor.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {tags.length > 0 && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setTagsOpen((open) => !open)}
+              className="border border-line bg-background px-2.5 py-1.5 text-sm"
+            >
+              Tag{selectedTagSlugs.size > 0 ? ` (${selectedTagSlugs.size})` : ""}
+            </button>
+            {tagsOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setTagsOpen(false)}
+                />
+                <div className="absolute left-0 top-full z-20 mt-1 max-h-72 w-56 overflow-y-auto border border-line bg-surface p-2 shadow-md">
+                  {tags.map((tag) => (
+                    <label
+                      key={tag.id}
+                      className="flex items-center gap-1.5 px-1 py-1 text-sm text-foreground"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTagSlugs.has(tag.slug)}
+                        onChange={() => toggleTag(tag.slug)}
+                      />
+                      <span className="truncate">{tag.name}</span>
                     </label>
                   ))}
                 </div>

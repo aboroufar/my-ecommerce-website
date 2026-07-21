@@ -55,7 +55,7 @@ export default async function AdminOrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, status, total_cents, currency, created_at, shipping_address, stripe_payment_intent_id, customers(email), carrier, tracking_number, tracking_url, label_url, pending_rates"
+      "id, status, total_cents, currency, created_at, shipping_address, stripe_payment_intent_id, clients(email), carrier, tracking_number, tracking_url, label_url, pending_rates"
     )
     .eq("id", id)
     .single();
@@ -90,7 +90,7 @@ export default async function AdminOrderDetailPage({
           </h1>
           <p className="mt-1 text-sm text-muted">
             Placed {new Date(order.created_at).toLocaleString()} ·{" "}
-            {order.customers?.email ?? "Guest"}
+            {order.clients?.email ?? "Guest"}
           </p>
         </div>
         <span className="border border-line px-3 py-1 text-xs font-medium uppercase tracking-wide text-foreground">

@@ -21,7 +21,7 @@ export default async function AdminOrdersPage({
   const supabase = createAdminClient();
   const { data: allOrders } = await supabase
     .from("orders")
-    .select("id, status, total_cents, currency, created_at, customers(email)")
+    .select("id, status, total_cents, currency, created_at, clients(email)")
     .order("created_at", { ascending: false });
 
   const query = q?.trim().toLowerCase() ?? "";
@@ -36,7 +36,7 @@ export default async function AdminOrdersPage({
     if (fromDate && new Date(o.created_at) < fromDate) return false;
     if (toDate && new Date(o.created_at) >= toDate) return false;
     if (query) {
-      const haystack = `${o.id} ${o.customers?.email ?? ""}`.toLowerCase();
+      const haystack = `${o.id} ${o.clients?.email ?? ""}`.toLowerCase();
       if (!haystack.includes(query)) return false;
     }
     return true;

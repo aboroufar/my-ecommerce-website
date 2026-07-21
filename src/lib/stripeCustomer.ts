@@ -13,23 +13,23 @@ export async function getOrCreateStripeCustomer(
   userId: string,
   email: string | undefined
 ): Promise<string> {
-  const { data: customer } = await supabase
-    .from("customers")
+  const { data: client } = await supabase
+    .from("clients")
     .select("stripe_customer_id")
     .eq("id", userId)
     .single();
 
-  if (customer?.stripe_customer_id) {
-    return customer.stripe_customer_id;
+  if (client?.stripe_customer_id) {
+    return client.stripe_customer_id;
   }
 
   const stripeCustomer = await getStripe().customers.create({
     email,
-    metadata: { customer_id: userId },
+    metadata: { client_id: userId },
   });
 
   await supabase
-    .from("customers")
+    .from("clients")
     .update({ stripe_customer_id: stripeCustomer.id })
     .eq("id", userId);
 

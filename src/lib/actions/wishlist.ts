@@ -22,7 +22,7 @@ export async function toggleWishlistItem(
   const { data: existing } = await supabase
     .from("wishlist_items")
     .select("id")
-    .eq("customer_id", user.id)
+    .eq("client_id", user.id)
     .eq("product_id", productId)
     .maybeSingle();
 
@@ -32,11 +32,11 @@ export async function toggleWishlistItem(
     return { inWishlist: false, signedIn: true };
   }
 
-  // RLS requires customer_id = auth.uid(), which also means this insert
-  // simply fails for anyone trying to write another customer's wishlist.
+  // RLS requires client_id = auth.uid(), which also means this insert
+  // simply fails for anyone trying to write another client's wishlist.
   await supabase
     .from("wishlist_items")
-    .insert({ customer_id: user.id, product_id: productId });
+    .insert({ client_id: user.id, product_id: productId });
   revalidatePath("/account/wishlist");
   return { inWishlist: true, signedIn: true };
 }

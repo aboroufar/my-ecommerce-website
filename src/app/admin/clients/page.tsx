@@ -4,45 +4,45 @@ import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminCustomersPage() {
+export default async function AdminClientsPage() {
   const supabase = createAdminClient();
 
-  const [{ data: customers }, { data: orders }] = await Promise.all([
+  const [{ data: clients }, { data: orders }] = await Promise.all([
     supabase
-      .from("customers")
+      .from("clients")
       .select("id, email, name, created_at")
       .order("created_at", { ascending: false }),
     // Only paid+ orders count toward "total spent" -- a pending/cancelled
     // order was never actually charged.
     supabase
       .from("orders")
-      .select("customer_id, total_cents, currency, status")
-      .not("customer_id", "is", null)
+      .select("client_id, total_cents, currency, status")
+      .not("client_id", "is", null)
       .in("status", ["paid", "fulfilled", "refunded"]),
   ]);
 
-  const statsByCustomer = new Map<
+  const statsByClient = new Map<
     string,
     { orderCount: number; totalCents: number; currency: string }
   >();
   for (const order of orders ?? []) {
-    if (!order.customer_id) continue;
-    const existing = statsByCustomer.get(order.customer_id) ?? {
+    if (!order.client_id) continue;
+    const existing = statsByClient.get(order.client_id) ?? {
       orderCount: 0,
       totalCents: 0,
       currency: order.currency,
     };
     existing.orderCount += 1;
     existing.totalCents += order.total_cents;
-    statsByCustomer.set(order.customer_id, existing);
+    statsByClient.set(order.client_id, existing);
   }
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-foreground">Customers</h1>
+      <h1 className="font-display text-2xl text-foreground">Clients</h1>
 
-      {!customers || customers.length === 0 ? (
-        <p className="mt-10 text-sm text-muted">No customers yet.</p>
+      {!clients || clients.length === 0 ? (
+        <p className="mt-10 text-sm text-muted">No clients yet.</p>
       ) : (
         <table className="mt-8 w-full text-left text-sm">
           <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
@@ -55,18 +55,18 @@ export default async function AdminCustomersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {customers.map((customer) => {
-              const stats = statsByCustomer.get(customer.id);
+            {clients.map((client) => {
+              const stats = statsByClient.get(client.id);
               return (
-                <tr key={customer.id}>
+                <tr key={client.id}>
                   <td className="py-3 text-foreground">
-                    {customer.email}
-                    {customer.name && (
-                      <span className="ml-2 text-muted">{customer.name}</span>
+                    {client.email}
+                    {client.name && (
+                      <span className="ml-2 text-muted">{client.name}</span>
                     )}
                   </td>
                   <td className="py-3 text-muted">
-                    {new Date(customer.created_at).toLocaleDateString()}
+                    {new Date(client.created_at).toLocaleDateString()}
                   </td>
                   <td className="py-3 text-foreground">
                     {stats?.orderCount ?? 0}
@@ -78,7 +78,7 @@ export default async function AdminCustomersPage() {
                   </td>
                   <td className="py-3 text-right">
                     <Link
-                      href={`/admin/customers/${customer.id}`}
+                      href={`/admin/clients/${client.id}`}
                       className="text-accent underline underline-offset-4"
                     >
                       View

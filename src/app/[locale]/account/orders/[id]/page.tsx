@@ -29,7 +29,7 @@ export default async function OrderDetailPage({
     getLocale(),
   ]);
 
-  // RLS ("Customers can view own orders") means this returns null for any
+  // RLS ("Clients can view own orders") means this returns null for any
   // order that isn't the logged-in user's -- no manual ownership check needed.
   const { data: order } = await supabase
     .from("orders")

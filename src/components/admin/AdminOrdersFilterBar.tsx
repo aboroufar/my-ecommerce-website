@@ -41,7 +41,7 @@ export function AdminOrdersFilterBar() {
         <input
           type="search"
           defaultValue={q}
-          placeholder="Search order # or customer email"
+          placeholder="Search order # or client email"
           onKeyDown={(e) => {
             if (e.key === "Enter") setParam("q", e.currentTarget.value.trim());
           }}

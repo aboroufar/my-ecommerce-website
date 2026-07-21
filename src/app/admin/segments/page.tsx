@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCustomerFacts, getMatchingCustomers, type Segment } from "@/lib/segments";
+import { getClientFacts, getMatchingClients, type Segment } from "@/lib/segments";
 import { SegmentsTable } from "@/components/admin/SegmentsTable";
 
 export const dynamic = "force-dynamic";
@@ -13,25 +13,25 @@ export default async function AdminSegmentsPage({
   const { error } = await searchParams;
   const supabase = createAdminClient();
 
-  const [{ data: segments }, customers] = await Promise.all([
+  const [{ data: segments }, clients] = await Promise.all([
     supabase
-      .from("customer_segments")
+      .from("client_segments")
       .select("id, name, condition_type, conditions, created_at")
       .order("created_at", { ascending: true }),
-    getCustomerFacts(supabase),
+    getClientFacts(supabase),
   ]);
 
-  const totalCustomers = customers.length;
+  const totalClients = clients.length;
   const rows = (segments ?? []).map((s) => {
     const segment = s as unknown as Segment;
-    const matching = getMatchingCustomers(customers, segment);
+    const matching = getMatchingClients(clients, segment);
     return {
       id: segment.id,
       name: segment.name,
       created_at: segment.created_at,
       matchCount: matching.length,
-      percentOfCustomers:
-        totalCustomers === 0 ? 0 : Math.round((matching.length / totalCustomers) * 100),
+      percentOfClients:
+        totalClients === 0 ? 0 : Math.round((matching.length / totalClients) * 100),
     };
   });
 
@@ -48,9 +48,9 @@ export default async function AdminSegmentsPage({
       </div>
 
       <p className="mt-2 max-w-lg text-sm text-muted">
-        A segment is a saved filter that matches a set of customers based
-        on simple conditions (e.g. order count, email subscription).
-        Click a segment to see its matching customers.
+        A segment is a saved query that matches a set of clients based on
+        their order history and account data. Click a segment to see its
+        matching clients.
       </p>
 
       {error && (

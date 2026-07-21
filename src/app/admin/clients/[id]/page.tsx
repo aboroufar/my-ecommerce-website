@@ -5,7 +5,7 @@ import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminCustomerDetailPage({
+export default async function AdminClientDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -13,41 +13,41 @@ export default async function AdminCustomerDetailPage({
   const { id } = await params;
   const supabase = createAdminClient();
 
-  const { data: customer } = await supabase
-    .from("customers")
+  const { data: client } = await supabase
+    .from("clients")
     .select("id, email, name, created_at")
     .eq("id", id)
     .single();
 
-  if (!customer) notFound();
+  if (!client) notFound();
 
   const [{ data: orders }, { data: addresses }] = await Promise.all([
     supabase
       .from("orders")
       .select("id, status, total_cents, currency, created_at")
-      .eq("customer_id", id)
+      .eq("client_id", id)
       .order("created_at", { ascending: false }),
     supabase
       .from("addresses")
       .select("id, line1, line2, city, region, postal_code, country, is_default")
-      .eq("customer_id", id),
+      .eq("client_id", id),
   ]);
 
   return (
     <div>
       <Link
-        href="/admin/customers"
+        href="/admin/clients"
         className="text-xs uppercase tracking-[0.15em] text-muted transition-colors hover:text-foreground"
       >
-        ← Customers
+        ← Clients
       </Link>
 
       <h1 className="mt-4 font-display text-2xl text-foreground">
-        {customer.email}
+        {client.email}
       </h1>
       <p className="mt-1 text-sm text-muted">
-        {customer.name && `${customer.name} · `}
-        Joined {new Date(customer.created_at).toLocaleDateString()}
+        {client.name && `${client.name} · `}
+        Joined {new Date(client.created_at).toLocaleDateString()}
       </p>
 
       <div className="mt-8">

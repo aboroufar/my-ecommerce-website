@@ -38,20 +38,20 @@ export async function addAddress(formData: FormData) {
 
   const { line2, region, is_billing, ...rest } = parsed.data;
 
-  // Only one address per customer can be the billing address -- clear any
+  // Only one address per client can be the billing address -- clear any
   // existing one first, same invariant as is_default (see setDefaultAddress).
   if (is_billing) {
     await supabase
       .from("addresses")
       .update({ is_billing: false })
-      .eq("customer_id", user.id);
+      .eq("client_id", user.id);
   }
 
   // Uses the logged-in user's own session (not the admin client) -- RLS
-  // requires customer_id = auth.uid(), which also means this insert simply
-  // fails for anyone trying to write another customer's address.
+  // requires client_id = auth.uid(), which also means this insert simply
+  // fails for anyone trying to write another client's address.
   const { error } = await supabase.from("addresses").insert({
-    customer_id: user.id,
+    client_id: user.id,
     ...rest,
     line2: line2 || null,
     region: region || null,
@@ -87,7 +87,7 @@ export async function updateAddress(id: string, formData: FormData) {
     await supabase
       .from("addresses")
       .update({ is_billing: false })
-      .eq("customer_id", user.id);
+      .eq("client_id", user.id);
   }
 
   const { error } = await supabase
@@ -99,7 +99,7 @@ export async function updateAddress(id: string, formData: FormData) {
       is_billing,
     })
     .eq("id", id)
-    .eq("customer_id", user.id);
+    .eq("client_id", user.id);
 
   if (error) {
     redirect(
@@ -118,19 +118,19 @@ export async function setBillingAddress(id: string) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/account");
 
-  // Only one address per customer should be marked billing -- clear the
+  // Only one address per client should be marked billing -- clear the
   // existing one (if any) before setting the new one, both scoped to
   // the caller's own rows via RLS regardless.
   await supabase
     .from("addresses")
     .update({ is_billing: false })
-    .eq("customer_id", user.id);
+    .eq("client_id", user.id);
 
   await supabase
     .from("addresses")
     .update({ is_billing: true })
     .eq("id", id)
-    .eq("customer_id", user.id);
+    .eq("client_id", user.id);
 
   revalidatePath("/account/addresses");
   redirect("/account/addresses");
@@ -143,19 +143,19 @@ export async function setDefaultAddress(id: string) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/account");
 
-  // Only one address per customer should be marked default -- clear the
+  // Only one address per client should be marked default -- clear the
   // existing default (if any) before setting the new one, both scoped to
   // the caller's own rows via RLS regardless.
   await supabase
     .from("addresses")
     .update({ is_default: false })
-    .eq("customer_id", user.id);
+    .eq("client_id", user.id);
 
   await supabase
     .from("addresses")
     .update({ is_default: true })
     .eq("id", id)
-    .eq("customer_id", user.id);
+    .eq("client_id", user.id);
 
   revalidatePath("/account/addresses");
   redirect("/account/addresses");
@@ -169,12 +169,12 @@ export async function deleteAddress(id: string) {
   if (!user) redirect("/account");
 
   // RLS scopes this to the caller's own rows regardless; the explicit
-  // customer_id match below is just belt-and-suspenders clarity.
+  // client_id match below is just belt-and-suspenders clarity.
   await supabase
     .from("addresses")
     .delete()
     .eq("id", id)
-    .eq("customer_id", user.id);
+    .eq("client_id", user.id);
 
   revalidatePath("/account/addresses");
   redirect("/account/addresses");

@@ -19,6 +19,8 @@ export default async function AdminProductsPage({
     min_price?: string;
     max_price?: string;
     q?: string;
+    vendor?: string | string[];
+    tag?: string | string[];
   }>;
 }) {
   const {
@@ -30,21 +32,26 @@ export default async function AdminProductsPage({
     min_price,
     max_price,
     q,
+    vendor,
+    tag,
   } = await searchParams;
   const supabase = createAdminClient();
 
-  const [{ data: categories }, { data: allProducts }] = await Promise.all([
-    supabase
-      .from("categories")
-      .select("id, name, slug")
-      .order("name", { ascending: true }),
-    supabase
-      .from("products")
-      .select(
-        "id, name, slug, sku, price_cents, currency, status, stock_qty, is_popular, product_images(url, sort_order), product_categories(categories(slug))"
-      )
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: categories }, { data: brands }, { data: tags }, { data: allProducts }] =
+    await Promise.all([
+      supabase
+        .from("categories")
+        .select("id, name, slug")
+        .order("name", { ascending: true }),
+      supabase.from("brands").select("id, name").order("name", { ascending: true }),
+      supabase.from("tags").select("id, name, slug").order("name", { ascending: true }),
+      supabase
+        .from("products")
+        .select(
+          "id, name, slug, sku, price_cents, currency, status, stock_qty, is_popular, brand_id, product_images(url, sort_order), product_categories(categories(slug)), product_tags(tags(slug))"
+        )
+        .order("created_at", { ascending: false }),
+    ]);
 
   const categorySlugs = category
     ? Array.isArray(category)
@@ -52,6 +59,12 @@ export default async function AdminProductsPage({
       : [category]
     : [];
   const matchSlugs = categorySlugs.length > 0 ? new Set(categorySlugs) : null;
+
+  const vendorIds = vendor ? (Array.isArray(vendor) ? vendor : [vendor]) : [];
+  const matchVendorIds = vendorIds.length > 0 ? new Set(vendorIds) : null;
+
+  const tagSlugs = tag ? (Array.isArray(tag) ? tag : [tag]) : [];
+  const matchTagSlugs = tagSlugs.length > 0 ? new Set(tagSlugs) : null;
 
   const minCents = min_price ? Math.round(parseFloat(min_price) * 100) : null;
   const maxCents = max_price ? Math.round(parseFloat(max_price) * 100) : null;
@@ -63,6 +76,13 @@ export default async function AdminProductsPage({
         .map((pc) => pc.categories?.slug)
         .filter((s): s is string => !!s);
       if (!productSlugs.some((s) => matchSlugs.has(s))) return false;
+    }
+    if (matchVendorIds && !(p.brand_id && matchVendorIds.has(p.brand_id))) return false;
+    if (matchTagSlugs) {
+      const productTagSlugs = p.product_tags
+        .map((pt) => pt.tags?.slug)
+        .filter((s): s is string => !!s);
+      if (!productTagSlugs.some((s) => matchTagSlugs.has(s))) return false;
     }
     if (status && p.status !== status) return false;
     if (stock === "in" && p.stock_qty <= 0) return false;
@@ -78,7 +98,15 @@ export default async function AdminProductsPage({
   });
 
   const hasAnyFilter =
-    categorySlugs.length > 0 || status || stock || popular || min_price || max_price || q;
+    categorySlugs.length > 0 ||
+    vendorIds.length > 0 ||
+    tagSlugs.length > 0 ||
+    status ||
+    stock ||
+    popular ||
+    min_price ||
+    max_price ||
+    q;
 
   const rows = products.map((p) => {
     const primaryImage = [...p.product_images].sort(
@@ -111,7 +139,11 @@ export default async function AdminProductsPage({
         </p>
       ) : (
         <div className="mt-8 flex flex-col gap-4">
-          <AdminProductsFilterBar categories={categories ?? []} />
+          <AdminProductsFilterBar
+            categories={categories ?? []}
+            vendors={brands ?? []}
+            tags={tags ?? []}
+          />
           <p className="text-xs text-muted">
             {products.length} of {allProducts.length} product
             {allProducts.length === 1 ? "" : "s"}

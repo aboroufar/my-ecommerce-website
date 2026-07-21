@@ -40,7 +40,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       const { data } = await supabase
         .from("wishlist_items")
         .select("product_id")
-        .eq("customer_id", userId);
+        .eq("client_id", userId);
       setIds(new Set((data ?? []).map((row) => row.product_id)));
       setLoaded(true);
     }

@@ -21,7 +21,7 @@ async function markOrderPaid(
 
   const { data: order, error: orderFetchError } = await supabase
     .from("orders")
-    .select("id, status, customer_id, total_cents, currency")
+    .select("id, status, client_id, total_cents, currency")
     .eq("id", orderId)
     .single();
 
@@ -123,7 +123,7 @@ async function markOrderPaid(
   if (customerEmail) {
     const siteUrl = process.env.SITE_URL;
     const orderUrl =
-      order.customer_id && siteUrl
+      order.client_id && siteUrl
         ? `${siteUrl}/account/orders/${orderId}`
         : undefined;
 

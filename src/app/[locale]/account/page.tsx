@@ -2,7 +2,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { updateProfile } from "@/lib/actions/customers";
+import { updateProfile } from "@/lib/actions/clients";
 import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -30,17 +30,17 @@ export default async function AccountOverviewPage({
   const COUNTRY_LABELS: Record<string, string> = { IT: t("countryItaly") };
 
   const supabase = await createClient();
-  const [{ data: customer }, { data: billingAddress }] = user
+  const [{ data: client }, { data: billingAddress }] = user
     ? await Promise.all([
         supabase
-          .from("customers")
-          .select("name, phone, client_id, date_of_birth, gender")
+          .from("clients")
+          .select("name, phone, display_id, date_of_birth, gender")
           .eq("id", user.id)
           .single(),
         supabase
           .from("addresses")
           .select("line1, line2, city, region, postal_code, country")
-          .eq("customer_id", user.id)
+          .eq("client_id", user.id)
           .eq("is_billing", true)
           .maybeSingle(),
       ])
@@ -73,7 +73,7 @@ export default async function AccountOverviewPage({
           <div className="mt-2 text-sm text-foreground">
             {billingAddress ? (
               <>
-                <p>{customer?.name}</p>
+                <p>{client?.name}</p>
                 <p>
                   {billingAddress.line1}
                   {billingAddress.line2 ? `, ${billingAddress.line2}` : ""}
@@ -100,14 +100,14 @@ export default async function AccountOverviewPage({
 
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
-            {t("customerData")}
+            {t("clientData")}
           </h3>
           {editingProfile ? (
             <form action={updateProfile} className="mt-3 flex max-w-xs flex-col gap-3">
               <input
                 name="name"
                 required
-                defaultValue={customer?.name ?? ""}
+                defaultValue={client?.name ?? ""}
                 placeholder={t("fullNamePlaceholder")}
                 className="border border-line bg-transparent px-3 py-2 text-sm"
               />
@@ -115,7 +115,7 @@ export default async function AccountOverviewPage({
                 name="phone"
                 type="tel"
                 required
-                defaultValue={customer?.phone ?? ""}
+                defaultValue={client?.phone ?? ""}
                 placeholder={t("phonePlaceholder")}
                 className="border border-line bg-transparent px-3 py-2 text-sm"
               />
@@ -125,7 +125,7 @@ export default async function AccountOverviewPage({
                   name="date_of_birth"
                   type="date"
                   required
-                  defaultValue={customer?.date_of_birth ?? ""}
+                  defaultValue={client?.date_of_birth ?? ""}
                   className="border border-line bg-transparent px-3 py-2 text-sm text-foreground"
                 />
               </label>
@@ -134,7 +134,7 @@ export default async function AccountOverviewPage({
                 <select
                   name="gender"
                   required
-                  defaultValue={customer?.gender ?? ""}
+                  defaultValue={client?.gender ?? ""}
                   className="border border-line bg-transparent px-3 py-2 text-sm text-foreground"
                 >
                   <option value="" disabled>
@@ -165,19 +165,19 @@ export default async function AccountOverviewPage({
           ) : (
             <>
               <div className="mt-2 text-sm text-foreground">
-                <p>{customer?.name}</p>
+                <p>{client?.name}</p>
                 <p>{user?.email}</p>
-                {customer?.date_of_birth && (
+                {client?.date_of_birth && (
                   <p>
-                    {formatDate(`${customer.date_of_birth}T00:00:00`, locale, {
+                    {formatDate(`${client.date_of_birth}T00:00:00`, locale, {
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
                     })}
                   </p>
                 )}
-                {customer?.phone && <p>{customer.phone}</p>}
-                {customer?.gender && <p>{GENDER_LABELS[customer.gender] ?? customer.gender}</p>}
+                {client?.phone && <p>{client.phone}</p>}
+                {client?.gender && <p>{GENDER_LABELS[client.gender] ?? client.gender}</p>}
               </div>
               <Link
                 href="/account?edit=profile"
@@ -188,10 +188,10 @@ export default async function AccountOverviewPage({
             </>
           )}
 
-          {customer?.client_id && (
+          {client?.display_id && (
             <p className="mt-6 text-sm text-foreground">
-              {t("myCustomerNumber")}{" "}
-              <span className="font-semibold">{customer.client_id}</span>
+              {t("myClientNumber")}{" "}
+              <span className="font-semibold">{client.display_id}</span>
             </p>
           )}
         </div>

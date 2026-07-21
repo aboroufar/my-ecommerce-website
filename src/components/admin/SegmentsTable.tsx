@@ -9,7 +9,7 @@ interface SegmentRow {
   name: string;
   created_at: string;
   matchCount: number;
-  percentOfCustomers: number;
+  percentOfClients: number;
 }
 
 export function SegmentsTable({ segments }: { segments: SegmentRow[] }) {
@@ -35,7 +35,7 @@ export function SegmentsTable({ segments }: { segments: SegmentRow[] }) {
         <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
           <tr>
             <th className="py-2 pl-3 font-medium">Name</th>
-            <th className="py-2 text-right font-medium">% of customers</th>
+            <th className="py-2 text-right font-medium">% of clients</th>
             <th className="py-2 pl-6 font-medium">Created</th>
             <th className="py-2" />
           </tr>
@@ -59,7 +59,7 @@ export function SegmentsTable({ segments }: { segments: SegmentRow[] }) {
                   </Link>
                 </td>
                 <td className="py-3 text-right text-foreground">
-                  {segment.percentOfCustomers}%
+                  {segment.percentOfClients}%
                 </td>
                 <td className="py-3 pl-6 text-muted">
                   Created on{" "}

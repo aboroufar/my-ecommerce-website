@@ -30,9 +30,9 @@ export async function updateProfile(formData: FormData) {
 
   // Uses the logged-in user's own session (not the admin client) -- RLS
   // requires id = auth.uid() for updates, so this simply fails for anyone
-  // trying to write another customer's row.
+  // trying to write another client's row.
   const { error } = await supabase
-    .from("customers")
+    .from("clients")
     .update({ name, phone, date_of_birth, gender })
     .eq("id", user.id);
 

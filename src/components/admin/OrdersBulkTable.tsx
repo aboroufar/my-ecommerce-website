@@ -11,7 +11,7 @@ interface OrderRow {
   total_cents: number;
   currency: string;
   created_at: string;
-  customers: { email: string } | null;
+  clients: { email: string } | null;
 }
 
 /**
@@ -82,7 +82,7 @@ export function OrdersBulkTable({ orders }: { orders: OrderRow[] }) {
               />
             </th>
             <th className="py-2 font-medium">Order</th>
-            <th className="py-2 font-medium">Customer</th>
+            <th className="py-2 font-medium">Client</th>
             <th className="py-2 font-medium">Status</th>
             <th className="py-2 font-medium">Total</th>
             <th className="py-2 font-medium">Date</th>
@@ -104,7 +104,7 @@ export function OrdersBulkTable({ orders }: { orders: OrderRow[] }) {
                 #{order.id.slice(0, 8)}
               </td>
               <td className="py-3 text-foreground">
-                {order.customers?.email ?? (
+                {order.clients?.email ?? (
                   <span className="text-muted">Guest</span>
                 )}
               </td>

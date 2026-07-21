@@ -313,7 +313,7 @@ export default async function AdminSettingsPage({
         </h2>
         <p className="mt-2 max-w-lg text-sm text-muted">
           Anyone listed here can sign in to /admin with a magic link and
-          manage products, orders, and customers.
+          manage products, orders, and clients.
         </p>
 
         {!admins || admins.length === 0 ? (

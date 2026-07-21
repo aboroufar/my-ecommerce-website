@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   // If the shopper is logged in, link the order to their account so it
   // shows up in order history. Guest checkout still works fine -- the
-  // order is simply created with customer_id: null.
+  // order is simply created with client_id: null.
   const authedSupabase = await createClient();
   const {
     data: { user },
@@ -135,10 +135,10 @@ export async function POST(req: NextRequest) {
 
   // Signed-in shoppers must have a complete profile (name, phone, DOB,
   // gender, and a designated billing address) before checking out. Guests
-  // have no customer row at all, so this only applies when user is set.
+  // have no client row at all, so this only applies when user is set.
   if (user) {
     const { data: profile } = await supabase
-      .from("customers")
+      .from("clients")
       .select("name, phone, date_of_birth, gender")
       .eq("id", user.id)
       .single();
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
     const { data: billingAddress } = await supabase
       .from("addresses")
       .select("id")
-      .eq("customer_id", user.id)
+      .eq("client_id", user.id)
       .eq("is_billing", true)
       .maybeSingle();
 
@@ -212,7 +212,7 @@ export async function POST(req: NextRequest) {
       status: "pending",
       total_cents: totalCents,
       currency,
-      customer_id: user?.id ?? null,
+      client_id: user?.id ?? null,
       discount_code: null,
       discount_cents: 0,
       shipping_cents: shippingCents,
@@ -266,7 +266,7 @@ export async function POST(req: NextRequest) {
     const { data: defaultAddress } = await supabase
       .from("addresses")
       .select("line1, line2, city, region, postal_code, country")
-      .eq("customer_id", user.id)
+      .eq("client_id", user.id)
       .order("is_default", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(1)

@@ -13,7 +13,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/admin/products", label: "Products", icon: TagIcon },
   { href: "/admin/orders", label: "Orders", icon: InboxIcon },
-  { href: "/admin/customers", label: "Customers", icon: PersonIcon },
+  { href: "/admin/clients", label: "Clients", icon: PersonIcon },
   { href: "/admin/segments", label: "Segments", icon: SegmentIcon },
   { href: "/admin/reviews", label: "Reviews", icon: StarIcon },
   { href: "/admin/categories", label: "Categories", icon: FolderIcon },
