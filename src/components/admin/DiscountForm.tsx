@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ProductChecklist, type ProductOption } from "./ProductChecklist";
+import { DiscountTagChecklist } from "./DiscountTagChecklist";
 import type { DiscountConfig, DiscountType, Scope } from "@/lib/discounts";
 
 interface CategoryOption {
@@ -26,6 +27,7 @@ interface DiscountFormValues {
   starts_at?: string;
   expires_at?: string | null;
   config?: DiscountConfig;
+  tagIds?: string[];
 }
 
 // Splits an ISO timestamp into separate <input type="date">/<input
@@ -174,6 +176,9 @@ export function DiscountForm({
   const [method, setMethod] = useState<"code" | "automatic">(initialConfig?.method ?? "code");
   const [code, setCode] = useState(initialValues?.code ?? initialConfig?.code ?? "");
   const [active, setActive] = useState(initialValues?.active ?? true);
+  const [assignedTagIds, setAssignedTagIds] = useState<Set<string>>(
+    new Set(initialValues?.tagIds ?? [])
+  );
 
   const initialStart = splitDateTime(initialValues?.starts_at);
   const [startDate, setStartDate] = useState(
@@ -339,6 +344,7 @@ export function DiscountForm({
     <form action={action} className="flex max-w-2xl flex-col gap-6">
       <input type="hidden" name="discount_type" value={discountType} />
       <input type="hidden" name="configJson" value={configJson} />
+      <input type="hidden" name="tagIdsJson" value={JSON.stringify([...assignedTagIds])} />
 
       <section className="border border-line bg-surface p-4">
         <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Method</h2>
@@ -389,6 +395,17 @@ export function DiscountForm({
             />
           </div>
         )}
+      </section>
+
+      <section className="border border-line bg-surface p-4">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Tags</h2>
+        <p className="mt-2 text-sm text-muted">
+          Organize and filter your discounts list -- unrelated to which
+          products this discount applies to.
+        </p>
+        <div className="mt-3">
+          <DiscountTagChecklist tags={tags} selectedIds={assignedTagIds} onChange={setAssignedTagIds} />
+        </div>
       </section>
 
       {discountType === "free_shipping" && (

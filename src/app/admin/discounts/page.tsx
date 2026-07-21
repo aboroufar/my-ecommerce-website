@@ -13,8 +13,13 @@ export default async function AdminDiscountsPage({
 
   const { data: codes } = await supabase
     .from("discount_codes")
-    .select("id, code, discount_type, config, active, expires_at")
+    .select("id, code, discount_type, config, active, expires_at, discount_tags(tags(name))")
     .order("created_at", { ascending: false });
+
+  const rows = (codes ?? []).map((c) => ({
+    ...c,
+    tags: c.discount_tags.map((dt) => dt.tags?.name).filter((n): n is string => !!n),
+  }));
 
   return (
     <div>
@@ -32,7 +37,7 @@ export default async function AdminDiscountsPage({
       )}
 
       <div className="mt-8">
-        <DiscountCodesManager codes={codes ?? []} />
+        <DiscountCodesManager codes={rows} />
       </div>
     </div>
   );

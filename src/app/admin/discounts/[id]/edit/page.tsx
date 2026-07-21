@@ -23,6 +23,7 @@ export default async function EditDiscountPage({
     { data: products },
     { data: segments },
     { data: tags },
+    { data: discountTags },
   ] = await Promise.all([
     supabase
       .from("discount_codes")
@@ -33,6 +34,7 @@ export default async function EditDiscountPage({
     supabase.from("products").select("id, name, sku").order("name", { ascending: true }),
     supabase.from("client_segments").select("id, name").order("name", { ascending: true }),
     supabase.from("tags").select("id, name").order("name", { ascending: true }),
+    supabase.from("discount_tags").select("tag_id").eq("discount_id", id),
   ]);
 
   if (!discount) notFound();
@@ -60,6 +62,7 @@ export default async function EditDiscountPage({
             starts_at: discount.starts_at,
             expires_at: discount.expires_at,
             config: discount.config as unknown as DiscountConfig,
+            tagIds: (discountTags ?? []).map((dt) => dt.tag_id),
           }}
           action={updateDiscountCode.bind(null, id)}
         />

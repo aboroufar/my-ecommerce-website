@@ -12,6 +12,7 @@ interface DiscountCode {
   config: unknown;
   active: boolean;
   expires_at: string | null;
+  tags: string[];
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -46,6 +47,7 @@ export function DiscountCodesManager({ codes }: { codes: DiscountCode[] }) {
               <th className="py-2 font-medium">Code / Method</th>
               <th className="py-2 font-medium">Type</th>
               <th className="py-2 font-medium">Value</th>
+              <th className="py-2 font-medium">Tags</th>
               <th className="py-2 font-medium">Expires</th>
               <th className="py-2 font-medium">Status</th>
               <th className="py-2" />
@@ -66,6 +68,9 @@ export function DiscountCodesManager({ codes }: { codes: DiscountCode[] }) {
                   {TYPE_LABELS[discountCode.discount_type] ?? discountCode.discount_type}
                 </td>
                 <td className="py-3 text-foreground">{formatValue(discountCode)}</td>
+                <td className="py-3 text-muted">
+                  {discountCode.tags.length > 0 ? discountCode.tags.join(", ") : "—"}
+                </td>
                 <td className="py-3 text-muted">
                   {discountCode.expires_at
                     ? new Date(discountCode.expires_at).toLocaleDateString()

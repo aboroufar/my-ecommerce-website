@@ -465,6 +465,36 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_tags: {
+        Row: {
+          discount_id: string
+          tag_id: string
+        }
+        Insert: {
+          discount_id: string
+          tag_id: string
+        }
+        Update: {
+          discount_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_tags_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       help_categories: {
         Row: {
           created_at: string

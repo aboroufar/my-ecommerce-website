@@ -25,7 +25,35 @@ const discountFormSchema = z.object({
     .string()
     .optional()
     .transform((v) => (v ? v : null)),
+  tagIdsJson: z.string().optional(),
 });
+
+function parseTagIds(tagIdsJson: string | undefined): string[] {
+  if (!tagIdsJson) return [];
+  try {
+    const raw = JSON.parse(tagIdsJson);
+    return Array.isArray(raw) ? raw.filter((v): v is string => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+// Organizational tags on the discount record itself (for filtering the
+// Discounts list) -- distinct from config.appliesTo's tag scoping, which
+// controls which products a discount's effect applies to. Same
+// delete-then-insert pattern as setProductTags in src/lib/actions/tags.ts.
+async function syncDiscountTags(
+  supabase: ReturnType<typeof createAdminClient>,
+  discountId: string,
+  tagIds: string[]
+) {
+  await supabase.from("discount_tags").delete().eq("discount_id", discountId);
+  if (tagIds.length > 0) {
+    await supabase
+      .from("discount_tags")
+      .insert(tagIds.map((tag_id) => ({ discount_id: discountId, tag_id })));
+  }
+}
 
 function parseConfig(configJson: string): DiscountConfig | null {
   try {
@@ -124,19 +152,27 @@ export async function createDiscountCode(formData: FormData) {
 
   const legacy = legacyTypeAndValue(config);
   const supabase = createAdminClient();
-  const { error } = await supabase.from("discount_codes").insert({
-    code: config.code ?? config.discount_type,
-    discount_type: config.discount_type,
-    config: config as unknown as Json,
-    type: legacy.type,
-    value: legacy.value,
-    active: parsed.data.active,
-    starts_at: parsed.data.starts_at,
-    expires_at: parsed.data.expires_at,
-    ...stripeIds,
-  });
+  const { data: inserted, error } = await supabase
+    .from("discount_codes")
+    .insert({
+      code: config.code ?? config.discount_type,
+      discount_type: config.discount_type,
+      config: config as unknown as Json,
+      type: legacy.type,
+      value: legacy.value,
+      active: parsed.data.active,
+      starts_at: parsed.data.starts_at,
+      expires_at: parsed.data.expires_at,
+      ...stripeIds,
+    })
+    .select("id")
+    .single();
 
-  if (error) redirect(`/admin/discounts/new?error=${encodeURIComponent(error.message)}`);
+  if (error || !inserted) {
+    redirect(`/admin/discounts/new?error=${encodeURIComponent(error?.message ?? "Could not create discount")}`);
+  }
+
+  await syncDiscountTags(supabase, inserted.id, parseTagIds(parsed.data.tagIdsJson));
 
   revalidatePath("/admin/discounts");
   redirect("/admin/discounts");
@@ -198,6 +234,8 @@ export async function updateDiscountCode(id: string, formData: FormData) {
     .eq("id", id);
 
   if (error) redirect(`/admin/discounts/${id}/edit?error=${encodeURIComponent(error.message)}`);
+
+  await syncDiscountTags(supabase, id, parseTagIds(parsed.data.tagIdsJson));
 
   revalidatePath("/admin/discounts");
   revalidatePath(`/admin/discounts/${id}/edit`);
