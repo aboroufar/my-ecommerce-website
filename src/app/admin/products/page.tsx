@@ -41,7 +41,7 @@ export default async function AdminProductsPage({
     supabase
       .from("products")
       .select(
-        "id, name, slug, sku, price_cents, currency, status, stock_qty, is_popular, product_categories(categories(slug))"
+        "id, name, slug, sku, price_cents, currency, status, stock_qty, is_popular, product_images(url, sort_order), product_categories(categories(slug))"
       )
       .order("created_at", { ascending: false }),
   ]);
@@ -79,6 +79,13 @@ export default async function AdminProductsPage({
 
   const hasAnyFilter =
     categorySlugs.length > 0 || status || stock || popular || min_price || max_price || q;
+
+  const rows = products.map((p) => {
+    const primaryImage = [...p.product_images].sort(
+      (a, b) => a.sort_order - b.sort_order
+    )[0];
+    return { ...p, image_url: primaryImage?.url ?? null };
+  });
 
   return (
     <div>
@@ -127,7 +134,7 @@ export default async function AdminProductsPage({
                 )}
               </p>
             ) : (
-              <ProductsBulkTable products={products} />
+              <ProductsBulkTable products={rows} />
             )}
           </div>
         </div>

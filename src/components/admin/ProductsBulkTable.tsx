@@ -13,6 +13,7 @@ interface ProductRow {
   price_cents: number;
   currency: string;
   stock_qty: number;
+  image_url: string | null;
 }
 
 /**
@@ -84,79 +85,87 @@ export function ProductsBulkTable({ products }: { products: ProductRow[] }) {
         </div>
       )}
 
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
-          <tr>
-            <th className="w-8 py-2">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                onChange={toggleAll}
-                aria-label="Select all products"
-              />
-            </th>
-            <th className="py-2 font-medium">Name</th>
-            <th className="py-2 font-medium">SKU</th>
-            <th className="py-2 font-medium">Status</th>
-            <th className="py-2 font-medium">Price</th>
-            <th className="py-2 text-right font-medium">Unavailable</th>
-            <th className="py-2 text-right font-medium">Committed</th>
-            <th className="py-2 text-right font-medium">Available</th>
-            <th className="py-2 text-right font-medium">On hand</th>
-            <th className="py-2 text-right font-medium">Incoming</th>
-            <th className="py-2" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-line">
-          {products.map((p) => (
-            <tr key={p.id}>
-              <td className="py-3">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-left text-sm">
+          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
+            <tr>
+              <th className="w-8 py-2">
                 <input
                   type="checkbox"
-                  checked={selected.has(p.id)}
-                  onChange={() => toggle(p.id)}
-                  aria-label={`Select ${p.name}`}
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label="Select all products"
                 />
-              </td>
-              <td className="py-3 text-foreground">{p.name}</td>
-              <td className="py-3 text-muted">{p.sku || "No SKU"}</td>
-              <td className="py-3">
-                <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-medium capitalize ${
-                    p.status === "active"
-                      ? "text-muted"
-                      : p.status === "draft"
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-surface text-muted"
-                  }`}
-                >
-                  {p.status}
-                </span>
-              </td>
-              <td className="py-3 text-foreground">
-                {formatPrice(p.price_cents, p.currency)}
-              </td>
-              {/* Unavailable/Committed/Incoming have no backing data yet --
-                  this app tracks a single stock_qty per product, not
-                  reservations, multi-location counts, or inbound shipments.
-                  Available and On hand both reflect that same stock_qty. */}
-              <td className="py-3 text-right text-foreground">0</td>
-              <td className="py-3 text-right text-foreground">0</td>
-              <td className="py-3 text-right text-foreground">{p.stock_qty}</td>
-              <td className="py-3 text-right text-foreground">{p.stock_qty}</td>
-              <td className="py-3 text-right text-foreground">0</td>
-              <td className="py-3 text-right">
-                <Link
-                  href={`/admin/products/${p.id}/edit`}
-                  className="text-accent underline underline-offset-4"
-                >
-                  Edit
-                </Link>
-              </td>
+              </th>
+              <th className="py-2 pl-3 font-medium" colSpan={2}>
+                Product
+              </th>
+              <th className="py-2 font-medium">SKU</th>
+              <th className="py-2 font-medium">Status</th>
+              <th className="py-2 font-medium">Price</th>
+              <th className="py-2 text-right font-medium">Stock</th>
+              <th className="py-2" />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {products.map((p) => (
+              <tr key={p.id}>
+                <td className="py-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(p.id)}
+                    onChange={() => toggle(p.id)}
+                    aria-label={`Select ${p.name}`}
+                  />
+                </td>
+                <td className="w-12 py-3 pl-3">
+                  {p.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- admin-only thumbnail
+                    <img
+                      src={p.image_url}
+                      alt=""
+                      className="h-10 w-10 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded bg-surface text-[9px] text-muted">
+                      No photo
+                    </div>
+                  )}
+                </td>
+                <td className="whitespace-nowrap py-3 pl-2 text-foreground">{p.name}</td>
+                <td className="whitespace-nowrap py-3 text-muted">{p.sku || "No SKU"}</td>
+                <td className="whitespace-nowrap py-3">
+                  <span
+                    className={`rounded px-1.5 py-0.5 text-xs font-medium capitalize ${
+                      p.status === "active"
+                        ? "text-muted"
+                        : p.status === "draft"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-surface text-muted"
+                    }`}
+                  >
+                    {p.status}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap py-3 text-foreground">
+                  {formatPrice(p.price_cents, p.currency)}
+                </td>
+                <td className="whitespace-nowrap py-3 text-right text-foreground">
+                  {p.stock_qty}
+                </td>
+                <td className="whitespace-nowrap py-3 pl-3 text-right">
+                  <Link
+                    href={`/admin/products/${p.id}/edit`}
+                    className="text-accent underline underline-offset-4"
+                  >
+                    Edit
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
