@@ -24,6 +24,17 @@ interface DiscountFormValues {
 
 const VALUE_TYPE_LABELS = { percent: "Percentage", fixed: "Fixed amount" } as const;
 
+// Uppercase alphanumeric, no ambiguous characters (no O/0/I/1), matching
+// the style of generate_client_id() used elsewhere in this codebase.
+const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function generateDiscountCode(length = 12): string {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+  }
+  return result;
+}
+
 function ScopePicker({
   scope,
   onChange,
@@ -263,13 +274,27 @@ export function DiscountForm({
           </button>
         </div>
         {method === "code" && (
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            required
-            placeholder="e.g. SAVE10"
-            className="mt-3 w-full max-w-xs border border-line bg-background px-3 py-2 text-sm uppercase"
-          />
+          <div className="mt-3 max-w-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted">
+                Discount code
+              </span>
+              <button
+                type="button"
+                onClick={() => setCode(generateDiscountCode())}
+                className="text-xs text-accent-text underline underline-offset-4 hover:opacity-80"
+              >
+                Generate random code
+              </button>
+            </div>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              required
+              placeholder="e.g. SAVE10"
+              className="mt-1.5 w-full border border-line bg-background px-3 py-2 text-sm uppercase"
+            />
+          </div>
         )}
       </section>
 
