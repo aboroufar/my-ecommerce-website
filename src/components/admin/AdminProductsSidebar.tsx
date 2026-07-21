@@ -179,7 +179,7 @@ export function AdminProductsSidebar({ categories }: { categories: Category[] })
 
       <div>
         <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
-          Price (USD)
+          Price (EUR)
         </h3>
         <form onSubmit={handlePriceSubmit} className="mt-2 flex items-center gap-2">
           <input
