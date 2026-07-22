@@ -26,6 +26,7 @@ export function MagicLinkForm({
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle"
   );
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +38,14 @@ export function MagicLinkForm({
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
-    setStatus(error ? "error" : "sent");
+    if (error) {
+      console.error("signInWithOtp failed:", error);
+      setErrorDetail(error.message);
+      setStatus("error");
+    } else {
+      setErrorDetail(null);
+      setStatus("sent");
+    }
   }
 
   return (
@@ -69,6 +77,11 @@ export function MagicLinkForm({
           {status === "error" && (
             <p className="text-sm text-red-700">
               {errorText}
+              {errorDetail && (
+                <span className="mt-1 block text-xs text-red-500">
+                  {errorDetail}
+                </span>
+              )}
             </p>
           )}
         </form>
