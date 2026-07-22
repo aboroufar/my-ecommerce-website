@@ -388,7 +388,9 @@ export type Database = {
           id: string
           name: string | null
           phone: string | null
+          sms_marketing_consent: boolean
           stripe_customer_id: string | null
+          whatsapp_marketing_consent: boolean
         }
         Insert: {
           created_at?: string
@@ -399,7 +401,9 @@ export type Database = {
           id: string
           name?: string | null
           phone?: string | null
+          sms_marketing_consent?: boolean
           stripe_customer_id?: string | null
+          whatsapp_marketing_consent?: boolean
         }
         Update: {
           created_at?: string
@@ -410,7 +414,9 @@ export type Database = {
           id?: string
           name?: string | null
           phone?: string | null
+          sms_marketing_consent?: boolean
           stripe_customer_id?: string | null
+          whatsapp_marketing_consent?: boolean
         }
         Relationships: []
       }

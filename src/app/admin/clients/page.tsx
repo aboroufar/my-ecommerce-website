@@ -63,7 +63,15 @@ export default async function AdminClientsPage({
     <div>
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl text-foreground">Clients</h1>
-        <ClientSegmentFilter segments={segments ?? []} activeSegmentId={segmentId} />
+        <div className="flex items-center gap-4">
+          <ClientSegmentFilter segments={segments ?? []} activeSegmentId={segmentId} />
+          <Link
+            href="/admin/clients/new"
+            className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+          >
+            Add client
+          </Link>
+        </div>
       </div>
 
       {activeSegment && (

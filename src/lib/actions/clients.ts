@@ -4,6 +4,18 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getAdminUser } from "@/lib/auth";
+
+/**
+ * Every action here re-checks admin auth itself rather than relying solely
+ * on the layout guard -- server actions are callable directly over the
+ * network, so the layout's redirect alone isn't enough protection.
+ */
+async function requireAdmin() {
+  const user = await getAdminUser();
+  if (!user) redirect("/admin");
+}
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -42,4 +54,113 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath("/account");
   redirect("/account?saved=1");
+}
+
+const newClientSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("A valid email is required"),
+  phone: z.string().optional().default(""),
+  email_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  sms_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  whatsapp_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  address_country: z.string().optional().default(""),
+  address_line1: z.string().optional().default(""),
+  address_line2: z.string().optional().default(""),
+  address_city: z.string().optional().default(""),
+  address_postal_code: z.string().optional().default(""),
+  address_region: z.string().optional().default(""),
+});
+
+/**
+ * Admin-created clients get a real (unconfirmed) Supabase Auth account
+ * tied to their email -- same identity model as a self-registered
+ * customer, since clients.id is a foreign key to auth.users(id) and every
+ * write path in this app (RLS policies, order/segment lookups) assumes
+ * that relationship holds. The customer can later sign in themselves via
+ * magic link using this email; no password is set here.
+ *
+ * handle_new_user() already inserts a bare clients row (id, email,
+ * display_id) the moment the auth user is created -- this action updates
+ * that row with the rest of the form fields rather than inserting a
+ * second one.
+ */
+export async function createClientAccount(formData: FormData) {
+  await requireAdmin();
+
+  const parsed = newClientSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(`/admin/clients/new?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
+  }
+
+  const {
+    first_name,
+    last_name,
+    email,
+    phone,
+    email_marketing_consent,
+    sms_marketing_consent,
+    whatsapp_marketing_consent,
+    address_country,
+    address_line1,
+    address_line2,
+    address_city,
+    address_postal_code,
+    address_region,
+  } = parsed.data;
+
+  const supabase = createAdminClient();
+
+  const { data: created, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    email_confirm: false,
+  });
+
+  if (authError || !created.user) {
+    const message =
+      authError?.code === "email_exists"
+        ? "A client with this email already exists."
+        : (authError?.message ?? "Could not create the client account.");
+    redirect(`/admin/clients/new?error=${encodeURIComponent(message)}`);
+  }
+
+  const clientId = created.user.id;
+  const name = `${first_name} ${last_name}`.trim();
+
+  const { error: updateError } = await supabase
+    .from("clients")
+    .update({
+      name,
+      phone: phone || null,
+      sms_marketing_consent,
+      whatsapp_marketing_consent,
+    })
+    .eq("id", clientId);
+
+  if (updateError) {
+    redirect(`/admin/clients/new?error=${encodeURIComponent(updateError.message)}`);
+  }
+
+  if (email_marketing_consent) {
+    // Same list customer-facing newsletter signup writes to -- unique
+    // constraint on email means a 23505 here is a harmless no-op, not an
+    // error worth surfacing.
+    await supabase.from("newsletter_subscribers").insert({ email: email.toLowerCase() });
+  }
+
+  if (address_line1 && address_city && address_postal_code && address_country) {
+    await supabase.from("addresses").insert({
+      client_id: clientId,
+      country: address_country,
+      line1: address_line1,
+      line2: address_line2 || null,
+      city: address_city,
+      postal_code: address_postal_code,
+      region: address_region || null,
+      is_default: true,
+    });
+  }
+
+  revalidatePath("/admin/clients");
+  redirect(`/admin/clients/${clientId}`);
 }
