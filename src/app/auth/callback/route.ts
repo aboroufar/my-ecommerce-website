@@ -23,8 +23,25 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Nudge a customer with an incomplete profile (date_of_birth/gender
+      // still null -- the case for every brand-new signup, since sign-up
+      // is email-only now with no other fields collected) to
+      // /account/complete-profile once, right after login. Scoped to
+      // `next` starting with /account so this never fires for the admin
+      // sign-in flow (next=/admin), which has no such concept. Skippable
+      // (the page itself links back to /account), not a hard gate.
+      if (next.startsWith("/account") && !next.startsWith("/account/complete-profile") && data.user) {
+        const { data: client } = await supabase
+          .from("clients")
+          .select("date_of_birth, gender")
+          .eq("id", data.user.id)
+          .single();
+        if (client && !client.date_of_birth && !client.gender) {
+          return NextResponse.redirect(`${origin}/account/complete-profile`);
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
     const redirectUrl = new URL(`${origin}${next}`);

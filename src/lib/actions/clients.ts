@@ -56,6 +56,105 @@ export async function updateProfile(formData: FormData) {
   redirect("/account?saved=1");
 }
 
+const completeProfileSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().min(1, "Phone is required"),
+  date_of_birth: z.string().min(1, "Date of birth is required"),
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say"], {
+    message: "Gender is required",
+  }),
+  email_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  sms_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  whatsapp_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  // Address is optional here -- a customer can finish onboarding without
+  // one and add it later from /account/addresses, same as the admin
+  // "Add client" form treats its own default address block.
+  address_country: z.string().optional().default(""),
+  address_line1: z.string().optional().default(""),
+  address_line2: z.string().optional().default(""),
+  address_city: z.string().optional().default(""),
+  address_postal_code: z.string().optional().default(""),
+  address_region: z.string().optional().default(""),
+});
+
+/**
+ * One-time onboarding form shown right after a customer's first
+ * magic-link login (see /auth/callback's redirect-when-incomplete
+ * check) -- combines updateProfile's fields with marketing consent and
+ * an optional billing address in a single submit, since asking for all
+ * of it across several separate forms would be a worse first-run
+ * experience than one page.
+ */
+export async function completeProfile(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/account");
+
+  const parsed = completeProfileSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(`/account/complete-profile?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
+  }
+
+  const {
+    name,
+    phone,
+    date_of_birth,
+    gender,
+    email_marketing_consent,
+    sms_marketing_consent,
+    whatsapp_marketing_consent,
+    address_country,
+    address_line1,
+    address_line2,
+    address_city,
+    address_postal_code,
+    address_region,
+  } = parsed.data;
+
+  // RLS scopes this update to the caller's own row (id = auth.uid()).
+  const { error } = await supabase
+    .from("clients")
+    .update({
+      name,
+      phone,
+      date_of_birth,
+      gender,
+      sms_marketing_consent,
+      whatsapp_marketing_consent,
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    redirect(`/account/complete-profile?error=${encodeURIComponent(error.message)}`);
+  }
+
+  if (email_marketing_consent && user.email) {
+    // Same list the storefront's newsletter signup and admin "Add client"
+    // form write to -- unique constraint on email means a 23505 here is
+    // a harmless no-op, not an error worth surfacing.
+    await supabase.from("newsletter_subscribers").insert({ email: user.email.toLowerCase() });
+  }
+
+  if (address_line1 && address_city && address_postal_code && address_country) {
+    await supabase.from("addresses").insert({
+      client_id: user.id,
+      country: address_country,
+      line1: address_line1,
+      line2: address_line2 || null,
+      city: address_city,
+      postal_code: address_postal_code,
+      region: address_region || null,
+      is_default: true,
+      is_billing: true,
+    });
+  }
+
+  revalidatePath("/account");
+  redirect("/account?saved=1");
+}
+
 const newClientSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),

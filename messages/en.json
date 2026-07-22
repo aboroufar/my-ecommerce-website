@@ -134,7 +134,17 @@
     "newPasswordPlaceholder": "At least 6 characters",
     "saving": "Saving…",
     "saveNewPassword": "Save new password",
-    "wishlistEmpty": "Nothing saved yet. Tap the heart on any product to add it here."
+    "wishlistEmpty": "Nothing saved yet. Tap the heart on any product to add it here.",
+    "completeProfileTitle": "Complete your profile",
+    "completeProfileIntro": "A few more details help us serve you better.",
+    "marketingPreferences": "Marketing preferences",
+    "marketingEmail": "I agree to receive marketing emails.",
+    "marketingSms": "I agree to receive SMS marketing text messages.",
+    "marketingWhatsapp": "I agree to receive WhatsApp marketing messages.",
+    "marketingConsentNotice": "You can change these preferences at any time.",
+    "addBillingAddress": "Billing address (optional)",
+    "skipForNow": "Skip for now",
+    "finish": "Finish"
   },
   "checkout": {
     "thankYou": "Thank you — order confirmed.",
