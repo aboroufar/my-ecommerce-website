@@ -112,10 +112,8 @@ export function AddressAutocompleteInput({
         });
         setReady(true);
       })
-      .catch(() => {
-        // SDK failed to load (bad key, network, ad blocker) -- the field
-        // silently stays a plain text input, no error surfaced to the
-        // admin since a default address is optional here anyway.
+      .catch((err) => {
+        console.error("[AddressAutocomplete] failed to load Google Maps SDK:", err);
       });
 
     return () => {
