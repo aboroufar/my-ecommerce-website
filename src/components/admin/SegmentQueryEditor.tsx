@@ -15,26 +15,41 @@ import {
 const KEYWORD_PATTERN = /^(FROM|SHOW|WHERE|AND|ORDER BY)\b/i;
 const OPERATOR_PATTERN = /(>=|<=|!=|=|>|<)/g;
 
-/** Colors line-prefix keywords and operators; everything else is left as
- * plain text. Not a real lexer -- the DSL is 5 fixed line shapes, so a
- * per-line regex pass is enough. */
-function highlightLine(line: string): { __html: string } {
-  const escaped = line
+function escapeHtml(text: string): string {
+  return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
 
-  const keywordMatch = escaped.match(KEYWORD_PATTERN);
-  let html = escaped;
-  if (keywordMatch) {
-    html =
-      `<span class="text-accent font-semibold">${keywordMatch[0]}</span>` +
-      escaped.slice(keywordMatch[0].length);
+/** Colors line-prefix keywords and operators; everything else is left as
+ * plain text. Not a real lexer -- the DSL is 5 fixed line shapes, so a
+ * per-line regex pass is enough. Both the keyword split and the operator
+ * split happen on raw (unescaped) text, then each resulting piece is
+ * escaped individually before being wrapped in a span -- escaping first
+ * and matching second would corrupt multi-char operators like ">=" (the
+ * ">" becomes "&gt;" before the regex sees it) and would let the operator
+ * regex match the "<"/">" inside an already-inserted <span> tag. */
+function highlightLine(line: string): { __html: string } {
+  const keywordMatch = line.match(KEYWORD_PATTERN);
+  const keyword = keywordMatch?.[0] ?? "";
+  const rest = line.slice(keyword.length);
+
+  const restParts: string[] = [];
+  let lastIndex = 0;
+  for (const match of rest.matchAll(OPERATOR_PATTERN)) {
+    const index = match.index ?? 0;
+    restParts.push(escapeHtml(rest.slice(lastIndex, index)));
+    restParts.push(`<span class="text-muted">${escapeHtml(match[0])}</span>`);
+    lastIndex = index + match[0].length;
   }
-  html = html.replace(
-    OPERATOR_PATTERN,
-    (match) => `<span class="text-muted">${match}</span>`
-  );
+  restParts.push(escapeHtml(rest.slice(lastIndex)));
+  const restHtml = restParts.join("");
+
+  const html = keyword
+    ? `<span class="text-accent font-semibold">${escapeHtml(keyword)}</span>${restHtml}`
+    : restHtml;
+
   return { __html: html || "​" };
 }
 
