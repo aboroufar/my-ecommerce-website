@@ -70,14 +70,22 @@ export function SegmentsTable({ segments }: { segments: SegmentRow[] }) {
                   })}
                 </td>
                 <td className="py-3 pr-3 text-right">
-                  <form action={deleteSegment.bind(null, segment.id)}>
-                    <button
-                      type="submit"
-                      className="text-xs text-red-700 underline underline-offset-4 hover:text-red-800"
+                  <div className="flex items-center justify-end gap-3">
+                    <Link
+                      href={`/admin/clients?segment=${segment.id}`}
+                      className="text-xs text-foreground underline underline-offset-4"
                     >
-                      Delete
-                    </button>
-                  </form>
+                      View members
+                    </Link>
+                    <form action={deleteSegment.bind(null, segment.id)}>
+                      <button
+                        type="submit"
+                        className="text-xs text-red-700 underline underline-offset-4 hover:text-red-800"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))

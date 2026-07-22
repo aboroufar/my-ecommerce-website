@@ -191,12 +191,6 @@ function matchesCondition(client: ClientFacts, condition: SegmentCondition): boo
  * to that category. Matches Shopify's own segment behavior.
  */
 export function matchesSegment(client: ClientFacts, segment: Segment): boolean {
-  if (segment.condition_type === "abandoned_checkout") {
-    // No server-side cart/checkout tracking exists yet (see the migration
-    // comment) -- this segment type always matches nobody until that data
-    // exists to evaluate against.
-    return false;
-  }
   return segment.conditions.every((c) => matchesCondition(client, c));
 }
 

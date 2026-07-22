@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPrice } from "@/lib/format";
+import { getClientFacts, getMatchingClients, type Segment } from "@/lib/segments";
+import { ClientSegmentFilter } from "@/components/admin/ClientSegmentFilter";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminClientsPage() {
+export default async function AdminClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ segment?: string }>;
+}) {
+  const { segment: segmentId } = await searchParams;
   const supabase = createAdminClient();
 
-  const [{ data: clients }, { data: orders }] = await Promise.all([
+  const [{ data: clients }, { data: orders }, { data: segments }] = await Promise.all([
     supabase
       .from("clients")
       .select("id, email, name, created_at")
@@ -19,6 +26,10 @@ export default async function AdminClientsPage() {
       .select("client_id, total_cents, currency, status")
       .not("client_id", "is", null)
       .in("status", ["paid", "fulfilled", "refunded"]),
+    supabase
+      .from("client_segments")
+      .select("id, name, condition_type, conditions, created_at")
+      .order("name", { ascending: true }),
   ]);
 
   const statsByClient = new Map<
@@ -37,12 +48,38 @@ export default async function AdminClientsPage() {
     statsByClient.set(order.client_id, existing);
   }
 
+  const activeSegment = (segments ?? []).find((s) => s.id === segmentId) as
+    | Segment
+    | undefined;
+
+  let visibleClients = clients ?? [];
+  if (activeSegment) {
+    const facts = await getClientFacts(supabase);
+    const matchingIds = new Set(getMatchingClients(facts, activeSegment).map((c) => c.id));
+    visibleClients = visibleClients.filter((c) => matchingIds.has(c.id));
+  }
+
   return (
     <div>
-      <h1 className="font-display text-2xl text-foreground">Clients</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl text-foreground">Clients</h1>
+        <ClientSegmentFilter segments={segments ?? []} activeSegmentId={segmentId} />
+      </div>
 
-      {!clients || clients.length === 0 ? (
-        <p className="mt-10 text-sm text-muted">No clients yet.</p>
+      {activeSegment && (
+        <p className="mt-2 text-sm text-muted">
+          Showing clients in <span className="font-medium text-foreground">{activeSegment.name}</span>{" "}
+          ({visibleClients.length} of {clients?.length ?? 0}) --{" "}
+          <Link href="/admin/clients" className="underline underline-offset-4 hover:text-foreground">
+            clear filter
+          </Link>
+        </p>
+      )}
+
+      {!visibleClients || visibleClients.length === 0 ? (
+        <p className="mt-10 text-sm text-muted">
+          {activeSegment ? "No clients match this segment." : "No clients yet."}
+        </p>
       ) : (
         <table className="mt-8 w-full text-left text-sm">
           <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
@@ -55,7 +92,7 @@ export default async function AdminClientsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {clients.map((client) => {
+            {visibleClients.map((client) => {
               const stats = statsByClient.get(client.id);
               return (
                 <tr key={client.id}>

@@ -57,14 +57,6 @@ export default async function SegmentDetailPage({
         </p>
       )}
 
-      {segment.condition_type === "abandoned_checkout" && (
-        <p className="mt-4 max-w-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          This segment has no matches yet -- abandoned checkouts aren&apos;t
-          tracked server-side in this store, so this segment is a
-          placeholder until that data exists.
-        </p>
-      )}
-
       <div className="mt-8 max-w-2xl">
         <SegmentQueryEditor
           clients={clients}
