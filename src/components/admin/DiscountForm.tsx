@@ -230,6 +230,14 @@ export function DiscountForm({
   const [getValue, setGetValue] = useState(
     (initialConfig?.discount_type === "buy_x_get_y" && initialConfig.get.value) || 100
   );
+  const [allocationLimitEnabled, setAllocationLimitEnabled] = useState(
+    (initialConfig?.discount_type === "buy_x_get_y" &&
+      initialConfig.get.allocationLimit !== undefined) ??
+      false
+  );
+  const [allocationLimit, setAllocationLimit] = useState(
+    (initialConfig?.discount_type === "buy_x_get_y" && initialConfig.get.allocationLimit) || 1
+  );
 
   const [eligibilityScope, setEligibilityScope] = useState<"all" | "segments">(
     initialConfig?.eligibility.scope ?? "all"
@@ -308,7 +316,13 @@ export function DiscountForm({
       config = {
         discount_type: "buy_x_get_y",
         buy: { scope: buyScope, requirement: buyRequirement },
-        get: { scope: getScope, quantity: getQuantity, valueType: getValueType, value: getValue },
+        get: {
+          scope: getScope,
+          quantity: getQuantity,
+          valueType: getValueType,
+          value: getValue,
+          allocationLimit: allocationLimitEnabled ? allocationLimit : undefined,
+        },
         ...shared,
       };
     }
@@ -334,6 +348,8 @@ export function DiscountForm({
     buyRequirementType,
     buyAmountEuros,
     buyQuantity,
+    allocationLimitEnabled,
+    allocationLimit,
     getScope,
     getQuantity,
     getValueType,
@@ -603,6 +619,23 @@ export function DiscountForm({
                   </div>
                 )}
               </div>
+              <label className="mt-3 flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={allocationLimitEnabled}
+                  onChange={(e) => setAllocationLimitEnabled(e.target.checked)}
+                />
+                Set a maximum number of uses per order
+              </label>
+              {allocationLimitEnabled && (
+                <input
+                  type="number"
+                  min={1}
+                  value={allocationLimit}
+                  onChange={(e) => setAllocationLimit(parseInt(e.target.value, 10) || 1)}
+                  className="ml-6 mt-2 w-32 border border-line bg-background px-2.5 py-1.5 text-sm"
+                />
+              )}
             </div>
           </div>
         </section>

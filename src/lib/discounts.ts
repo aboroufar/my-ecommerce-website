@@ -98,6 +98,12 @@ export type DiscountConfig =
         quantity: number;
         valueType: "percent" | "fixed" | "free";
         value: number;
+        // Caps how many times the buy/get pairing can repeat within a
+        // single order (Shopify calls this "Allocation limit" / "Set a
+        // maximum number of uses per order"). Undefined means unlimited
+        // repetitions -- as many times as the cart's buy-condition
+        // quantity allows.
+        allocationLimit?: number;
       };
     });
 
@@ -174,6 +180,7 @@ export const discountConfigSchema = z
         quantity: z.number().int().positive(),
         valueType: z.enum(["percent", "fixed", "free"]),
         value: z.number().nonnegative(),
+        allocationLimit: z.number().int().positive().optional(),
       }),
       ...sharedFieldsSchema,
     }),
@@ -330,33 +337,95 @@ export function evaluateDiscountEligibility(
   }
 
   // buy_x_get_y: the buy condition (minimum quantity or minimum purchase
-  // amount within buy.scope) gates eligibility; the discount then applies
-  // to the cheapest get.quantity units in get.scope. When the buy
-  // requirement is quantity-based, that many units are reserved as
-  // "bought" first (most-expensive-first, so the discount targets the
-  // cheapest remaining units -- standard, customer-favorable BXGY
-  // behavior) so a unit can't count as both "buy" and "get". An
-  // amount-based buy requirement has no natural unit count to reserve,
-  // so every get.scope-matching unit remains eligible for the discount.
+  // amount within buy.scope) gates eligibility. The buy/get pairing
+  // repeats as many times as the cart allows -- e.g. "buy 2 get 1" with
+  // 6 qualifying items repeats 3 times, unless capped by
+  // get.allocationLimit ("maximum number of uses per order"). Units are
+  // expanded into a single per-unit pool (buy.requirement.type ===
+  // "quantity" only -- an amount-based buy requirement has no natural
+  // unit count to divide into repetitions, so it's always exactly one
+  // repetition once met, still subject to allocationLimit as a no-op at
+  // 1). A unit matching BOTH buy and get scope is only ever counted once
+  // -- reserved as "bought" first (most-expensive-first, so the discount
+  // targets the cheapest remaining units, standard customer-favorable
+  // BXGY behavior) -- so overlapping scopes (or fully identical ones)
+  // correctly can't double-spend the same units across both roles.
   if (!checkBuyRequirement(config.buy.requirement, config.buy.scope, context)) {
     return { eligible: false, reason: "Buy requirement not met" };
   }
 
-  const getCandidateUnits: number[] = [];
-  for (const line of context.cartLines) {
-    if (!matchesScope(config.get.scope, line)) continue;
-    for (let i = 0; i < line.quantity; i++) getCandidateUnits.push(line.unitPriceCents);
-  }
+  let repetitions = 1;
+  let discountableUnits: number[] = [];
 
-  let discountableUnits = getCandidateUnits;
   if (config.buy.requirement.type === "quantity") {
-    getCandidateUnits.sort((a, b) => b - a);
-    discountableUnits = getCandidateUnits.slice(config.buy.requirement.minQuantity);
-  }
-  discountableUnits.sort((a, b) => a - b);
-  const discountedUnits = discountableUnits.slice(0, config.get.quantity);
+    const buyMinQuantity = config.buy.requirement.minQuantity;
 
-  if (discountedUnits.length === 0) {
+    // One entry per unit in the cart, tagged with which role(s) it can
+    // fill. A unit matching both scopes can fill either role but not both
+    // at once.
+    const units: { priceCents: number; canBuy: boolean; canGet: boolean }[] = [];
+    for (const line of context.cartLines) {
+      const canBuy = matchesScope(config.buy.scope, line);
+      const canGet = matchesScope(config.get.scope, line);
+      if (!canBuy && !canGet) continue;
+      for (let i = 0; i < line.quantity; i++) {
+        units.push({ priceCents: line.unitPriceCents, canBuy, canGet });
+      }
+    }
+
+    const buyPoolQty = units.filter((u) => u.canBuy).length;
+    const getPoolQty = units.filter((u) => u.canGet).length;
+    const repsFromBuyPool = Math.floor(buyPoolQty / buyMinQuantity);
+    const repsFromGetPool = Math.floor(getPoolQty / config.get.quantity);
+    repetitions = Math.min(repsFromBuyPool, repsFromGetPool || repsFromBuyPool);
+    // When buy/get scopes overlap, the same units compete for both roles,
+    // so also cap by how many complete (buy + get) groups the combined
+    // pool can actually supply.
+    const overlapping = units.some((u) => u.canBuy && u.canGet);
+    if (overlapping) {
+      repetitions = Math.min(
+        repetitions,
+        Math.floor(units.length / (buyMinQuantity + config.get.quantity))
+      );
+    }
+    if (config.get.allocationLimit !== undefined) {
+      repetitions = Math.min(repetitions, config.get.allocationLimit);
+    }
+
+    // Reserve buyMinQuantity * repetitions units as "bought" -- prefer
+    // buy-only units first (they can't serve as "get" anyway), then the
+    // most expensive buy-and-get units, so the cheapest shared units
+    // remain available to be discounted.
+    const buyOnly = units.filter((u) => u.canBuy && !u.canGet);
+    const buyAndGet = units.filter((u) => u.canBuy && u.canGet).sort((a, b) => b.priceCents - a.priceCents);
+    const neededBuyUnits = buyMinQuantity * repetitions;
+    const reserved = new Set<(typeof units)[number]>();
+    for (const u of buyOnly) {
+      if (reserved.size >= neededBuyUnits) break;
+      reserved.add(u);
+    }
+    for (const u of buyAndGet) {
+      if (reserved.size >= neededBuyUnits) break;
+      reserved.add(u);
+    }
+
+    discountableUnits = units
+      .filter((u) => u.canGet && !reserved.has(u))
+      .map((u) => u.priceCents);
+  } else {
+    if (config.get.allocationLimit !== undefined) {
+      repetitions = Math.min(repetitions, config.get.allocationLimit);
+    }
+    discountableUnits = context.cartLines
+      .filter((l) => matchesScope(config.get.scope, l))
+      .flatMap((l) => Array(l.quantity).fill(l.unitPriceCents));
+  }
+
+  const maxDiscountedUnits = repetitions * config.get.quantity;
+  discountableUnits.sort((a, b) => a - b);
+  const discountedUnits = discountableUnits.slice(0, maxDiscountedUnits);
+
+  if (repetitions <= 0 || discountedUnits.length === 0) {
     return { eligible: false, reason: "No matching 'get' items in cart" };
   }
 
