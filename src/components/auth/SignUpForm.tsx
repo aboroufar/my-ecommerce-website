@@ -11,7 +11,6 @@ export function SignUpForm() {
   const t = useTranslations("signUpForm");
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -36,9 +35,11 @@ export function SignUpForm() {
     setStatus("loading");
     setError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    // signInWithOtp creates the account on first use (shouldCreateUser
+    // defaults to true) -- same magic-link mechanism as the sign-in
+    // flow, so there's no separate password to set or confirm.
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
       },
@@ -93,20 +94,6 @@ export function SignUpForm() {
               placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border border-line bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-            />
-          </label>
-          <label className="flex flex-col gap-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-foreground">
-              {t("password")}
-            </span>
-            <input
-              type="password"
-              required
-              minLength={6}
-              placeholder={t("passwordPlaceholder")}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               className="border border-line bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
           </label>

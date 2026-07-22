@@ -444,13 +444,11 @@
   "signUpForm": {
     "title": "Crea account",
     "or": "oppure",
-    "checkEmail": "Controlla la tua email per confermare il tuo account.",
+    "checkEmail": "Controlla la tua email per il link che completa la creazione dell'account.",
     "email": "Email*",
     "emailPlaceholder": "Inserisci la tua email",
-    "password": "Password*",
-    "passwordPlaceholder": "Almeno 6 caratteri",
-    "creating": "Creazione account…",
-    "createAccount": "Crea account",
+    "creating": "Invio…",
+    "createAccount": "Continua con email",
     "alreadyHaveAccount": "Hai già un account?",
     "signIn": "Accedi"
   },
