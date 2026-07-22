@@ -120,7 +120,7 @@ export function PostForm({
 
       <Field
         label="Tags"
-        hint="Manage the tag list from Admin → Tags (shared with product tags)."
+        hint="Blog tags are a separate list from product tags."
       >
         <div className="flex flex-wrap gap-x-4 gap-y-2 border border-line bg-surface p-4">
           {tags.length === 0 && <p className="text-sm text-muted">No tags yet.</p>}

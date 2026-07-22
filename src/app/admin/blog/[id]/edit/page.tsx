@@ -18,18 +18,18 @@ export default async function EditPostPage({
     supabase
       .from("blog_posts")
       .select(
-        "id, title, slug, excerpt, cover_image_url, body_html, status, author_name, author_photo_url, author_bio, author_facebook_url, author_twitter_url, author_linkedin_url, blog_post_categories(category_id), blog_post_tags(tag_id)"
+        "id, title, slug, excerpt, cover_image_url, body_html, status, author_name, author_photo_url, author_bio, author_facebook_url, author_twitter_url, author_linkedin_url, blog_post_categories(category_id), blog_post_tag_links(tag_id)"
       )
       .eq("id", id)
       .single(),
     supabase.from("blog_categories").select("id, name").order("name", { ascending: true }),
-    supabase.from("tags").select("id, name").order("name", { ascending: true }),
+    supabase.from("blog_tags").select("id, name").order("name", { ascending: true }),
   ]);
 
   if (!post) notFound();
 
   const categoryIds = post.blog_post_categories.map((pc) => pc.category_id);
-  const tagIds = post.blog_post_tags.map((pt) => pt.tag_id);
+  const tagIds = post.blog_post_tag_links.map((pt) => pt.tag_id);
 
   const updateWithId = updatePost.bind(null, id);
   const deleteWithId = deletePost.bind(null, id);

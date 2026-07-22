@@ -7,9 +7,9 @@ import {
   getPostBySlug,
   getPublishedPosts,
   getBlogCategories,
+  getBlogTags,
   getRelatedPosts,
 } from "@/lib/blog";
-import { getTags } from "@/lib/products";
 import { getSiteSettings } from "@/lib/siteSettings";
 import { formatDate } from "@/lib/format";
 import { BlogPostCard } from "@/components/BlogPostCard";
@@ -51,7 +51,7 @@ export default async function BlogPostPage({
   const [post, categories, tags, sidebarPosts, settings, t, locale] = await Promise.all([
     getPostBySlug(slug),
     getBlogCategories(),
-    getTags(),
+    getBlogTags(),
     getPublishedPosts(),
     getSiteSettings(),
     getTranslations("blogPost"),
@@ -63,8 +63,8 @@ export default async function BlogPostPage({
   const postCategories = post.blog_post_categories
     .map((pc) => pc.blog_categories)
     .filter((c): c is { name: string; slug: string } => !!c);
-  const postTags = post.blog_post_tags
-    .map((pt) => pt.tags)
+  const postTags = post.blog_post_tag_links
+    .map((pt) => pt.blog_tags)
     .filter((t): t is { name: string; slug: string } => !!t);
 
   const related = await getRelatedPosts(

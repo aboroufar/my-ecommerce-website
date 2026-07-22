@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createTagInline } from "@/lib/actions/tags";
+import { createDiscountLabelInline } from "@/lib/actions/discountLabels";
 
 export interface TagOption {
   id: string;
@@ -15,7 +15,8 @@ export interface TagOption {
  * discount's effect applies to. Reports selections back to DiscountForm's
  * own state instead of relying on checkbox name/FormData, same reasoning
  * as ProductChecklist. Reuses createTagInline so new tags can be created
- * without leaving the form, same as the product-form TagChecklist.
+ * without leaving the form, same as the product-form TagChecklist --
+ * but against discount_labels, a pool separate from product tags.
  */
 export function DiscountTagChecklist({
   tags,
@@ -43,7 +44,7 @@ export function DiscountTagChecklist({
     if (!name) return;
     setError(null);
     startTransition(async () => {
-      const result = await createTagInline(name);
+      const result = await createDiscountLabelInline(name);
       if ("error" in result) {
         setError(result.error);
         return;

@@ -6,8 +6,14 @@ export interface BlogCategory {
   slug: string;
 }
 
+export interface BlogTag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface BlogTagRef {
-  tags: { name: string; slug: string } | null;
+  blog_tags: { name: string; slug: string } | null;
 }
 
 export interface BlogCategoryRef {
@@ -26,7 +32,7 @@ export interface BlogPostSummary {
 
 export interface BlogPostDetail extends BlogPostSummary {
   body_html: string;
-  blog_post_tags: BlogTagRef[];
+  blog_post_tag_links: BlogTagRef[];
   author_name: string;
   author_photo_url: string;
   author_bio: string;
@@ -54,16 +60,16 @@ export async function getPublishedPosts(options?: {
     if (options?.tagSlug) {
       const { data, error } = await supabase
         .from("blog_posts")
-        .select(`${POST_SUMMARY_SELECT}, blog_post_tags!inner(tags!inner(slug))`)
+        .select(`${POST_SUMMARY_SELECT}, blog_post_tag_links!inner(blog_tags!inner(slug))`)
         .eq("status", "published")
-        .eq("blog_post_tags.tags.slug", options.tagSlug)
+        .eq("blog_post_tag_links.blog_tags.slug", options.tagSlug)
         .order("published_at", { ascending: false });
 
       if (error) {
         console.error("getPublishedPosts (tag) error:", error.message);
         return [];
       }
-      return (data ?? []).map(({ blog_post_tags: _tags, ...post }) => post);
+      return (data ?? []).map(({ blog_post_tag_links: _tags, ...post }) => post);
     }
 
     if (options?.categorySlug) {
@@ -135,7 +141,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPostDetail | null
     const { data, error } = await supabase
       .from("blog_posts")
       .select(
-        "id, title, slug, excerpt, cover_image_url, body_html, published_at, author_name, author_photo_url, author_bio, author_facebook_url, author_twitter_url, author_linkedin_url, blog_post_categories(blog_categories(name, slug)), blog_post_tags(tags(name, slug))"
+        "id, title, slug, excerpt, cover_image_url, body_html, published_at, author_name, author_photo_url, author_bio, author_facebook_url, author_twitter_url, author_linkedin_url, blog_post_categories(blog_categories(name, slug)), blog_post_tag_links(blog_tags(name, slug))"
       )
       .eq("slug", slug)
       .eq("status", "published")
@@ -194,6 +200,27 @@ export async function getBlogCategories(): Promise<BlogCategory[]> {
     return data ?? [];
   } catch (err) {
     console.error("getBlogCategories failed (Supabase not configured?):", err);
+    return [];
+  }
+}
+
+// blog_tags is its own pool, separate from product tags (getTags in
+// src/lib/products.ts) and discount labels.
+export async function getBlogTags(): Promise<BlogTag[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("blog_tags")
+      .select("id, name, slug")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("getBlogTags error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("getBlogTags failed (Supabase not configured?):", err);
     return [];
   }
 }

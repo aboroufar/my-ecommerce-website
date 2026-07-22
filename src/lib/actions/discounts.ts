@@ -38,20 +38,23 @@ function parseTagIds(tagIdsJson: string | undefined): string[] {
   }
 }
 
-// Organizational tags on the discount record itself (for filtering the
+// Organizational labels on the discount record itself (for filtering the
 // Discounts list) -- distinct from config.appliesTo's tag scoping, which
-// controls which products a discount's effect applies to. Same
-// delete-then-insert pattern as setProductTags in src/lib/actions/tags.ts.
+// controls which products a discount's effect applies to and stays on
+// the product-facing `tags` table. Labels live in their own
+// discount_labels/discount_label_links pool so creating one doesn't leak
+// into the product tag list or vice versa. Same delete-then-insert
+// pattern as setProductTags in src/lib/actions/tags.ts.
 async function syncDiscountTags(
   supabase: ReturnType<typeof createAdminClient>,
   discountId: string,
-  tagIds: string[]
+  labelIds: string[]
 ) {
-  await supabase.from("discount_tags").delete().eq("discount_id", discountId);
-  if (tagIds.length > 0) {
+  await supabase.from("discount_label_links").delete().eq("discount_id", discountId);
+  if (labelIds.length > 0) {
     await supabase
-      .from("discount_tags")
-      .insert(tagIds.map((tag_id) => ({ discount_id: discountId, tag_id })));
+      .from("discount_label_links")
+      .insert(labelIds.map((label_id) => ({ discount_id: discountId, label_id })));
   }
 }
 

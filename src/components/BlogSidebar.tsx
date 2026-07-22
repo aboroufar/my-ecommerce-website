@@ -1,8 +1,7 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import type { BlogCategory, BlogPostSummary } from "@/lib/blog";
-import type { Tag } from "@/lib/products";
+import type { BlogCategory, BlogPostSummary, BlogTag } from "@/lib/blog";
 import type { SiteSettings } from "@/lib/siteSettings";
 import { BlogSearchBox } from "./BlogSearchBox";
 import { SocialIconLink, type SocialPlatform } from "./SocialIconLink";
@@ -16,7 +15,7 @@ export async function BlogSidebar({
   activeTagSlug,
 }: {
   categories: BlogCategory[];
-  tags: Tag[];
+  tags: BlogTag[];
   relatedPosts: BlogPostSummary[];
   settings: SiteSettings;
   activeCategorySlug?: string;

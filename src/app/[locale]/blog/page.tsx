@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { getPublishedPosts, getBlogCategories, searchPosts } from "@/lib/blog";
-import { getTags } from "@/lib/products";
+import { getPublishedPosts, getBlogCategories, getBlogTags, searchPosts } from "@/lib/blog";
 import { getSiteSettings } from "@/lib/siteSettings";
 import { BlogPostCard } from "@/components/BlogPostCard";
 import { BlogSidebar } from "@/components/BlogSidebar";
@@ -27,7 +26,7 @@ export default async function BlogPage({
       ? searchPosts(trimmedQuery)
       : getPublishedPosts({ categorySlug: category, tagSlug: tag }),
     getBlogCategories(),
-    getTags(),
+    getBlogTags(),
     getPublishedPosts(),
     getSiteSettings(),
     getTranslations("blogPage"),

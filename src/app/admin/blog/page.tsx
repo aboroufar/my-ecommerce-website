@@ -28,6 +28,12 @@ export default async function AdminBlogPage({
             Manage categories
           </Link>
           <Link
+            href="/admin/blog/tags"
+            className="text-sm text-muted underline underline-offset-4 hover:text-foreground"
+          >
+            Manage tags
+          </Link>
+          <Link
             href="/admin/blog/new"
             className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
           >

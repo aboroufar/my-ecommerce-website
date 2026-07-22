@@ -48,12 +48,14 @@ async function setPostCategories(postId: string, categoryIds: string[]) {
   }
 }
 
+// blog_tags is its own pool, separate from product tags and discount
+// labels -- see supabase/migrations/20260722000001_separate_tag_pools.sql.
 async function setPostTags(postId: string, tagIds: string[]) {
   const supabase = createAdminClient();
-  await supabase.from("blog_post_tags").delete().eq("post_id", postId);
+  await supabase.from("blog_post_tag_links").delete().eq("post_id", postId);
   if (tagIds.length > 0) {
     await supabase
-      .from("blog_post_tags")
+      .from("blog_post_tag_links")
       .insert(tagIds.map((tag_id) => ({ post_id: postId, tag_id })));
   }
 }
@@ -216,4 +218,52 @@ export async function deleteBlogCategory(id: string) {
   revalidatePath("/admin/blog/categories");
   revalidatePath("/blog", "layout");
   redirect("/admin/blog/categories");
+}
+
+const tagSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+});
+
+// blog_tags is its own pool, separate from product tags and discount
+// labels -- see supabase/migrations/20260722000001_separate_tag_pools.sql.
+export async function createBlogTag(formData: FormData) {
+  await requireAdmin();
+
+  const parsed = tagSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(`/admin/blog/tags?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("blog_tags").insert({
+    name: parsed.data.name,
+    slug: slugify(parsed.data.name),
+  });
+
+  if (error) {
+    const message =
+      error.code === "23505" ? "That tag already exists." : error.message;
+    redirect(`/admin/blog/tags?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/admin/blog/tags");
+  revalidatePath("/blog", "layout");
+  redirect("/admin/blog/tags");
+}
+
+export async function deleteBlogTag(id: string) {
+  await requireAdmin();
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("blog_tags").delete().eq("id", id);
+
+  if (error) {
+    redirect(
+      `/admin/blog/tags?error=${encodeURIComponent("Could not delete: " + error.message)}`
+    );
+  }
+
+  revalidatePath("/admin/blog/tags");
+  revalidatePath("/blog", "layout");
+  redirect("/admin/blog/tags");
 }

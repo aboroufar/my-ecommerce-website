@@ -160,6 +160,7 @@ export function DiscountForm({
   products,
   segments,
   tags,
+  discountLabels,
   initialValues,
   action,
 }: {
@@ -168,6 +169,7 @@ export function DiscountForm({
   products: ProductOption[];
   segments: SegmentOption[];
   tags: TagOption[];
+  discountLabels: TagOption[];
   initialValues?: DiscountFormValues;
   action: (formData: FormData) => void;
 }) {
@@ -414,13 +416,13 @@ export function DiscountForm({
       </section>
 
       <section className="border border-line bg-surface p-4">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Tags</h2>
+        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Labels</h2>
         <p className="mt-2 text-sm text-muted">
           Organize and filter your discounts list -- unrelated to which
           products this discount applies to.
         </p>
         <div className="mt-3">
-          <DiscountTagChecklist tags={tags} selectedIds={assignedTagIds} onChange={setAssignedTagIds} />
+          <DiscountTagChecklist tags={discountLabels} selectedIds={assignedTagIds} onChange={setAssignedTagIds} />
         </div>
       </section>
 

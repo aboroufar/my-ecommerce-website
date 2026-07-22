@@ -190,7 +190,7 @@ export type Database = {
           },
         ]
       }
-      blog_post_tags: {
+      blog_post_tag_links: {
         Row: {
           post_id: string
           tag_id: string
@@ -205,20 +205,41 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "blog_post_tags_post_id_fkey"
+            foreignKeyName: "blog_post_tag_links_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "blog_posts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "blog_post_tags_tag_id_fkey"
+            foreignKeyName: "blog_post_tag_links_tag_id_fkey"
             columns: ["tag_id"]
             isOneToOne: false
-            referencedRelation: "tags"
+            referencedRelation: "blog_tags"
             referencedColumns: ["id"]
           },
         ]
+      }
+      blog_tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       brands: {
         Row: {
@@ -465,35 +486,56 @@ export type Database = {
         }
         Relationships: []
       }
-      discount_tags: {
+      discount_label_links: {
         Row: {
           discount_id: string
-          tag_id: string
+          label_id: string
         }
         Insert: {
           discount_id: string
-          tag_id: string
+          label_id: string
         }
         Update: {
           discount_id?: string
-          tag_id?: string
+          label_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "discount_tags_discount_id_fkey"
+            foreignKeyName: "discount_label_links_discount_id_fkey"
             columns: ["discount_id"]
             isOneToOne: false
             referencedRelation: "discount_codes"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "discount_tags_tag_id_fkey"
-            columns: ["tag_id"]
+            foreignKeyName: "discount_label_links_label_id_fkey"
+            columns: ["label_id"]
             isOneToOne: false
-            referencedRelation: "tags"
+            referencedRelation: "discount_labels"
             referencedColumns: ["id"]
           },
         ]
+      }
+      discount_labels: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       help_categories: {
         Row: {

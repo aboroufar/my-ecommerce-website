@@ -11,7 +11,7 @@ export default async function NewPostPage({
   const supabase = createAdminClient();
   const [{ data: categories }, { data: tags }] = await Promise.all([
     supabase.from("blog_categories").select("id, name").order("name", { ascending: true }),
-    supabase.from("tags").select("id, name").order("name", { ascending: true }),
+    supabase.from("blog_tags").select("id, name").order("name", { ascending: true }),
   ]);
 
   return (
