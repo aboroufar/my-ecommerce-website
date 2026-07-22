@@ -94,8 +94,22 @@ export function SegmentQueryEditor({
       conditions: parseResult.query.conditions,
       created_at: new Date().toISOString(),
     };
-    return getMatchingClients(clients, segment);
+    const matched = getMatchingClients(clients, segment);
+
+    const orderBy = parseResult.query.orderBy;
+    if (!orderBy) return matched;
+    const { field, direction } = orderBy;
+    const sorted = [...matched].sort((a, b) => {
+      const av = (a as unknown as Record<string, unknown>)[field];
+      const bv = (b as unknown as Record<string, unknown>)[field];
+      if (typeof av === "number" && typeof bv === "number") return av - bv;
+      return String(av ?? "").localeCompare(String(bv ?? ""));
+    });
+    return direction === "desc" ? sorted.reverse() : sorted;
   }, [parseResult, clients, name]);
+
+  const percentOfClients =
+    clients.length === 0 ? 0 : Math.round((matching.length / clients.length) * 100);
 
   const showFields =
     parseResult.ok && parseResult.query.show.length > 0
@@ -180,7 +194,9 @@ export function SegmentQueryEditor({
 
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-muted">
-          {parseResult.ok ? `${matching.length} matching client${matching.length === 1 ? "" : "s"}` : "Fix errors to run"}
+          {parseResult.ok
+            ? `${matching.length} matching client${matching.length === 1 ? "" : "s"} · ${percentOfClients}% of client base`
+            : "Fix errors to run"}
         </p>
 
         {parseResult.ok && matching.length > 0 && (

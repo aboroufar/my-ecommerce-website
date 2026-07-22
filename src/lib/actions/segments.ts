@@ -88,6 +88,39 @@ export async function updateSegment(id: string, formData: FormData) {
   redirect(`/admin/segments/${id}`);
 }
 
+export async function duplicateSegment(id: string) {
+  await requireAdmin();
+
+  const supabase = createAdminClient();
+  const { data: original, error: fetchError } = await supabase
+    .from("client_segments")
+    .select("name, condition_type, conditions, query_text")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !original) {
+    redirect(`/admin/segments?error=${encodeURIComponent("Could not duplicate: segment not found")}`);
+  }
+
+  const { data: copy, error: insertError } = await supabase
+    .from("client_segments")
+    .insert({
+      name: `${original.name} (copy)`,
+      condition_type: original.condition_type,
+      conditions: original.conditions,
+      query_text: original.query_text,
+    })
+    .select("id")
+    .single();
+
+  if (insertError || !copy) {
+    redirect(`/admin/segments?error=${encodeURIComponent("Could not duplicate: " + (insertError?.message ?? "unknown error"))}`);
+  }
+
+  revalidatePath("/admin/segments");
+  redirect(`/admin/segments/${copy.id}`);
+}
+
 export async function deleteSegment(id: string) {
   await requireAdmin();
 

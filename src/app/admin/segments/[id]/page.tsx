@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getClientFacts, type Segment } from "@/lib/segments";
 import { serializeSegmentQuery } from "@/lib/segmentQuery";
-import { updateSegment, deleteSegment } from "@/lib/actions/segments";
+import { updateSegment, deleteSegment, duplicateSegment } from "@/lib/actions/segments";
 import { SegmentQueryEditor } from "@/components/admin/SegmentQueryEditor";
 
 export const dynamic = "force-dynamic";
@@ -41,14 +41,24 @@ export default async function SegmentDetailPage({
 
       <div className="mt-2 flex items-center justify-between">
         <h1 className="font-display text-2xl text-foreground">{segment.name}</h1>
-        <form action={deleteSegment.bind(null, segment.id)}>
-          <button
-            type="submit"
-            className="text-sm text-red-700 underline underline-offset-4 hover:text-red-800"
-          >
-            Delete segment
-          </button>
-        </form>
+        <div className="flex items-center gap-4">
+          <form action={duplicateSegment.bind(null, segment.id)}>
+            <button
+              type="submit"
+              className="text-sm text-muted underline underline-offset-4 hover:text-foreground"
+            >
+              Duplicate
+            </button>
+          </form>
+          <form action={deleteSegment.bind(null, segment.id)}>
+            <button
+              type="submit"
+              className="text-sm text-red-700 underline underline-offset-4 hover:text-red-800"
+            >
+              Delete segment
+            </button>
+          </form>
+        </div>
       </div>
 
       {error && (

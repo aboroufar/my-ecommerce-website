@@ -173,6 +173,20 @@ export function parseSegmentQuery(text: string): ParseResult {
     if (/^ORDER\s+BY\s+/i.test(line)) {
       const rest = line.replace(/^ORDER\s+BY\s+/i, "").trim();
       const [rawField, rawDirection] = rest.split(/\s+/);
+      if (!rawField) {
+        errors.push({ line: lineNumber, message: "ORDER BY needs a field name" });
+        return;
+      }
+      if (rawDirection && !/^(ASC|DESC)$/i.test(rawDirection)) {
+        errors.push({
+          line: lineNumber,
+          message: `ORDER BY direction must be ASC or DESC, got "${rawDirection}"`,
+        });
+        return;
+      }
+      // ORDER BY can reference any client fact (email, name), not just the
+      // condition-eligible fields WHERE supports -- so fields not in
+      // FIELD_ALIASES pass through as-is rather than being rejected.
       const field = FIELD_ALIASES[rawField] ?? rawField;
       const direction = rawDirection?.toUpperCase() === "DESC" ? "desc" : "asc";
       orderBy = { field, direction };
