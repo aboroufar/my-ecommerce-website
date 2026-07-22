@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { AddressAutocompleteInput } from "./AddressAutocompleteInput";
 
 /**
  * Collapsed behind a single "Add address" row by default, matching
@@ -10,6 +11,22 @@ import { useState } from "react";
  */
 export function DefaultAddressSection() {
   const [expanded, setExpanded] = useState(false);
+  const [line1, setLine1] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [region, setRegion] = useState("");
+  const [country, setCountry] = useState("Italy");
+
+  const handleAddressSelect = useCallback(
+    (fields: { line1: string; city: string; postalCode: string; region: string; country: string }) => {
+      setLine1(fields.line1);
+      setCity(fields.city);
+      setPostalCode(fields.postalCode);
+      setRegion(fields.region);
+      if (fields.country) setCountry(fields.country);
+    },
+    []
+  );
 
   return (
     <section>
@@ -34,16 +51,19 @@ export function DefaultAddressSection() {
             <span className="text-sm text-foreground">Country/region</span>
             <input
               name="address_country"
-              defaultValue="Italy"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
               className="border border-line bg-background px-3 py-2 text-sm"
             />
           </label>
 
           <label className="mt-4 flex flex-col gap-1.5">
             <span className="text-sm text-foreground">Street and house number</span>
-            <input
+            <AddressAutocompleteInput
               name="address_line1"
-              className="border border-line bg-background px-3 py-2 text-sm"
+              value={line1}
+              onChange={setLine1}
+              onAddressSelect={handleAddressSelect}
             />
           </label>
 
@@ -60,6 +80,8 @@ export function DefaultAddressSection() {
               <span className="text-sm text-foreground">Postal code</span>
               <input
                 name="address_postal_code"
+                value={postalCode}
+                onChange={(e) => setPostalCode(e.target.value)}
                 className="border border-line bg-background px-3 py-2 text-sm"
               />
             </label>
@@ -67,6 +89,8 @@ export function DefaultAddressSection() {
               <span className="text-sm text-foreground">City</span>
               <input
                 name="address_city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
                 className="border border-line bg-background px-3 py-2 text-sm"
               />
             </label>
@@ -74,6 +98,8 @@ export function DefaultAddressSection() {
               <span className="text-sm text-foreground">Province</span>
               <input
                 name="address_region"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
                 className="border border-line bg-background px-3 py-2 text-sm"
               />
             </label>
