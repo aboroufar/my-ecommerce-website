@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClientAccount } from "@/lib/actions/clients";
+import { DefaultAddressSection } from "@/components/admin/DefaultAddressSection";
 
 export default async function NewClientPage({
   searchParams,
@@ -90,59 +91,7 @@ export default async function NewClientPage({
           </div>
         </section>
 
-        <section>
-          <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Default address</h2>
-          <p className="mt-2 text-sm text-muted">Optional -- leave blank to add later.</p>
-
-          <label className="mt-3 flex flex-col gap-1.5">
-            <span className="text-sm text-foreground">Country/region</span>
-            <input
-              name="address_country"
-              defaultValue="Italy"
-              className="border border-line bg-background px-3 py-2 text-sm"
-            />
-          </label>
-
-          <label className="mt-4 flex flex-col gap-1.5">
-            <span className="text-sm text-foreground">Street and house number</span>
-            <input
-              name="address_line1"
-              className="border border-line bg-background px-3 py-2 text-sm"
-            />
-          </label>
-
-          <label className="mt-4 flex flex-col gap-1.5">
-            <span className="text-sm text-foreground">Apartment, suite, etc</span>
-            <input
-              name="address_line2"
-              className="border border-line bg-background px-3 py-2 text-sm"
-            />
-          </label>
-
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            <label className="flex flex-col gap-1.5">
-              <span className="text-sm text-foreground">Postal code</span>
-              <input
-                name="address_postal_code"
-                className="border border-line bg-background px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-sm text-foreground">City</span>
-              <input
-                name="address_city"
-                className="border border-line bg-background px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-sm text-foreground">Province</span>
-              <input
-                name="address_region"
-                className="border border-line bg-background px-3 py-2 text-sm"
-              />
-            </label>
-          </div>
-        </section>
+        <DefaultAddressSection />
 
         <div className="flex items-center gap-4">
           <button
