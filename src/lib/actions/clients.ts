@@ -263,3 +263,76 @@ export async function createClientAccount(formData: FormData) {
   revalidatePath("/admin/clients");
   redirect(`/admin/clients/${clientId}`);
 }
+
+const updateClientSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  phone: z.string().optional().default(""),
+  sms_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  whatsapp_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+});
+
+/**
+ * Admin edit of an existing client -- deliberately does not touch email
+ * (that's the auth.users identity, changing it needs Supabase's own
+ * email-change/re-confirmation flow, not a plain column update) or
+ * addresses (managed from the client detail page's own address list,
+ * same as a customer manages their own via /account/addresses).
+ */
+export async function updateClientAccount(clientId: string, formData: FormData) {
+  await requireAdmin();
+
+  const parsed = updateClientSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(
+      `/admin/clients/${clientId}/edit?error=${encodeURIComponent(parsed.error.issues[0].message)}`
+    );
+  }
+
+  const { first_name, last_name, phone, sms_marketing_consent, whatsapp_marketing_consent } =
+    parsed.data;
+  const name = `${first_name} ${last_name}`.trim();
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("clients")
+    .update({
+      name,
+      phone: phone || null,
+      sms_marketing_consent,
+      whatsapp_marketing_consent,
+    })
+    .eq("id", clientId);
+
+  if (error) {
+    redirect(`/admin/clients/${clientId}/edit?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/admin/clients");
+  revalidatePath(`/admin/clients/${clientId}`);
+  redirect(`/admin/clients/${clientId}`);
+}
+
+/**
+ * Deletes the client's Supabase Auth user, not just the `clients` row --
+ * clients.id references auth.users(id) on delete cascade, so this alone
+ * removes the clients row and cascades to addresses/carts/wishlist_items
+ * too. orders.client_id is `on delete set null` (not cascade), so past
+ * orders survive with their financial record intact, just unlinked from
+ * a client. Deleting only the `clients` row directly (leaving the auth
+ * user behind) would orphan an account that can still sign in but no
+ * longer has a client record anywhere in the app.
+ */
+export async function deleteClientAccount(clientId: string) {
+  await requireAdmin();
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.auth.admin.deleteUser(clientId);
+
+  if (error) {
+    redirect(`/admin/clients?error=${encodeURIComponent("Could not delete: " + error.message)}`);
+  }
+
+  revalidatePath("/admin/clients");
+  redirect("/admin/clients");
+}

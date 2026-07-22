@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPrice } from "@/lib/format";
+import { deleteClientAccount } from "@/lib/actions/clients";
 
 export const dynamic = "force-dynamic";
 
@@ -42,9 +43,27 @@ export default async function AdminClientDetailPage({
         ← Clients
       </Link>
 
-      <h1 className="mt-4 font-display text-2xl text-foreground">
-        {client.email}
-      </h1>
+      <div className="mt-4 flex items-center justify-between">
+        <h1 className="font-display text-2xl text-foreground">
+          {client.email}
+        </h1>
+        <div className="flex items-center gap-4">
+          <Link
+            href={`/admin/clients/${client.id}/edit`}
+            className="text-sm text-foreground underline underline-offset-4 hover:text-accent"
+          >
+            Edit
+          </Link>
+          <form action={deleteClientAccount.bind(null, client.id)}>
+            <button
+              type="submit"
+              className="text-sm text-red-700 underline underline-offset-4 hover:text-red-800"
+            >
+              Delete
+            </button>
+          </form>
+        </div>
+      </div>
       <p className="mt-1 text-sm text-muted">
         {client.name && `${client.name} · `}
         Joined {new Date(client.created_at).toLocaleDateString()}

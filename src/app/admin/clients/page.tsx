@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPrice } from "@/lib/format";
 import { getClientFacts, getMatchingClients, type Segment } from "@/lib/segments";
 import { ClientSegmentFilter } from "@/components/admin/ClientSegmentFilter";
+import { deleteClientAccount } from "@/lib/actions/clients";
 
 export const dynamic = "force-dynamic";
 
@@ -122,12 +123,28 @@ export default async function AdminClientsPage({
                       : "—"}
                   </td>
                   <td className="py-3 text-right">
-                    <Link
-                      href={`/admin/clients/${client.id}`}
-                      className="text-accent underline underline-offset-4"
-                    >
-                      View
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/admin/clients/${client.id}`}
+                        className="text-accent underline underline-offset-4"
+                      >
+                        View
+                      </Link>
+                      <Link
+                        href={`/admin/clients/${client.id}/edit`}
+                        className="text-foreground underline underline-offset-4"
+                      >
+                        Edit
+                      </Link>
+                      <form action={deleteClientAccount.bind(null, client.id)}>
+                        <button
+                          type="submit"
+                          className="text-red-700 underline underline-offset-4 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               );
