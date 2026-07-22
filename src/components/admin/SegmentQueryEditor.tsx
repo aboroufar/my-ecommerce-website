@@ -140,29 +140,44 @@ export function SegmentQueryEditor({
 
       <div>
         <span className="text-xs font-medium uppercase tracking-wide text-muted">Query</span>
-        <div className="relative mt-1.5 flex border border-line bg-surface font-mono text-sm">
-          <div className="select-none border-r border-line bg-background px-2 py-3 text-right text-muted">
-            {lines.map((_, i) => (
-              <div key={i} className={errorsByLine.has(i + 1) ? "text-red-600" : undefined}>
-                {i + 1}
-              </div>
-            ))}
+        <div className="mt-1.5 border border-line bg-surface">
+          <div className="flex items-baseline gap-3 border-b border-line px-3 py-2">
+            {parseResult.ok ? (
+              <>
+                <span className="text-sm font-semibold text-foreground">
+                  {matching.length} client{matching.length === 1 ? "" : "s"}
+                </span>
+                <span className="text-xs text-muted">{percentOfClients}% of your client base</span>
+              </>
+            ) : (
+              <span className="text-xs text-red-700">Fix errors to see matching clients</span>
+            )}
           </div>
-          <div className="relative flex-1">
-            <pre
-              aria-hidden
-              className="pointer-events-none absolute inset-0 whitespace-pre-wrap break-words px-3 py-3 text-foreground"
-              dangerouslySetInnerHTML={{
-                __html: lines.map((l) => highlightLine(l).__html).join("\n"),
-              }}
-            />
-            <textarea
-              value={queryText}
-              onChange={(e) => setQueryText(e.target.value)}
-              spellCheck={false}
-              rows={Math.max(lines.length, 5)}
-              className="relative block w-full resize-y whitespace-pre-wrap break-words bg-transparent px-3 py-3 text-transparent caret-foreground outline-none"
-            />
+
+          <div className="relative flex font-mono text-sm">
+            <div className="select-none border-r border-line bg-background px-2 py-3 text-right text-muted">
+              {lines.map((_, i) => (
+                <div key={i} className={errorsByLine.has(i + 1) ? "text-red-600" : undefined}>
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+            <div className="relative flex-1">
+              <pre
+                aria-hidden
+                className="pointer-events-none absolute inset-0 whitespace-pre-wrap break-words px-3 py-3 text-foreground"
+                dangerouslySetInnerHTML={{
+                  __html: lines.map((l) => highlightLine(l).__html).join("\n"),
+                }}
+              />
+              <textarea
+                value={queryText}
+                onChange={(e) => setQueryText(e.target.value)}
+                spellCheck={false}
+                rows={Math.max(lines.length, 5)}
+                className="relative block w-full resize-y whitespace-pre-wrap break-words bg-transparent px-3 py-3 text-transparent caret-foreground outline-none"
+              />
+            </div>
           </div>
         </div>
 
@@ -193,12 +208,6 @@ export function SegmentQueryEditor({
       </div>
 
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">
-          {parseResult.ok
-            ? `${matching.length} matching client${matching.length === 1 ? "" : "s"} · ${percentOfClients}% of client base`
-            : "Fix errors to run"}
-        </p>
-
         {parseResult.ok && matching.length > 0 && (
           <table className="mt-3 w-full text-left text-sm">
             <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
