@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  parseSegmentQuery,
+  parseWhereClause,
+  renderScaffold,
+  WHERE_FIELD_NAMES,
   type ParseError,
 } from "@/lib/segmentQuery";
 import {
@@ -12,7 +14,7 @@ import {
   type Segment,
 } from "@/lib/segments";
 
-const KEYWORD_PATTERN = /^(FROM|SHOW|WHERE|AND|ORDER BY)\b/i;
+const KEYWORD_PATTERN = /^(WHERE|AND|ORDER BY)\b/i;
 const OPERATOR_PATTERN = /(>=|<=|!=|=|>|<)/g;
 
 function escapeHtml(text: string): string {
@@ -61,6 +63,7 @@ const SHOW_FIELD_LABELS: Record<string, string> = {
   total_spent: "Total spent",
   avg_order_value: "Avg. order value",
   last_order_date: "Last order",
+  has_tag: "Tag",
 };
 
 function formatShowValue(client: ClientFacts, field: string): string {
@@ -84,6 +87,37 @@ function formatShowValue(client: ClientFacts, field: string): string {
   }
 }
 
+/**
+ * Detects whether the caret sits inside a field-name position -- right
+ * after WHERE/AND/ORDER BY on the current line, before any operator has
+ * been typed -- and if so, returns the partial word typed so far so it
+ * can be matched against WHERE_FIELD_NAMES. Returns null everywhere else
+ * (e.g. once an operator or value follows), so the dropdown only appears
+ * exactly where a field name is expected, matching Shopify's own
+ * field-position-only autocomplete.
+ */
+function fieldNameContext(
+  text: string,
+  caret: number
+): { lineStart: number; wordStart: number; partial: string } | null {
+  const lineStart = text.lastIndexOf("\n", caret - 1) + 1;
+  const lineEnd = text.indexOf("\n", caret);
+  const line = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd);
+  const caretInLine = caret - lineStart;
+
+  const match = line.match(/^\s*(WHERE|AND|ORDER\s+BY)\s+/i);
+  if (!match) return null;
+  const afterKeywordIndex = match[0].length;
+  if (caretInLine < afterKeywordIndex) return null;
+
+  const between = line.slice(afterKeywordIndex, caretInLine);
+  // Once whitespace or an operator character appears after the keyword,
+  // the admin has moved past the field name -- no more suggestions.
+  if (/[\s=><!]/.test(between)) return null;
+
+  return { lineStart, wordStart: lineStart + afterKeywordIndex, partial: between };
+}
+
 export function SegmentQueryEditor({
   clients,
   initialName,
@@ -97,8 +131,50 @@ export function SegmentQueryEditor({
 }) {
   const [name, setName] = useState(initialName);
   const [queryText, setQueryText] = useState(initialQueryText);
+  const [suggestions, setSuggestions] = useState<{
+    options: string[];
+    wordStart: number;
+    activeIndex: number;
+  } | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const parseResult = useMemo(() => parseSegmentQuery(queryText), [queryText]);
+  function updateSuggestions(text: string, caret: number) {
+    const context = fieldNameContext(text, caret);
+    if (!context) {
+      setSuggestions(null);
+      return;
+    }
+    const options = WHERE_FIELD_NAMES.filter((f) =>
+      f.startsWith(context.partial.toLowerCase())
+    );
+    if (options.length === 0 || (options.length === 1 && options[0] === context.partial)) {
+      setSuggestions(null);
+      return;
+    }
+    setSuggestions({ options, wordStart: context.wordStart, activeIndex: 0 });
+  }
+
+  function applySuggestion(field: string) {
+    if (!suggestions || !textareaRef.current) return;
+    const caret = textareaRef.current.selectionStart;
+    const next = queryText.slice(0, suggestions.wordStart) + field + queryText.slice(caret);
+    setQueryText(next);
+    setSuggestions(null);
+    const cursorPos = suggestions.wordStart + field.length;
+    requestAnimationFrame(() => {
+      textareaRef.current?.setSelectionRange(cursorPos, cursorPos);
+      textareaRef.current?.focus();
+    });
+  }
+
+  const parseResult = useMemo(() => parseWhereClause(queryText), [queryText]);
+
+  // Scaffold (FROM/SHOW/GROUP BY) is always derived from the current
+  // conditions, shown read-only above the editable WHERE/ORDER BY text --
+  // matching Shopify's fixed-template editor, where the admin only ever
+  // edits WHERE. Falls back to just "email" when the query doesn't parse
+  // yet (mid-edit), so the scaffold never goes blank while typing.
+  const scaffold = renderScaffold(parseResult.ok ? parseResult.query.conditions : []);
 
   const matching = useMemo(() => {
     if (!parseResult.ok) return [];
@@ -156,6 +232,15 @@ export function SegmentQueryEditor({
       <div>
         <span className="text-xs font-medium uppercase tracking-wide text-muted">Query</span>
         <div className="mt-1.5 border border-line bg-surface">
+          {/* Fixed scaffold -- read-only, always derived from the WHERE
+              conditions below, never typed by the admin (matches
+              Shopify's segment editor). */}
+          <div className="border-b border-line bg-background px-3 py-3 font-mono text-sm text-muted">
+            <div>{scaffold.from}</div>
+            <div>{scaffold.show}</div>
+            <div>{scaffold.groupBy}</div>
+          </div>
+
           <div className="flex items-baseline gap-3 border-b border-line px-3 py-2">
             {parseResult.ok ? (
               <>
@@ -186,14 +271,73 @@ export function SegmentQueryEditor({
                 }}
               />
               <textarea
+                ref={textareaRef}
                 value={queryText}
-                onChange={(e) => setQueryText(e.target.value)}
+                onChange={(e) => {
+                  setQueryText(e.target.value);
+                  updateSuggestions(e.target.value, e.target.selectionStart);
+                }}
+                onClick={(e) => updateSuggestions(queryText, e.currentTarget.selectionStart)}
+                onKeyUp={(e) => {
+                  if (!["ArrowUp", "ArrowDown", "Enter", "Tab", "Escape"].includes(e.key)) {
+                    updateSuggestions(queryText, e.currentTarget.selectionStart);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (!suggestions) return;
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setSuggestions({
+                      ...suggestions,
+                      activeIndex: (suggestions.activeIndex + 1) % suggestions.options.length,
+                    });
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setSuggestions({
+                      ...suggestions,
+                      activeIndex:
+                        (suggestions.activeIndex - 1 + suggestions.options.length) %
+                        suggestions.options.length,
+                    });
+                  } else if (e.key === "Enter" || e.key === "Tab") {
+                    e.preventDefault();
+                    applySuggestion(suggestions.options[suggestions.activeIndex]);
+                  } else if (e.key === "Escape") {
+                    setSuggestions(null);
+                  }
+                }}
+                onBlur={() => {
+                  // Delay so a click on a suggestion registers before the
+                  // list disappears (blur fires before click otherwise).
+                  setTimeout(() => setSuggestions(null), 150);
+                }}
                 spellCheck={false}
                 rows={Math.max(lines.length, 5)}
                 className="relative block w-full resize-y whitespace-pre-wrap break-words bg-transparent px-3 py-3 text-transparent caret-foreground outline-none"
               />
             </div>
           </div>
+
+          {suggestions && (
+            <ul className="border-t border-line bg-background font-mono text-sm">
+              {suggestions.options.map((option, i) => (
+                <li key={option}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => applySuggestion(option)}
+                    className={`block w-full px-3 py-1.5 text-left ${
+                      i === suggestions.activeIndex
+                        ? "bg-accent/10 text-foreground"
+                        : "text-muted hover:bg-accent/5"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {!parseResult.ok && (

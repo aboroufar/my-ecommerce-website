@@ -28,12 +28,33 @@ const FIELD_ALIASES: Record<string, SegmentCondition["field"]> = {
   purchased_product_id: "purchased_product_id",
   purchased_category: "purchased_category_id",
   purchased_category_id: "purchased_category_id",
+  has_tag: "has_tag",
+  tag: "has_tag",
 };
 
 const SET_FIELDS = new Set<SegmentCondition["field"]>([
   "purchased_product_id",
   "purchased_category_id",
+  "has_tag",
 ]);
+
+/**
+ * One preferred short alias per WHERE-eligible field, for the editor's
+ * autocomplete dropdown -- FIELD_ALIASES has multiple spellings per field
+ * (e.g. total_spent/total_spent_cents both parse), but a suggestion list
+ * should offer one canonical option, not every alias.
+ */
+export const WHERE_FIELD_NAMES = [
+  "order_count",
+  "email_subscribed",
+  "created_at",
+  "total_spent",
+  "avg_order_value",
+  "last_order_date",
+  "purchased_product",
+  "purchased_category",
+  "has_tag",
+] as const;
 
 // "!=" and "<=" have no engine equivalent (engine only has gte/gt/lt/eq) --
 // the parser rejects them explicitly with a clear error (see parseCondition)
@@ -60,6 +81,31 @@ function coerceValue(raw: string, field: SegmentCondition["field"]): number | bo
     throw new Error(`"${raw}" is not a valid number for ${field}`);
   }
   return num;
+}
+
+const FIELD_LABELS: Record<SegmentCondition["field"], string> = {
+  order_count: "order_count",
+  email_subscribed: "email_subscribed",
+  created_at: "created_at",
+  total_spent_cents: "total_spent",
+  avg_order_value_cents: "avg_order_value",
+  last_order_date: "last_order_date",
+  purchased_product_id: "purchased_product",
+  purchased_category_id: "purchased_category",
+  has_tag: "has_tag",
+};
+
+const OPERATOR_LABELS: Record<SegmentCondition["operator"], string> = {
+  eq: "=",
+  gt: ">",
+  gte: ">=",
+  lt: "<",
+};
+
+function formatValue(value: SegmentCondition["value"]): string {
+  if (typeof value === "boolean") return String(value);
+  if (typeof value === "number") return String(value);
+  return `"${value}"`;
 }
 
 function stripQuotes(raw: string): string {
@@ -106,44 +152,23 @@ function parseCondition(rawClause: string, lineNumber: number): SegmentCondition
 }
 
 /**
- * Parses the small fixed-format query DSL (FROM/SHOW/WHERE/ORDER BY) down
- * to the same SegmentCondition[] the engine already evaluates -- never
- * raw SQL, preserving the earlier decision to avoid arbitrary query
- * execution. Grammar: WHERE conditions are AND-only (no OR/parentheses),
- * matching both the engine's existing AND-only evaluation and Shopify's
- * own segment-builder simplicity.
+ * Parses only the admin-editable portion of the query -- WHERE/AND/ORDER BY
+ * lines -- matching Shopify's own segment editor, where FROM/SHOW/GROUP BY
+ * are fixed scaffolding shown for transparency but never typed by the
+ * admin. `show` is always derived from the fields actually referenced in
+ * WHERE (see deriveShowFields), not read from the text.
  */
-export function parseSegmentQuery(text: string): ParseResult {
+export function parseWhereClause(text: string): ParseResult {
   const lines = text.split("\n");
   const errors: ParseError[] = [];
-  let show: string[] = [];
   const conditions: SegmentCondition[] = [];
   let orderBy: ParsedSegmentQuery["orderBy"] = null;
-  let sawFrom = false;
   let sawWhere = false;
 
   lines.forEach((rawLine, index) => {
     const lineNumber = index + 1;
     const line = rawLine.trim();
     if (!line) return;
-
-    if (/^FROM\s+/i.test(line)) {
-      const target = line.replace(/^FROM\s+/i, "").trim();
-      if (target !== "clients") {
-        errors.push({ line: lineNumber, message: `FROM must be "clients", got "${target}"` });
-      }
-      sawFrom = true;
-      return;
-    }
-
-    if (/^SHOW\s+/i.test(line)) {
-      show = line
-        .replace(/^SHOW\s+/i, "")
-        .split(",")
-        .map((f) => f.trim())
-        .filter(Boolean);
-      return;
-    }
 
     if (/^WHERE\s+/i.test(line)) {
       sawWhere = true;
@@ -193,50 +218,67 @@ export function parseSegmentQuery(text: string): ParseResult {
       return;
     }
 
-    errors.push({ line: lineNumber, message: `Unrecognized line: "${line}"` });
+    errors.push({
+      line: lineNumber,
+      message: `Unrecognized line: "${line}" -- expected WHERE, AND, or ORDER BY`,
+    });
   });
-
-  if (!sawFrom) {
-    errors.push({ line: 1, message: 'Missing "FROM clients" line' });
-  }
 
   if (errors.length > 0) return { ok: false, errors };
-  return { ok: true, query: { show, conditions, orderBy } };
+  return {
+    ok: true,
+    query: { show: deriveShowFields(conditions), conditions, orderBy },
+  };
 }
 
-const FIELD_LABELS: Record<SegmentCondition["field"], string> = {
-  order_count: "order_count",
-  email_subscribed: "email_subscribed",
-  created_at: "created_at",
-  total_spent_cents: "total_spent",
-  avg_order_value_cents: "avg_order_value",
-  last_order_date: "last_order_date",
-  purchased_product_id: "purchased_product",
-  purchased_category_id: "purchased_category",
-};
-
-const OPERATOR_LABELS: Record<SegmentCondition["operator"], string> = {
-  eq: "=",
-  gt: ">",
-  gte: ">=",
-  lt: "<",
-};
-
-function formatValue(value: SegmentCondition["value"]): string {
-  if (typeof value === "boolean") return String(value);
-  if (typeof value === "number") return String(value);
-  return `"${value}"`;
+/**
+ * SHOW is always the set of fields referenced in WHERE (deduplicated, in
+ * first-seen order) plus "email" -- there's no separate admin choice of
+ * which columns to preview, matching the fixed-template behavior.
+ */
+function deriveShowFields(conditions: SegmentCondition[]): string[] {
+  const seen = new Set<string>(["email"]);
+  const show = ["email"];
+  for (const condition of conditions) {
+    const label = FIELD_LABELS[condition.field];
+    if (!seen.has(label)) {
+      seen.add(label);
+      show.push(label);
+    }
+  }
+  return show;
 }
 
-/** Inverse of parseSegmentQuery -- used only as a fallback when a segment
- * has no persisted query_text (e.g. rows seeded directly via SQL). */
-export function serializeSegmentQuery(conditions: SegmentCondition[]): string {
-  const lines = ["FROM clients", "SHOW email, order_count"];
-  conditions.forEach((condition, index) => {
-    const prefix = index === 0 ? "WHERE" : "  AND";
-    lines.push(
-      `${prefix} ${FIELD_LABELS[condition.field]} ${OPERATOR_LABELS[condition.operator]} ${formatValue(condition.value)}`
-    );
-  });
-  return lines.join("\n");
+/**
+ * Renders the fixed, non-editable scaffold lines (FROM/SHOW/GROUP BY)
+ * shown above the WHERE editor -- always derived from the current
+ * conditions, never stored or typed separately.
+ */
+export function renderScaffold(conditions: SegmentCondition[]): {
+  from: string;
+  show: string;
+  groupBy: string;
+} {
+  const fields = deriveShowFields(conditions).join(", ");
+  return {
+    from: "FROM clients",
+    show: `SHOW ${fields}`,
+    groupBy: `GROUP BY ${fields}`,
+  };
+}
+
+/**
+ * Serializes conditions back to WHERE/AND lines only -- the editable
+ * portion of the query. Used to re-populate the editor from a segment's
+ * saved conditions (e.g. Duplicate, or a segment with no persisted
+ * query_text such as rows seeded directly via SQL).
+ */
+export function serializeWhereClause(conditions: SegmentCondition[]): string {
+  if (conditions.length === 0) return "";
+  return conditions
+    .map((condition, index) => {
+      const prefix = index === 0 ? "WHERE" : "  AND";
+      return `${prefix} ${FIELD_LABELS[condition.field]} ${OPERATOR_LABELS[condition.operator]} ${formatValue(condition.value)}`;
+    })
+    .join("\n");
 }

@@ -5,9 +5,7 @@ import { SegmentQueryEditor } from "@/components/admin/SegmentQueryEditor";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_QUERY_TEXT = `FROM clients
-SHOW email, order_count
-WHERE order_count >= 1`;
+const DEFAULT_QUERY_TEXT = `WHERE order_count >= 1`;
 
 export default async function NewSegmentPage({
   searchParams,

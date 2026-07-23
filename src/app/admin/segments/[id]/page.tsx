@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getClientFacts, type Segment } from "@/lib/segments";
-import { serializeSegmentQuery } from "@/lib/segmentQuery";
+import { serializeWhereClause } from "@/lib/segmentQuery";
 import { updateSegment, deleteSegment, duplicateSegment } from "@/lib/actions/segments";
 import { SegmentQueryEditor } from "@/components/admin/SegmentQueryEditor";
 
@@ -31,7 +31,12 @@ export default async function SegmentDetailPage({
   if (!segmentRow) notFound();
 
   const segment = segmentRow as unknown as Segment & { query_text: string | null };
-  const queryText = segment.query_text ?? serializeSegmentQuery(segment.conditions);
+  // Always re-derive from `conditions`, the real source of truth, rather
+  // than trusting a persisted query_text -- a segment saved by the
+  // previous editor version has query_text in the old full-text format
+  // (FROM/SHOW embedded), which the current WHERE-only editor can't
+  // parse back correctly.
+  const queryText = serializeWhereClause(segment.conditions);
 
   return (
     <div>

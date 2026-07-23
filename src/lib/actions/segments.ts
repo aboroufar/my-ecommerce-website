@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminUser } from "@/lib/auth";
-import { parseSegmentQuery } from "@/lib/segmentQuery";
+import { parseWhereClause } from "@/lib/segmentQuery";
 import type { Json } from "@/lib/supabase/types";
 
 /**
@@ -31,7 +31,7 @@ export async function createSegment(formData: FormData) {
     redirect(`/admin/segments/new?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
   }
 
-  const result = parseSegmentQuery(parsed.data.queryText);
+  const result = parseWhereClause(parsed.data.queryText);
   if (!result.ok) {
     const message = `Line ${result.errors[0].line}: ${result.errors[0].message}`;
     redirect(`/admin/segments/new?error=${encodeURIComponent(message)}`);
@@ -63,7 +63,7 @@ export async function updateSegment(id: string, formData: FormData) {
     );
   }
 
-  const result = parseSegmentQuery(parsed.data.queryText);
+  const result = parseWhereClause(parsed.data.queryText);
   if (!result.ok) {
     const message = `Line ${result.errors[0].line}: ${result.errors[0].message}`;
     redirect(`/admin/segments/${id}?error=${encodeURIComponent(message)}`);

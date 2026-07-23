@@ -9,7 +9,8 @@ export interface SegmentCondition {
     | "avg_order_value_cents"
     | "last_order_date"
     | "purchased_product_id"
-    | "purchased_category_id";
+    | "purchased_category_id"
+    | "has_tag";
   operator: "gte" | "gt" | "lt" | "eq";
   value: number | boolean | string;
 }
@@ -34,6 +35,7 @@ export interface ClientFacts {
   last_order_date: string | null;
   purchased_product_ids: Set<string>;
   purchased_category_ids: Set<string>;
+  tag_names: Set<string>;
 }
 
 // Only paid+ orders count as a real purchase -- a pending/cancelled order
@@ -52,23 +54,47 @@ export async function getClientFacts(
   supabase: ReturnType<typeof createAdminClient>,
   clientIds?: string[]
 ): Promise<ClientFacts[]> {
-  const [{ data: clients }, { data: orders }, { data: subscribers }, { data: categoryLinks }] =
-    await Promise.all([
-      clientIds
-        ? supabase.from("clients").select("id, email, name, created_at").in("id", clientIds)
-        : supabase.from("clients").select("id, email, name, created_at"),
-      (() => {
-        let query = supabase
-          .from("orders")
-          .select("id, client_id, status, total_cents, created_at")
-          .not("client_id", "is", null)
-          .in("status", REAL_PURCHASE_STATUSES);
-        if (clientIds) query = query.in("client_id", clientIds);
-        return query;
-      })(),
-      supabase.from("newsletter_subscribers").select("email"),
-      supabase.from("product_categories").select("product_id, category_id"),
-    ]);
+  const [
+    { data: clients },
+    { data: orders },
+    { data: subscribers },
+    { data: categoryLinks },
+    { data: tagLinks },
+  ] = await Promise.all([
+    clientIds
+      ? supabase.from("clients").select("id, email, name, created_at").in("id", clientIds)
+      : supabase.from("clients").select("id, email, name, created_at"),
+    (() => {
+      let query = supabase
+        .from("orders")
+        .select("id, client_id, status, total_cents, created_at")
+        .not("client_id", "is", null)
+        .in("status", REAL_PURCHASE_STATUSES);
+      if (clientIds) query = query.in("client_id", clientIds);
+      return query;
+    })(),
+    supabase.from("newsletter_subscribers").select("email"),
+    supabase.from("product_categories").select("product_id, category_id"),
+    (() => {
+      let query = supabase
+        .from("client_tag_links")
+        .select("client_id, client_tags(name)");
+      if (clientIds) query = query.in("client_id", clientIds);
+      return query;
+    })(),
+  ]);
+
+  const tagNamesByClient = new Map<string, Set<string>>();
+  for (const link of (tagLinks ?? []) as unknown as {
+    client_id: string;
+    client_tags: { name: string } | { name: string }[] | null;
+  }[]) {
+    const tag = Array.isArray(link.client_tags) ? link.client_tags[0] : link.client_tags;
+    if (!tag) continue;
+    const existing = tagNamesByClient.get(link.client_id) ?? new Set<string>();
+    existing.add(tag.name);
+    tagNamesByClient.set(link.client_id, existing);
+  }
 
   const subscribedEmails = new Set(
     (subscribers ?? []).map((s) => s.email.toLowerCase())
@@ -146,6 +172,7 @@ export async function getClientFacts(
       last_order_date: lastOrderDateByClient.get(client.id) ?? null,
       purchased_product_ids: purchasedProductIdsByClient.get(client.id) ?? new Set(),
       purchased_category_ids: purchasedCategoryIdsByClient.get(client.id) ?? new Set(),
+      tag_names: tagNamesByClient.get(client.id) ?? new Set(),
     };
   });
 }
@@ -160,6 +187,9 @@ function matchesCondition(client: ClientFacts, condition: SegmentCondition): boo
   }
   if (condition.field === "purchased_category_id") {
     return client.purchased_category_ids.has(String(condition.value));
+  }
+  if (condition.field === "has_tag") {
+    return client.tag_names.has(String(condition.value));
   }
 
   const actual = client[condition.field];
