@@ -336,3 +336,37 @@ export async function deleteClientAccount(clientId: string) {
   revalidatePath("/admin/clients");
   redirect("/admin/clients");
 }
+
+const clientNoteSchema = z.object({
+  body: z.string().min(1, "Note can't be empty"),
+});
+
+/**
+ * Adds a staff-only note to a client's activity timeline. Returns a
+ * result instead of redirecting -- the detail page's Timeline is a
+ * single-page dashboard, not a form flow, so a redirect would just be an
+ * unnecessary round trip; the caller clears its own textarea on success.
+ */
+export async function addClientNote(
+  clientId: string,
+  body: string
+): Promise<{ error: string } | { success: true }> {
+  await requireAdmin();
+
+  const parsed = clientNoteSchema.safeParse({ body });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("client_notes")
+    .insert({ client_id: clientId, body: parsed.data.body });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/admin/clients/${clientId}`);
+  return { success: true };
+}
