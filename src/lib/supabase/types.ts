@@ -1484,6 +1484,63 @@ export type Database = {
         }
         Relationships: []
       }
+      suppliers: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          company: string
+          contact_name: string | null
+          country: string
+          created_at: string
+          currency: string
+          email: string | null
+          id: string
+          notes: string | null
+          payment_terms: string
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          website: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          company: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          currency?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          payment_terms?: string
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          website?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          company?: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string
+          currency?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          payment_terms?: string
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           created_at: string

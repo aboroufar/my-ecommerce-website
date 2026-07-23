@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/menu", label: "Menu", icon: MenuIcon },
   { href: "/admin/brands", label: "Brands", icon: BadgeIcon },
   { href: "/admin/packages", label: "Packages", icon: BoxIcon },
+  { href: "/admin/suppliers", label: "Suppliers", icon: TruckIcon },
   { href: "/admin/content", label: "Content", icon: ImageIcon },
   { href: "/admin/discounts", label: "Discounts", icon: DiscountIcon },
 ];
@@ -208,6 +209,17 @@ function BoxIcon({ className }: { className?: string }) {
       <path d="M3.5 8 12 4l8.5 4-8.5 4-8.5-4Z" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M3.5 8v8L12 20l8.5-4V8" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M12 12v8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TruckIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
+      <path d="M3 6.5h10v9H3z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13 10h4l3.5 3v2.5H13z" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="7" cy="17.5" r="1.75" />
+      <circle cx="17" cy="17.5" r="1.75" />
     </svg>
   );
 }
