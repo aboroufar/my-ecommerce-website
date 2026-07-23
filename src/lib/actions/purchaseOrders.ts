@@ -28,6 +28,7 @@ const lineItemSchema = z.object({
   variant_id: z.string().uuid().nullable(),
   product_name: z.string().min(1),
   variant_label: z.string().nullable(),
+  supplier_sku: z.string().optional().default(""),
   quantity_ordered: z.number().int().positive(),
   unit_cost_cents: z.number().int().min(0),
 });
@@ -105,6 +106,7 @@ export async function createPurchaseOrder(formData: FormData) {
       variant_id: item.variant_id,
       product_name: item.product_name,
       variant_label: item.variant_label,
+      supplier_sku: item.supplier_sku || null,
       quantity_ordered: item.quantity_ordered,
       unit_cost_cents: item.unit_cost_cents,
     }))

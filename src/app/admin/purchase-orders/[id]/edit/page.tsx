@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updatePurchaseOrderDetails } from "@/lib/actions/purchaseOrders";
+import { SupplierPicker } from "@/components/admin/SupplierPicker";
 
 export const dynamic = "force-dynamic";
 
@@ -48,21 +49,7 @@ export default async function EditPurchaseOrderPage({
         action={updatePurchaseOrderDetails.bind(null, id)}
         className="mt-8 flex max-w-2xl flex-col gap-6"
       >
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-foreground">Supplier</span>
-          <select
-            name="supplier_id"
-            defaultValue={po.supplier_id ?? ""}
-            className="border border-line bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Select supplier</option>
-            {(suppliers ?? []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.company}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SupplierPicker suppliers={suppliers ?? []} defaultSupplierId={po.supplier_id} />
 
         <label className="flex flex-col gap-1.5">
           <span className="text-sm text-foreground">Reference number</span>

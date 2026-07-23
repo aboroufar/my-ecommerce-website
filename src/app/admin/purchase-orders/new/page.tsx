@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPurchaseOrder } from "@/lib/actions/purchaseOrders";
 import { PurchaseOrderLineItems, type ProductSearchOption } from "@/components/admin/PurchaseOrderLineItems";
+import { SupplierPicker } from "@/components/admin/SupplierPicker";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +19,15 @@ export default async function NewPurchaseOrderPage({
     supabase
       .from("products")
       .select(
-        "id, name, sku, product_option_types(id, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, product_variant_options(option_value_id))"
+        "id, name, sku, stock_qty, product_images(url, sort_order), product_option_types(id, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, stock_qty, product_variant_options(option_value_id))"
       )
       .order("name", { ascending: true }),
   ]);
 
   const options: ProductSearchOption[] = [];
   for (const product of products ?? []) {
+    const image = [...product.product_images].sort((a, b) => a.sort_order - b.sort_order)[0];
+
     if (product.product_variants.length === 0) {
       options.push({
         productId: product.id,
@@ -32,6 +35,8 @@ export default async function NewPurchaseOrderPage({
         variantId: null,
         variantLabel: null,
         sku: product.sku,
+        imageUrl: image?.url ?? null,
+        stockQty: product.stock_qty,
       });
       continue;
     }
@@ -53,6 +58,8 @@ export default async function NewPurchaseOrderPage({
         variantId: variant.id,
         variantLabel: labels.length > 0 ? labels.join(" / ") : null,
         sku: variant.sku,
+        imageUrl: image?.url ?? null,
+        stockQty: variant.stock_qty,
       });
     }
   }
@@ -75,20 +82,7 @@ export default async function NewPurchaseOrderPage({
       )}
 
       <form action={createPurchaseOrder} className="mt-8 grid max-w-3xl grid-cols-1 gap-8">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-foreground">Supplier</span>
-          <select
-            name="supplier_id"
-            className="border border-line bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Select supplier</option>
-            {(suppliers ?? []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.company}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SupplierPicker suppliers={suppliers ?? []} />
 
         <section>
           <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Products</h2>

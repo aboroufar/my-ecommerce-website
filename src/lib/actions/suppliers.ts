@@ -48,6 +48,39 @@ const supplierSchema = z.object({
   currency: z.string().min(1),
 });
 
+/**
+ * Minimal supplier creation for the "Create new supplier" flow inside the
+ * purchase order form -- returns the new row instead of redirecting, same
+ * reasoning as createDiscountLabelInline/createClientTagInline: a
+ * redirect would blow away the in-progress purchase order the admin is
+ * still filling out. Only company is required here; every other field
+ * stays blank and can be filled in later from /admin/suppliers.
+ */
+export async function createSupplierInline(
+  company: string
+): Promise<{ id: string; company: string } | { error: string }> {
+  await requireAdmin();
+
+  const parsed = z.object({ company: z.string().min(1, "Company is required") }).safeParse({ company });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("suppliers")
+    .insert({ company: parsed.data.company })
+    .select("id, company")
+    .single();
+
+  if (error || !data) {
+    return { error: error?.message ?? "Could not create supplier." };
+  }
+
+  revalidatePath("/admin/suppliers");
+  return data;
+}
+
 export async function createSupplier(formData: FormData) {
   await requireAdmin();
 

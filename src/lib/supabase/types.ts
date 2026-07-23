@@ -1054,6 +1054,7 @@ export type Database = {
           purchase_order_id: string
           quantity_ordered: number
           quantity_received: number
+          supplier_sku: string | null
           unit_cost_cents: number
           variant_id: string | null
           variant_label: string | null
@@ -1066,6 +1067,7 @@ export type Database = {
           purchase_order_id: string
           quantity_ordered: number
           quantity_received?: number
+          supplier_sku?: string | null
           unit_cost_cents?: number
           variant_id?: string | null
           variant_label?: string | null
@@ -1078,6 +1080,7 @@ export type Database = {
           purchase_order_id?: string
           quantity_ordered?: number
           quantity_received?: number
+          supplier_sku?: string | null
           unit_cost_cents?: number
           variant_id?: string | null
           variant_label?: string | null
