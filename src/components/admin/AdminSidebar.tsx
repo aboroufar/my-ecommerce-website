@@ -23,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/brands", label: "Brands", icon: BadgeIcon },
   { href: "/admin/packages", label: "Packages", icon: BoxIcon },
   { href: "/admin/suppliers", label: "Suppliers", icon: TruckIcon },
+  { href: "/admin/purchase-orders", label: "Purchase orders", icon: ClipboardIcon },
   { href: "/admin/content", label: "Content", icon: ImageIcon },
   { href: "/admin/discounts", label: "Discounts", icon: DiscountIcon },
 ];
@@ -220,6 +221,16 @@ function TruckIcon({ className }: { className?: string }) {
       <path d="M13 10h4l3.5 3v2.5H13z" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="7" cy="17.5" r="1.75" />
       <circle cx="17" cy="17.5" r="1.75" />
+    </svg>
+  );
+}
+
+function ClipboardIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
+      <rect x="5.5" y="4.5" width="13" height="16" rx="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 4.5V4a2 2 0 0 1 4 0v.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.5 10.5h7M8.5 14h7M8.5 17.5h4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
