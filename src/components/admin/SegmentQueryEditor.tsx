@@ -56,6 +56,7 @@ function highlightLine(line: string): { __html: string } {
 }
 
 const SHOW_FIELD_LABELS: Record<string, string> = {
+  name: "Name",
   email: "Email",
   order_count: "Orders",
   email_subscribed: "Subscribed",
@@ -68,6 +69,8 @@ const SHOW_FIELD_LABELS: Record<string, string> = {
 
 function formatShowValue(client: ClientFacts, field: string): string {
   switch (field) {
+    case "name":
+      return client.name ?? "—";
     case "email":
       return client.email;
     case "order_count":
@@ -169,12 +172,11 @@ export function SegmentQueryEditor({
 
   const parseResult = useMemo(() => parseWhereClause(queryText), [queryText]);
 
-  // Scaffold (FROM/SHOW/GROUP BY) is always derived from the current
-  // conditions, shown read-only above the editable WHERE/ORDER BY text --
-  // matching Shopify's fixed-template editor, where the admin only ever
-  // edits WHERE. Falls back to just "email" when the query doesn't parse
-  // yet (mid-edit), so the scaffold never goes blank while typing.
-  const scaffold = renderScaffold(parseResult.ok ? parseResult.query.conditions : []);
+  // Scaffold (FROM/SHOW/GROUP BY) is always the full fixed client field
+  // set, shown read-only above the editable WHERE/ORDER BY text --
+  // matching Shopify's fixed-template editor, where SHOW/GROUP BY list
+  // every customer field as context regardless of what WHERE filters on.
+  const scaffold = renderScaffold();
 
   const matching = useMemo(() => {
     if (!parseResult.ok) return [];

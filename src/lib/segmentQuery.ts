@@ -95,6 +95,25 @@ const FIELD_LABELS: Record<SegmentCondition["field"], string> = {
   has_tag: "has_tag",
 };
 
+/**
+ * The full, fixed column set shown in SHOW/GROUP BY -- every field a
+ * client fact actually has, always listed in full regardless of what
+ * WHERE references (matches Shopify's own segment editor, which shows
+ * the complete customer field set as context, not just the fields used
+ * in the filter). "name" and "email" aren't WHERE-eligible conditions,
+ * but they're real ClientFacts fields worth showing in the preview table.
+ */
+const ALL_SHOW_FIELDS = [
+  "name",
+  "email",
+  "email_subscribed",
+  "order_count",
+  "total_spent",
+  "avg_order_value",
+  "last_order_date",
+  "created_at",
+] as const;
+
 const OPERATOR_LABELS: Record<SegmentCondition["operator"], string> = {
   eq: "=",
   gt: ">",
@@ -155,8 +174,9 @@ function parseCondition(rawClause: string, lineNumber: number): SegmentCondition
  * Parses only the admin-editable portion of the query -- WHERE/AND/ORDER BY
  * lines -- matching Shopify's own segment editor, where FROM/SHOW/GROUP BY
  * are fixed scaffolding shown for transparency but never typed by the
- * admin. `show` is always derived from the fields actually referenced in
- * WHERE (see deriveShowFields), not read from the text.
+ * admin. `show` is always the full ALL_SHOW_FIELDS list, not read from the
+ * text. When the admin doesn't write an ORDER BY line, one is defaulted
+ * (see below) rather than leaving results unordered.
  */
 export function parseWhereClause(text: string): ParseResult {
   const lines = text.split("\n");
@@ -227,39 +247,30 @@ export function parseWhereClause(text: string): ParseResult {
   if (errors.length > 0) return { ok: false, errors };
   return {
     ok: true,
-    query: { show: deriveShowFields(conditions), conditions, orderBy },
+    query: {
+      show: [...ALL_SHOW_FIELDS],
+      conditions,
+      // created_at is this app's real equivalent of Shopify's
+      // "date_customer_updated" -- clients has no updated_at column, so
+      // "when they joined" is the closest genuine sort default rather
+      // than inventing a field with no backing data.
+      orderBy: orderBy ?? { field: "created_at", direction: "desc" },
+    },
   };
 }
 
 /**
- * SHOW is always the set of fields referenced in WHERE (deduplicated, in
- * first-seen order) plus "email" -- there's no separate admin choice of
- * which columns to preview, matching the fixed-template behavior.
- */
-function deriveShowFields(conditions: SegmentCondition[]): string[] {
-  const seen = new Set<string>(["email"]);
-  const show = ["email"];
-  for (const condition of conditions) {
-    const label = FIELD_LABELS[condition.field];
-    if (!seen.has(label)) {
-      seen.add(label);
-      show.push(label);
-    }
-  }
-  return show;
-}
-
-/**
  * Renders the fixed, non-editable scaffold lines (FROM/SHOW/GROUP BY)
- * shown above the WHERE editor -- always derived from the current
- * conditions, never stored or typed separately.
+ * shown above the WHERE editor -- always the full client field set,
+ * matching Shopify's own segment editor (SHOW/GROUP BY list every
+ * customer field for context, not just fields referenced in WHERE).
  */
-export function renderScaffold(conditions: SegmentCondition[]): {
+export function renderScaffold(): {
   from: string;
   show: string;
   groupBy: string;
 } {
-  const fields = deriveShowFields(conditions).join(", ");
+  const fields = ALL_SHOW_FIELDS.join(", ");
   return {
     from: "FROM clients",
     show: `SHOW ${fields}`,
