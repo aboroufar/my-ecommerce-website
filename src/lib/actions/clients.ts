@@ -45,9 +45,16 @@ async function syncNewsletterSubscription(email: string, subscribed: boolean) {
   const adminSupabase = createAdminClient();
   const normalizedEmail = email.toLowerCase();
   if (subscribed) {
-    await adminSupabase.from("newsletter_subscribers").insert({ email: normalizedEmail });
+    const { error } = await adminSupabase
+      .from("newsletter_subscribers")
+      .upsert({ email: normalizedEmail }, { onConflict: "email", ignoreDuplicates: true });
+    if (error) console.error("syncNewsletterSubscription insert failed:", error);
   } else {
-    await adminSupabase.from("newsletter_subscribers").delete().eq("email", normalizedEmail);
+    const { error } = await adminSupabase
+      .from("newsletter_subscribers")
+      .delete()
+      .eq("email", normalizedEmail);
+    if (error) console.error("syncNewsletterSubscription delete failed:", error);
   }
 }
 
