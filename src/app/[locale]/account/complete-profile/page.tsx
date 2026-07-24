@@ -22,15 +22,31 @@ export default async function CompleteProfilePage({
     prefer_not_to_say: t("genderPreferNotToSay"),
   };
 
-  let client: { name: string | null; phone: string | null } | null = null;
+  let client: {
+    name: string | null;
+    phone: string | null;
+    sms_marketing_consent: boolean;
+    whatsapp_marketing_consent: boolean;
+  } | null = null;
+  let emailSubscribed = false;
   if (user) {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("clients")
-      .select("name, phone")
-      .eq("id", user.id)
-      .single();
+    const [{ data }, { data: subscriber }] = await Promise.all([
+      supabase
+        .from("clients")
+        .select("name, phone, sms_marketing_consent, whatsapp_marketing_consent")
+        .eq("id", user.id)
+        .single(),
+      user.email
+        ? supabase
+            .from("newsletter_subscribers")
+            .select("email")
+            .eq("email", user.email.toLowerCase())
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
     client = data;
+    emailSubscribed = !!subscriber;
   }
 
   return (
@@ -111,15 +127,23 @@ export default async function CompleteProfilePage({
           <p className="mt-2 text-sm text-muted">{t("marketingConsentNotice")}</p>
           <div className="mt-3 flex flex-col gap-2">
             <label className="flex items-center gap-2 text-sm text-foreground">
-              <input type="checkbox" name="email_marketing_consent" />
+              <input type="checkbox" name="email_marketing_consent" defaultChecked={emailSubscribed} />
               {t("marketingEmail")}
             </label>
             <label className="flex items-center gap-2 text-sm text-foreground">
-              <input type="checkbox" name="sms_marketing_consent" />
+              <input
+                type="checkbox"
+                name="sms_marketing_consent"
+                defaultChecked={client?.sms_marketing_consent}
+              />
               {t("marketingSms")}
             </label>
             <label className="flex items-center gap-2 text-sm text-foreground">
-              <input type="checkbox" name="whatsapp_marketing_consent" />
+              <input
+                type="checkbox"
+                name="whatsapp_marketing_consent"
+                defaultChecked={client?.whatsapp_marketing_consent}
+              />
               {t("marketingWhatsapp")}
             </label>
           </div>

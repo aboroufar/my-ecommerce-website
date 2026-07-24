@@ -135,6 +135,8 @@
     "marketingSms": "I agree to receive SMS marketing text messages.",
     "marketingWhatsapp": "I agree to receive WhatsApp marketing messages.",
     "marketingConsentNotice": "You can change these preferences at any time.",
+    "subscribed": "Subscribed",
+    "notSubscribed": "Not subscribed",
     "addBillingAddress": "Billing address (optional)",
     "skipForNow": "Skip for now",
     "finish": "Finish"

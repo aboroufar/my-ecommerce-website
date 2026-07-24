@@ -135,6 +135,8 @@
     "marketingSms": "Accetto di ricevere messaggi di marketing via SMS.",
     "marketingWhatsapp": "Accetto di ricevere messaggi di marketing via WhatsApp.",
     "marketingConsentNotice": "Puoi modificare queste preferenze in qualsiasi momento.",
+    "subscribed": "Iscritto",
+    "notSubscribed": "Non iscritto",
     "addBillingAddress": "Indirizzo di fatturazione (facoltativo)",
     "skipForNow": "Salta per ora",
     "finish": "Fine"

@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfile } from "@/lib/actions/clients";
 import { formatDate } from "@/lib/format";
+import { PhoneNumberField } from "@/components/account/PhoneNumberField";
 
 export const dynamic = "force-dynamic";
 
@@ -30,11 +31,13 @@ export default async function AccountOverviewPage({
   const COUNTRY_LABELS: Record<string, string> = { IT: t("countryItaly") };
 
   const supabase = await createClient();
-  const [{ data: client }, { data: billingAddress }] = user
+  const [{ data: client }, { data: billingAddress }, { data: subscriber }] = user
     ? await Promise.all([
         supabase
           .from("clients")
-          .select("name, phone, display_id, date_of_birth, gender")
+          .select(
+            "name, phone, display_id, date_of_birth, gender, sms_marketing_consent, whatsapp_marketing_consent"
+          )
           .eq("id", user.id)
           .single(),
         supabase
@@ -43,8 +46,16 @@ export default async function AccountOverviewPage({
           .eq("client_id", user.id)
           .eq("is_billing", true)
           .maybeSingle(),
+        user.email
+          ? supabase
+              .from("newsletter_subscribers")
+              .select("email")
+              .eq("email", user.email.toLowerCase())
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
       ])
-    : [{ data: null }, { data: null }];
+    : [{ data: null }, { data: null }, { data: null }];
+  const emailSubscribed = !!subscriber;
 
   return (
     <div>
@@ -111,14 +122,7 @@ export default async function AccountOverviewPage({
                 placeholder={t("fullNamePlaceholder")}
                 className="border border-line bg-transparent px-3 py-2 text-sm"
               />
-              <input
-                name="phone"
-                type="tel"
-                required
-                defaultValue={client?.phone ?? ""}
-                placeholder={t("phonePlaceholder")}
-                className="border border-line bg-transparent px-3 py-2 text-sm"
-              />
+              <PhoneNumberField defaultValue={client?.phone ?? ""} placeholder={t("phonePlaceholder")} />
               <label className="flex flex-col gap-1.5">
                 <span className="text-xs text-muted">{t("dateOfBirth")}</span>
                 <input
@@ -147,6 +151,37 @@ export default async function AccountOverviewPage({
                   ))}
                 </select>
               </label>
+
+              <div className="mt-2 flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  {t("marketingPreferences")}
+                </span>
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    name="email_marketing_consent"
+                    defaultChecked={emailSubscribed}
+                  />
+                  {t("marketingEmail")}
+                </label>
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    name="sms_marketing_consent"
+                    defaultChecked={client?.sms_marketing_consent}
+                  />
+                  {t("marketingSms")}
+                </label>
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    name="whatsapp_marketing_consent"
+                    defaultChecked={client?.whatsapp_marketing_consent}
+                  />
+                  {t("marketingWhatsapp")}
+                </label>
+              </div>
+
               <div className="mt-1 flex items-center gap-4">
                 <button
                   type="submit"
@@ -179,6 +214,26 @@ export default async function AccountOverviewPage({
                 {client?.phone && <p>{client.phone}</p>}
                 {client?.gender && <p>{GENDER_LABELS[client.gender] ?? client.gender}</p>}
               </div>
+
+              <div className="mt-4">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  {t("marketingPreferences")}
+                </span>
+                <ul className="mt-1.5 flex flex-col gap-0.5 text-sm text-foreground">
+                  <li>
+                    {t("marketingEmail")}: {emailSubscribed ? t("subscribed") : t("notSubscribed")}
+                  </li>
+                  <li>
+                    {t("marketingSms")}:{" "}
+                    {client?.sms_marketing_consent ? t("subscribed") : t("notSubscribed")}
+                  </li>
+                  <li>
+                    {t("marketingWhatsapp")}:{" "}
+                    {client?.whatsapp_marketing_consent ? t("subscribed") : t("notSubscribed")}
+                  </li>
+                </ul>
+              </div>
+
               <Link
                 href="/account?edit=profile"
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-foreground underline underline-offset-4 hover:text-accent"

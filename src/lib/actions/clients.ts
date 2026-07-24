@@ -17,6 +17,36 @@ async function requireAdmin() {
   if (!user) redirect("/admin");
 }
 
+/** clients.phone has a unique constraint (see 20260811000001) -- every
+ * write path surfaces its 23505 as this same clear message instead of
+ * the raw constraint-violation text. */
+function phoneErrorMessage(error: { code?: string; message: string }): string {
+  return error.code === "23505"
+    ? "This phone number is already in use by another client."
+    : error.message;
+}
+
+/**
+ * Adds or removes a row in newsletter_subscribers (matched by lowercased
+ * email) to reflect the desired email-marketing-consent state -- the
+ * single place all four call sites (customer self-edit, onboarding,
+ * admin create, admin edit) go through, so "subscribe" and "unsubscribe"
+ * aren't reimplemented differently in each action. A 23505 on insert is
+ * a harmless no-op (already subscribed), not an error worth surfacing.
+ */
+async function syncNewsletterSubscription(
+  supabase: ReturnType<typeof createAdminClient> | Awaited<ReturnType<typeof createClient>>,
+  email: string,
+  subscribed: boolean
+) {
+  const normalizedEmail = email.toLowerCase();
+  if (subscribed) {
+    await supabase.from("newsletter_subscribers").insert({ email: normalizedEmail });
+  } else {
+    await supabase.from("newsletter_subscribers").delete().eq("email", normalizedEmail);
+  }
+}
+
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Phone is required"),
@@ -24,6 +54,9 @@ const profileSchema = z.object({
   gender: z.enum(["male", "female", "other", "prefer_not_to_say"], {
     message: "Gender is required",
   }),
+  email_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  sms_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
+  whatsapp_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
 });
 
 export async function updateProfile(formData: FormData) {
@@ -38,18 +71,30 @@ export async function updateProfile(formData: FormData) {
     redirect(`/account?error=${encodeURIComponent(parsed.error.issues[0].message)}`);
   }
 
-  const { name, phone, date_of_birth, gender } = parsed.data;
+  const {
+    name,
+    phone,
+    date_of_birth,
+    gender,
+    email_marketing_consent,
+    sms_marketing_consent,
+    whatsapp_marketing_consent,
+  } = parsed.data;
 
   // Uses the logged-in user's own session (not the admin client) -- RLS
   // requires id = auth.uid() for updates, so this simply fails for anyone
   // trying to write another client's row.
   const { error } = await supabase
     .from("clients")
-    .update({ name, phone, date_of_birth, gender })
+    .update({ name, phone, date_of_birth, gender, sms_marketing_consent, whatsapp_marketing_consent })
     .eq("id", user.id);
 
   if (error) {
-    redirect(`/account?error=${encodeURIComponent(error.message)}`);
+    redirect(`/account?error=${encodeURIComponent(phoneErrorMessage(error))}`);
+  }
+
+  if (user.email) {
+    await syncNewsletterSubscription(supabase, user.email, email_marketing_consent);
   }
 
   revalidatePath("/account");
@@ -127,14 +172,11 @@ export async function completeProfile(formData: FormData) {
     .eq("id", user.id);
 
   if (error) {
-    redirect(`/account/complete-profile?error=${encodeURIComponent(error.message)}`);
+    redirect(`/account/complete-profile?error=${encodeURIComponent(phoneErrorMessage(error))}`);
   }
 
-  if (email_marketing_consent && user.email) {
-    // Same list the storefront's newsletter signup and admin "Add client"
-    // form write to -- unique constraint on email means a 23505 here is
-    // a harmless no-op, not an error worth surfacing.
-    await supabase.from("newsletter_subscribers").insert({ email: user.email.toLowerCase() });
+  if (user.email) {
+    await syncNewsletterSubscription(supabase, user.email, email_marketing_consent);
   }
 
   if (address_line1 && address_city && address_postal_code && address_country) {
@@ -237,15 +279,10 @@ export async function createClientAccount(formData: FormData) {
     .eq("id", clientId);
 
   if (updateError) {
-    redirect(`/admin/clients/new?error=${encodeURIComponent(updateError.message)}`);
+    redirect(`/admin/clients/new?error=${encodeURIComponent(phoneErrorMessage(updateError))}`);
   }
 
-  if (email_marketing_consent) {
-    // Same list customer-facing newsletter signup writes to -- unique
-    // constraint on email means a 23505 here is a harmless no-op, not an
-    // error worth surfacing.
-    await supabase.from("newsletter_subscribers").insert({ email: email.toLowerCase() });
-  }
+  await syncNewsletterSubscription(supabase, email, email_marketing_consent);
 
   if (address_line1 && address_city && address_postal_code && address_country) {
     await supabase.from("addresses").insert({
@@ -268,16 +305,19 @@ const updateClientSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   phone: z.string().optional().default(""),
+  email_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
   sms_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
   whatsapp_marketing_consent: z.preprocess((v) => v === "on", z.boolean()),
 });
 
 /**
- * Admin edit of an existing client -- deliberately does not touch email
- * (that's the auth.users identity, changing it needs Supabase's own
- * email-change/re-confirmation flow, not a plain column update) or
- * addresses (managed from the client detail page's own address list,
- * same as a customer manages their own via /account/addresses).
+ * Admin edit of an existing client -- deliberately does not touch the
+ * client's email address itself (that's the auth.users identity,
+ * changing it needs Supabase's own email-change/re-confirmation flow,
+ * not a plain column update) or addresses (managed from the client
+ * detail page's own address list, same as a customer manages their own
+ * via /account/addresses). Email *marketing* consent is a separate
+ * concept -- membership in newsletter_subscribers -- and is synced here.
  */
 export async function updateClientAccount(clientId: string, formData: FormData) {
   await requireAdmin();
@@ -289,11 +329,23 @@ export async function updateClientAccount(clientId: string, formData: FormData) 
     );
   }
 
-  const { first_name, last_name, phone, sms_marketing_consent, whatsapp_marketing_consent } =
-    parsed.data;
+  const {
+    first_name,
+    last_name,
+    phone,
+    email_marketing_consent,
+    sms_marketing_consent,
+    whatsapp_marketing_consent,
+  } = parsed.data;
   const name = `${first_name} ${last_name}`.trim();
 
   const supabase = createAdminClient();
+  const { data: existingClient } = await supabase
+    .from("clients")
+    .select("email")
+    .eq("id", clientId)
+    .single();
+
   const { error } = await supabase
     .from("clients")
     .update({
@@ -305,7 +357,11 @@ export async function updateClientAccount(clientId: string, formData: FormData) 
     .eq("id", clientId);
 
   if (error) {
-    redirect(`/admin/clients/${clientId}/edit?error=${encodeURIComponent(error.message)}`);
+    redirect(`/admin/clients/${clientId}/edit?error=${encodeURIComponent(phoneErrorMessage(error))}`);
+  }
+
+  if (existingClient?.email) {
+    await syncNewsletterSubscription(supabase, existingClient.email, email_marketing_consent);
   }
 
   revalidatePath("/admin/clients");

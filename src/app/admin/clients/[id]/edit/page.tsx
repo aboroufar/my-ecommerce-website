@@ -24,6 +24,13 @@ export default async function EditClientPage({
 
   if (!client) notFound();
 
+  const { data: subscriber } = await supabase
+    .from("newsletter_subscribers")
+    .select("email")
+    .eq("email", client.email.toLowerCase())
+    .maybeSingle();
+  const emailSubscribed = !!subscriber;
+
   // clients.name is one combined field (see createClientAccount) --
   // split back into first/last for the form the same way it was joined,
   // falling back to putting everything in "first name" if there's no
@@ -100,6 +107,14 @@ export default async function EditClientPage({
         <section>
           <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Marketing</h2>
           <div className="mt-3 flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                name="email_marketing_consent"
+                defaultChecked={emailSubscribed}
+              />
+              Customer agreed to receive marketing emails.
+            </label>
             <label className="flex items-center gap-2 text-sm text-foreground">
               <input
                 type="checkbox"
