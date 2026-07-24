@@ -215,25 +215,6 @@ export default async function AccountOverviewPage({
                 {client?.gender && <p>{GENDER_LABELS[client.gender] ?? client.gender}</p>}
               </div>
 
-              <div className="mt-4">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-                  {t("marketingPreferences")}
-                </span>
-                <ul className="mt-1.5 flex flex-col gap-0.5 text-sm text-foreground">
-                  <li>
-                    {t("marketingEmail")}: {emailSubscribed ? t("subscribed") : t("notSubscribed")}
-                  </li>
-                  <li>
-                    {t("marketingSms")}:{" "}
-                    {client?.sms_marketing_consent ? t("subscribed") : t("notSubscribed")}
-                  </li>
-                  <li>
-                    {t("marketingWhatsapp")}:{" "}
-                    {client?.whatsapp_marketing_consent ? t("subscribed") : t("notSubscribed")}
-                  </li>
-                </ul>
-              </div>
-
               <Link
                 href="/account?edit=profile"
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-foreground underline underline-offset-4 hover:text-accent"

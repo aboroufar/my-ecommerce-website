@@ -33,17 +33,21 @@ function phoneErrorMessage(error: { code?: string; message: string }): string {
  * admin create, admin edit) go through, so "subscribe" and "unsubscribe"
  * aren't reimplemented differently in each action. A 23505 on insert is
  * a harmless no-op (already subscribed), not an error worth surfacing.
+ *
+ * Always uses its own service-role client, never the caller's session-
+ * scoped one -- newsletter_subscribers has RLS enabled with no
+ * anon/authenticated policies at all (see 20260709000001), so an insert
+ * or delete issued through the customer's own session client is
+ * silently blocked by RLS (no rows affected, no error surfaced) rather
+ * than actually persisting.
  */
-async function syncNewsletterSubscription(
-  supabase: ReturnType<typeof createAdminClient> | Awaited<ReturnType<typeof createClient>>,
-  email: string,
-  subscribed: boolean
-) {
+async function syncNewsletterSubscription(email: string, subscribed: boolean) {
+  const adminSupabase = createAdminClient();
   const normalizedEmail = email.toLowerCase();
   if (subscribed) {
-    await supabase.from("newsletter_subscribers").insert({ email: normalizedEmail });
+    await adminSupabase.from("newsletter_subscribers").insert({ email: normalizedEmail });
   } else {
-    await supabase.from("newsletter_subscribers").delete().eq("email", normalizedEmail);
+    await adminSupabase.from("newsletter_subscribers").delete().eq("email", normalizedEmail);
   }
 }
 
@@ -94,7 +98,7 @@ export async function updateProfile(formData: FormData) {
   }
 
   if (user.email) {
-    await syncNewsletterSubscription(supabase, user.email, email_marketing_consent);
+    await syncNewsletterSubscription(user.email, email_marketing_consent);
   }
 
   revalidatePath("/account");
@@ -176,7 +180,7 @@ export async function completeProfile(formData: FormData) {
   }
 
   if (user.email) {
-    await syncNewsletterSubscription(supabase, user.email, email_marketing_consent);
+    await syncNewsletterSubscription(user.email, email_marketing_consent);
   }
 
   if (address_line1 && address_city && address_postal_code && address_country) {
@@ -282,7 +286,7 @@ export async function createClientAccount(formData: FormData) {
     redirect(`/admin/clients/new?error=${encodeURIComponent(phoneErrorMessage(updateError))}`);
   }
 
-  await syncNewsletterSubscription(supabase, email, email_marketing_consent);
+  await syncNewsletterSubscription(email, email_marketing_consent);
 
   if (address_line1 && address_city && address_postal_code && address_country) {
     await supabase.from("addresses").insert({
@@ -361,7 +365,7 @@ export async function updateClientAccount(clientId: string, formData: FormData) 
   }
 
   if (existingClient?.email) {
-    await syncNewsletterSubscription(supabase, existingClient.email, email_marketing_consent);
+    await syncNewsletterSubscription(existingClient.email, email_marketing_consent);
   }
 
   revalidatePath("/admin/clients");
