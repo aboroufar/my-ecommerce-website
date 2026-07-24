@@ -3,19 +3,13 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export function SignInForm({ next = "/account" }: { next?: string }) {
   const t = useTranslations("signInForm");
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [resetSent, setResetSent] = useState(false);
-  const [resetSending, setResetSending] = useState(false);
 
   // Surfaces OAuth failures redirected back from /auth/callback (e.g. the
   // user cancelled the Google consent screen, or the exchange failed) --
@@ -33,43 +27,6 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
     // mount only; re-reading searchParams on every render would fight the
     // replaceState cleanup above.
   }, []);
-
-  async function handleLogIn(e: React.FormEvent) {
-    e.preventDefault();
-    setStatus("loading");
-    setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setStatus("idle");
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    router.push(next);
-    router.refresh();
-  }
-
-  async function handleForgotPassword() {
-    if (!email) {
-      setError(t("enterEmailFirst"));
-      return;
-    }
-    setError(null);
-    setResetSending(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/account/reset-password`,
-    });
-    setResetSending(false);
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    setResetSent(true);
-  }
 
   async function handleGoogleSignIn() {
     setError(null);
@@ -97,61 +54,14 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
         <span className="h-px flex-1 bg-line" />
       </div>
 
-      <form onSubmit={handleLogIn} className="flex flex-col gap-5">
-        <Field
-          label={t("email")}
-          type="email"
-          required
-          placeholder={t("emailPlaceholder")}
-          value={email}
-          onChange={setEmail}
-        />
-        <Field
-          label={t("password")}
-          type="password"
-          required
-          placeholder={t("passwordPlaceholder")}
-          value={password}
-          onChange={setPassword}
-        />
+      {error && <p className="mt-4 text-sm text-red-700">{error}</p>}
 
-        {error && <p className="text-sm text-red-700">{error}</p>}
-        {resetSent && (
-          <p className="text-sm text-foreground">
-            {t("resetSent")}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          aria-live="polite"
-          className="bg-foreground px-6 py-3.5 text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          {status === "loading" ? t("loggingIn") : t("logIn")}
-        </button>
-
-        <button
-          type="button"
-          onClick={handleForgotPassword}
-          disabled={resetSending}
-          aria-live="polite"
-          className="self-start rounded text-xs font-medium uppercase tracking-wide text-foreground underline underline-offset-4 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          {resetSending ? t("sending") : t("forgotPassword")}
-        </button>
-      </form>
-
-      <p className="mt-6 text-xs text-muted">
-        {t("preferNoPassword")}{" "}
-        <Link
-          href="/auth/magic-link"
-          className="text-foreground underline underline-offset-4"
-        >
-          {t("emailMeLink")}
-        </Link>
-        .
-      </p>
+      <Link
+        href="/auth/magic-link"
+        className="mt-6 flex w-full items-center justify-center border border-line px-6 py-3.5 text-sm font-medium uppercase tracking-wide text-foreground transition-colors hover:border-foreground"
+      >
+        {t("emailMeLink")}
+      </Link>
 
       <hr className="my-10 border-line" />
 
@@ -166,39 +76,6 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
         {t("createAccount")}
       </Link>
     </main>
-  );
-}
-
-function Field({
-  label,
-  type,
-  required,
-  placeholder,
-  value,
-  onChange,
-}: {
-  label: string;
-  type: string;
-  required?: boolean;
-  placeholder: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="flex flex-col gap-2">
-      <span className="text-xs font-medium uppercase tracking-wide text-foreground">
-        {label}
-        {required && "*"}
-      </span>
-      <input
-        type={type}
-        required={required}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="border border-line bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-      />
-    </label>
   );
 }
 
