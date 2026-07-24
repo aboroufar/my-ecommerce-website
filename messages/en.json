@@ -426,23 +426,10 @@
     "title": "Sign in",
     "or": "or",
     "emailMeLink": "Continue with email",
-    "noAccount": "Don't have an account?",
-    "createAccount": "Create account",
     "continueWithGoogle": "Continue with Google"
   },
   "signOutButton": {
     "signOut": "Sign out"
-  },
-  "signUpForm": {
-    "title": "Create account",
-    "or": "or",
-    "checkEmail": "Check your email for a link to finish creating your account.",
-    "email": "Email*",
-    "emailPlaceholder": "Enter your email",
-    "creating": "Sending…",
-    "createAccount": "Continue with email",
-    "alreadyHaveAccount": "Already have an account?",
-    "signIn": "Sign in"
   },
   "addToCartButton": {
     "decreaseQuantity": "Decrease quantity",

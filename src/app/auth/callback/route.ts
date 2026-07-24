@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   // that case fell through silently to the same redirect as a missing
   // code, discarding the actual reason. Redirecting to `next` (not a fixed
   // page) rather than always to /admin keeps the customer-facing Google
-  // sign-in (SignInForm/SignUpForm, both pass next=/account) landing back
+  // sign-in (SignInForm, which passes next=/account) landing back
   // where the user started, with the error visible via ?error=.
   const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
   if (oauthError) {

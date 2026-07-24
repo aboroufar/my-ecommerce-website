@@ -62,19 +62,6 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
       >
         {t("emailMeLink")}
       </Link>
-
-      <hr className="my-10 border-line" />
-
-      <h2 className="font-display text-3xl font-bold uppercase leading-tight text-foreground">
-        {t("noAccount")}
-      </h2>
-
-      <Link
-        href="/auth/sign-up"
-        className="mt-6 inline-block bg-foreground px-6 py-3.5 text-center text-sm font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90"
-      >
-        {t("createAccount")}
-      </Link>
     </main>
   );
 }
