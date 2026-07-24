@@ -8,13 +8,18 @@ interface NavItem {
   href: string;
   label: string;
   icon: (props: { className?: string }) => React.ReactNode;
+  children?: { href: string; label: string }[];
 }
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/admin/products", label: "Products", icon: TagIcon },
   { href: "/admin/orders", label: "Orders", icon: InboxIcon },
-  { href: "/admin/clients", label: "Clients", icon: PersonIcon },
-  { href: "/admin/segments", label: "Segments", icon: SegmentIcon },
+  {
+    href: "/admin/clients",
+    label: "Clients",
+    icon: PersonIcon,
+    children: [{ href: "/admin/segments", label: "Segments" }],
+  },
   { href: "/admin/reviews", label: "Reviews", icon: StarIcon },
   { href: "/admin/categories", label: "Categories", icon: FolderIcon },
   { href: "/admin/tags", label: "Tags", icon: HashIcon },
@@ -56,7 +61,12 @@ export function AdminSidebar({ userEmail }: { userEmail: string }) {
       <nav className="flex-1 overflow-y-auto px-3 pb-4">
         <ul className="flex flex-col gap-0.5">
           {NAV_ITEMS.map((item) => (
-            <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
+            <SidebarLink
+              key={item.href}
+              item={item}
+              active={isActive(pathname, item.href)}
+              pathname={pathname}
+            />
           ))}
         </ul>
       </nav>
@@ -64,7 +74,12 @@ export function AdminSidebar({ userEmail }: { userEmail: string }) {
       <div className="border-t border-line px-3 py-3">
         <ul className="flex flex-col gap-0.5">
           {FOOTER_ITEMS.map((item) => (
-            <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
+            <SidebarLink
+              key={item.href}
+              item={item}
+              active={isActive(pathname, item.href)}
+              pathname={pathname}
+            />
           ))}
         </ul>
         <div className="mt-3 flex items-center justify-between gap-2 px-2.5 text-xs text-muted">
@@ -76,8 +91,20 @@ export function AdminSidebar({ userEmail }: { userEmail: string }) {
   );
 }
 
-function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
+function SidebarLink({
+  item,
+  active,
+  pathname,
+}: {
+  item: NavItem;
+  active: boolean;
+  pathname: string;
+}) {
   const Icon = item.icon;
+  // Children stay visible whenever the parent section is active, matching
+  // the Shopify pattern of an always-expanded child list under the parent
+  // (not a collapsible toggle) -- this app has at most one child per item,
+  // so there's no need for independent expand/collapse state.
   return (
     <li>
       <Link
@@ -92,6 +119,28 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
         <Icon className="h-4.5 w-4.5 shrink-0" />
         {item.label}
       </Link>
+      {item.children && active && (
+        <ul className="mt-0.5 flex flex-col gap-0.5 border-l border-line pl-4">
+          {item.children.map((child) => {
+            const childActive = isActive(pathname, child.href);
+            return (
+              <li key={child.href}>
+                <Link
+                  href={child.href}
+                  aria-current={childActive ? "page" : undefined}
+                  className={`flex items-center rounded-md px-2.5 py-1.5 text-sm transition-colors ${
+                    childActive
+                      ? "bg-accent-soft font-medium text-foreground"
+                      : "text-muted hover:bg-accent-soft/60 hover:text-foreground"
+                  }`}
+                >
+                  {child.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </li>
   );
 }
@@ -127,16 +176,6 @@ function PersonIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
       <circle cx="12" cy="8" r="3.25" />
       <path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function SegmentIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
-      <circle cx="9" cy="7" r="2.75" />
-      <path d="M4.5 19c.9-2.7 2.5-4 4.5-4s3.6 1.3 4.5 4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 6h5M15 10h5M15 14h3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
