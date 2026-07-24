@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { completeProfile } from "@/lib/actions/clients";
 import { CompleteProfileAddressFields } from "@/components/account/CompleteProfileAddressFields";
+import { PhoneNumberField } from "@/components/account/PhoneNumberField";
 
 export const dynamic = "force-dynamic";
 
@@ -52,13 +53,9 @@ export default async function CompleteProfilePage({
             placeholder={t("fullNamePlaceholder")}
             className="border border-line bg-transparent px-3 py-2 text-sm"
           />
-          <input
-            name="phone"
-            type="tel"
-            required
+          <PhoneNumberField
             defaultValue={client?.phone ?? ""}
             placeholder={t("phonePlaceholder")}
-            className="border border-line bg-transparent px-3 py-2 text-sm"
           />
           <label className="flex flex-col gap-1.5">
             <span className="text-xs text-muted">{t("dateOfBirth")}</span>
@@ -66,6 +63,7 @@ export default async function CompleteProfilePage({
               name="date_of_birth"
               type="date"
               required
+              defaultValue=""
               className="border border-line bg-transparent px-3 py-2 text-sm text-foreground"
             />
           </label>
