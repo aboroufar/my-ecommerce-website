@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { decrementStockForOrder, promoteDraftOrder } from "@/lib/orderStock";
 
 // Shared by checkout.session.completed (card / immediate methods) and
 // checkout.session.async_payment_succeeded (SEPA Direct Debit and other
@@ -21,7 +22,7 @@ async function markOrderPaid(
 
   const { data: order, error: orderFetchError } = await supabase
     .from("orders")
-    .select("id, status, client_id, total_cents, currency")
+    .select("id, status, financial_status, fulfillment_status, client_id, total_cents, currency")
     .eq("id", orderId)
     .single();
 
@@ -34,7 +35,7 @@ async function markOrderPaid(
   // can fire both checkout.session.completed and async_payment_succeeded
   // in some cases. If we've already marked this order paid, don't
   // decrement stock a second time.
-  if (order.status === "paid") return;
+  if (order.financial_status === "paid") return;
 
   const shipping = session.collected_information?.shipping_details ?? null;
 
@@ -65,7 +66,12 @@ async function markOrderPaid(
   await supabase
     .from("orders")
     .update({
+      // status is kept only as a deprecated mirror column (see
+      // 20260812000001_financial_fulfillment_status.sql) -- nothing new
+      // reads it, financial_status/fulfillment_status are the real state.
       status: "paid",
+      financial_status: "paid",
+      fulfillment_status: "unfulfilled",
       stripe_payment_intent_id:
         typeof session.payment_intent === "string"
           ? session.payment_intent
@@ -82,44 +88,10 @@ async function markOrderPaid(
   // stock_qty and oversell it (a plain read-then-write from here would
   // have that race condition). Variant line items decrement the
   // variant's own stock_qty via a separate function instead of the
-  // parent product's -- decrement_stock itself is untouched.
-  const { data: orderItems } = await supabase
-    .from("order_items")
-    .select("product_id, product_name, quantity, unit_price_cents, variant_id, variant_label")
-    .eq("order_id", orderId);
-
-  for (const item of orderItems ?? []) {
-    if (item.variant_id) {
-      const { data: ok, error: rpcError } = await supabase.rpc(
-        "decrement_variant_stock",
-        { item_variant_id: item.variant_id, item_quantity: item.quantity }
-      );
-      if (rpcError) {
-        console.error("decrement_variant_stock failed:", rpcError.message);
-      } else if (!ok) {
-        console.warn(
-          `Stock insufficient for variant ${item.variant_id} on order ${orderId} -- needs manual review.`
-        );
-      }
-      continue;
-    }
-
-    if (!item.product_id) continue;
-    const { data: ok, error: rpcError } = await supabase.rpc(
-      "decrement_stock",
-      { item_product_id: item.product_id, item_quantity: item.quantity }
-    );
-    if (rpcError) {
-      console.error("decrement_stock failed:", rpcError.message);
-    } else if (!ok) {
-      // Insufficient stock at fulfillment time (e.g. oversold by a
-      // near-simultaneous order). Payment already succeeded, so this
-      // needs manual follow-up rather than silently going negative.
-      console.warn(
-        `Stock insufficient for product ${item.product_id} on order ${orderId} -- needs manual review.`
-      );
-    }
-  }
+  // parent product's -- decrement_stock itself is untouched. Shared with
+  // the draft-order promotion path in src/lib/orderStock.ts so this
+  // logic isn't duplicated.
+  const orderItems = await decrementStockForOrder(supabase, orderId);
 
   // Send order confirmation email. Failure here is only logged, never
   // thrown -- an email hiccup shouldn't cause Stripe to retry a webhook
@@ -193,14 +165,14 @@ export async function POST(req: NextRequest) {
       // resolve. Cards and other immediate methods are always "paid" by
       // the time this event fires, so their behavior is unchanged.
       if (session.payment_status === "paid") {
-        await markOrderPaid(supabase, session);
+        await handleCheckoutSessionPaid(supabase, session);
       }
       break;
     }
 
     case "checkout.session.async_payment_succeeded": {
       const session = event.data.object as Stripe.Checkout.Session;
-      await markOrderPaid(supabase, session);
+      await handleCheckoutSessionPaid(supabase, session);
       break;
     }
 
@@ -210,9 +182,9 @@ export async function POST(req: NextRequest) {
       if (orderId) {
         await supabase
           .from("orders")
-          .update({ status: "cancelled" })
+          .update({ status: "cancelled", financial_status: "voided", fulfillment_status: "cancelled" })
           .eq("id", orderId)
-          .eq("status", "pending"); // don't cancel an order that already paid
+          .eq("financial_status", "pending"); // don't cancel an order that already paid
       }
       break;
     }
@@ -223,10 +195,16 @@ export async function POST(req: NextRequest) {
       if (orderId) {
         await supabase
           .from("orders")
-          .update({ status: "cancelled" })
+          .update({ status: "cancelled", financial_status: "voided", fulfillment_status: "cancelled" })
           .eq("id", orderId)
-          .eq("status", "pending"); // don't cancel an order that already paid
+          .eq("financial_status", "pending"); // don't cancel an order that already paid
       }
+      break;
+    }
+
+    case "charge.refunded": {
+      const charge = event.data.object as Stripe.Charge;
+      await reconcileStripeRefund(supabase, charge);
       break;
     }
 
@@ -236,4 +214,100 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ received: true });
+}
+
+/**
+ * A checkout.session.completed/async_payment_succeeded session either
+ * belongs to a normal checkout (session.metadata.order_id, an orders
+ * row already exists) or to a draft order's Stripe Payment Link
+ * (session.metadata.draft_order_id, no orders row exists yet -- it's
+ * created here by promoting the draft). Payment Links are session
+ * factories, so they fire the exact same event types as a normal
+ * checkout; this is the only branch needed to route between the two.
+ */
+async function handleCheckoutSessionPaid(
+  supabase: ReturnType<typeof createAdminClient>,
+  session: Stripe.Checkout.Session
+) {
+  const draftOrderId = session.metadata?.draft_order_id;
+  if (draftOrderId && !session.metadata?.order_id) {
+    const paymentIntentId =
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : session.payment_intent?.id ?? null;
+    const result = await promoteDraftOrder(supabase, draftOrderId, {
+      stripePaymentIntentId: paymentIntentId,
+      customerEmail: session.customer_details?.email,
+    });
+    if ("error" in result) {
+      console.error("promoteDraftOrder failed for draft order", draftOrderId, result.error);
+    }
+    return;
+  }
+
+  await markOrderPaid(supabase, session);
+}
+
+/**
+ * Handles refunds initiated from the Stripe Dashboard directly
+ * (bypassing this app's own admin refund action in
+ * src/lib/actions/refunds.ts). Idempotency: this app's own createRefund
+ * action always inserts its `refunds` row (with stripe_refund_id set)
+ * before Stripe's webhook can plausibly arrive, so checking for an
+ * existing row with that stripe_refund_id and no-oping if found means
+ * a Dashboard-initiated refund never double-inserts against one this
+ * app already recorded. No line-item breakdown or restock happens
+ * here -- a Dashboard-initiated refund has no order_item association --
+ * only the header-level refunds row and financial_status are
+ * reconciled.
+ */
+async function reconcileStripeRefund(
+  supabase: ReturnType<typeof createAdminClient>,
+  charge: Stripe.Charge
+) {
+  const paymentIntentId =
+    typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+  if (!paymentIntentId) return;
+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("id, total_cents, financial_status")
+    .eq("stripe_payment_intent_id", paymentIntentId)
+    .single();
+  if (!order) return;
+
+  for (const refund of charge.refunds?.data ?? []) {
+    const { data: existing } = await supabase
+      .from("refunds")
+      .select("id")
+      .eq("stripe_refund_id", refund.id)
+      .maybeSingle();
+    if (existing) continue; // already recorded by this app's own createRefund action
+
+    await supabase.from("refunds").insert({
+      order_id: order.id,
+      amount_cents: refund.amount,
+      reason: refund.reason ?? "Refunded via Stripe Dashboard",
+      stripe_refund_id: refund.id,
+      created_by_email: null, // Dashboard-initiated, no in-app admin identity
+    });
+  }
+
+  const totalRefundedCents = charge.amount_refunded ?? 0;
+  const newFinancialStatus =
+    totalRefundedCents >= order.total_cents
+      ? "refunded"
+      : totalRefundedCents > 0
+        ? "partially_refunded"
+        : order.financial_status;
+
+  if (newFinancialStatus === "refunded") {
+    // status is kept only as a deprecated mirror column.
+    await supabase
+      .from("orders")
+      .update({ financial_status: newFinancialStatus, status: "refunded" })
+      .eq("id", order.id);
+  } else {
+    await supabase.from("orders").update({ financial_status: newFinancialStatus }).eq("id", order.id);
+  }
 }

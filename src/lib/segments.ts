@@ -38,9 +38,12 @@ export interface ClientFacts {
   tag_names: Set<string>;
 }
 
-// Only paid+ orders count as a real purchase -- a pending/cancelled order
-// was never actually charged, same rule the Clients list uses.
-const REAL_PURCHASE_STATUSES = ["paid", "fulfilled", "refunded"];
+// Only actually-charged orders count as a real purchase -- financial_status
+// "voided" means the order never completed payment (see
+// 20260812000001_financial_fulfillment_status.sql); paid/partially_refunded/
+// refunded all represent money that was actually charged at some point,
+// same rule the Clients list uses.
+const REAL_PURCHASE_FINANCIAL_STATUSES = ["paid", "partially_refunded", "refunded"];
 
 /**
  * Builds the fact set every segment is evaluated against: one row per
@@ -67,9 +70,9 @@ export async function getClientFacts(
     (() => {
       let query = supabase
         .from("orders")
-        .select("id, client_id, status, total_cents, created_at")
+        .select("id, client_id, financial_status, total_cents, created_at")
         .not("client_id", "is", null)
-        .in("status", REAL_PURCHASE_STATUSES);
+        .in("financial_status", REAL_PURCHASE_FINANCIAL_STATUSES);
       if (clientIds) query = query.in("client_id", clientIds);
       return query;
     })(),

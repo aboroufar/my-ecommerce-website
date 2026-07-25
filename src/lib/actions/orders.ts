@@ -19,10 +19,6 @@ interface StripeShippingAddress {
   };
 }
 
-const statusSchema = z.object({
-  status: z.enum(["pending", "paid", "fulfilled", "cancelled", "refunded"]),
-});
-
 /**
  * Every action here re-checks admin auth itself rather than relying solely
  * on the layout guard -- server actions are callable directly over the
@@ -33,57 +29,87 @@ async function requireAdmin() {
   if (!user) redirect("/admin");
 }
 
-export async function updateOrderStatus(id: string, formData: FormData) {
+/**
+ * Manual "mark as fulfilled" override for orders shipped without buying
+ * a label through this app (e.g. picked up in-store) -- the Shippo label
+ * flow doesn't touch fulfillment_status itself, so this is the only way
+ * to close out fulfillment when there's no label to buy. Requires the
+ * order to already be paid, same as Shopify won't let you fulfill an
+ * unpaid order.
+ */
+export async function markOrderFulfilled(orderId: string) {
   await requireAdmin();
 
-  const parsed = statusSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) {
+  const supabase = createAdminClient();
+  const { data: order } = await supabase
+    .from("orders")
+    .select("financial_status")
+    .eq("id", orderId)
+    .single();
+
+  if (!order || order.financial_status !== "paid") {
     redirect(
-      `/admin/orders/${id}?error=${encodeURIComponent(parsed.error.issues[0].message)}`
+      `/admin/orders/${orderId}?error=${encodeURIComponent("Only paid orders can be marked fulfilled.")}`
     );
   }
 
-  const supabase = createAdminClient();
   const { error } = await supabase
     .from("orders")
-    .update({ status: parsed.data.status })
-    .eq("id", id);
+    .update({ fulfillment_status: "fulfilled", status: "fulfilled" })
+    .eq("id", orderId);
 
   if (error) {
-    redirect(
-      `/admin/orders/${id}?error=${encodeURIComponent(error.message)}`
-    );
+    redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
   }
 
-  // Manual status changes here are separate from the automatic
-  // pending -> paid transition the Stripe webhook makes -- this is for
-  // fulfillment/refund bookkeeping after payment, not payment confirmation
-  // itself. Stock is never touched here; decrement_stock only runs from
-  // the webhook, once, when a payment is actually confirmed.
   revalidatePath("/admin/orders");
-  revalidatePath(`/admin/orders/${id}`);
+  revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/account/orders");
-  redirect(`/admin/orders/${id}`);
+  redirect(`/admin/orders/${orderId}`);
 }
 
-export async function bulkUpdateOrderStatus(formData: FormData) {
+/**
+ * Bulk fulfillment/cancellation replace the old single bulk status
+ * setter -- a free-form combined status no longer maps cleanly onto two
+ * independent financial_status/fulfillment_status fields, so these are
+ * scoped to the two genuinely common bulk operations instead.
+ */
+export async function bulkMarkOrdersFulfilled(formData: FormData) {
   await requireAdmin();
 
   const ids = formData.getAll("order_ids") as string[];
-  const parsedStatus = z
-    .enum(["pending", "paid", "fulfilled", "cancelled", "refunded"])
-    .safeParse(formData.get("bulk_status"));
-
-  if (ids.length === 0 || !parsedStatus.success) {
-    redirect(
-      `/admin/orders?error=${encodeURIComponent("Select at least one order and a status.")}`
-    );
+  if (ids.length === 0) {
+    redirect(`/admin/orders?error=${encodeURIComponent("Select at least one order.")}`);
   }
 
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("orders")
-    .update({ status: parsedStatus.data })
+    .update({ fulfillment_status: "fulfilled", status: "fulfilled" })
+    .in("id", ids)
+    .eq("financial_status", "paid");
+
+  if (error) {
+    redirect(`/admin/orders?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/account/orders");
+  redirect("/admin/orders");
+}
+
+export async function bulkCancelOrders(formData: FormData) {
+  await requireAdmin();
+
+  const ids = formData.getAll("order_ids") as string[];
+  if (ids.length === 0) {
+    redirect(`/admin/orders?error=${encodeURIComponent("Select at least one order.")}`);
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({ fulfillment_status: "cancelled", status: "cancelled" })
     .in("id", ids);
 
   if (error) {

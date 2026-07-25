@@ -20,13 +20,14 @@ export default async function AdminClientsPage({
       .from("clients")
       .select("id, email, name, created_at")
       .order("created_at", { ascending: false }),
-    // Only paid+ orders count toward "total spent" -- a pending/cancelled
-    // order was never actually charged.
+    // Only actually-charged orders count toward "total spent" -- a
+    // financial_status of "voided" means the order never completed
+    // payment (see 20260812000001_financial_fulfillment_status.sql).
     supabase
       .from("orders")
-      .select("client_id, total_cents, currency, status")
+      .select("client_id, total_cents, currency, financial_status")
       .not("client_id", "is", null)
-      .in("status", ["paid", "fulfilled", "refunded"]),
+      .in("financial_status", ["paid", "partially_refunded", "refunded"]),
     supabase
       .from("client_segments")
       .select("id, name, condition_type, conditions, created_at")

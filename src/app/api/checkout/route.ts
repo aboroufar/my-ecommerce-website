@@ -241,7 +241,7 @@ export async function POST(req: NextRequest) {
           .from("orders")
           .select("discount_code, client_id")
           .in("discount_code", candidateCodes)
-          .in("status", ["paid", "fulfilled", "refunded"])
+          .in("financial_status", ["paid", "partially_refunded", "refunded"])
       : { data: [] as { discount_code: string | null; client_id: string | null }[] };
 
   function usageFor(code: string) {
@@ -377,6 +377,8 @@ export async function POST(req: NextRequest) {
     .from("orders")
     .insert({
       status: "pending",
+      financial_status: "pending",
+      fulfillment_status: "unfulfilled",
       total_cents: totalCents,
       currency,
       client_id: user?.id ?? null,

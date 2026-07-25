@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { OrdersBulkTable } from "@/components/admin/OrdersBulkTable";
 import { AdminOrdersFilterBar } from "@/components/admin/AdminOrdersFilterBar";
@@ -12,16 +13,17 @@ export default async function AdminOrdersPage({
   searchParams: Promise<{
     error?: string;
     q?: string;
-    status?: string;
+    financial_status?: string;
+    fulfillment_status?: string;
     from?: string;
     to?: string;
   }>;
 }) {
-  const { error, q, status, from, to } = await searchParams;
+  const { error, q, financial_status, fulfillment_status, from, to } = await searchParams;
   const supabase = createAdminClient();
   const { data: allOrders } = await supabase
     .from("orders")
-    .select("id, status, total_cents, currency, created_at, clients(email)")
+    .select("id, financial_status, fulfillment_status, total_cents, currency, created_at, clients(email)")
     .order("created_at", { ascending: false });
 
   const query = q?.trim().toLowerCase() ?? "";
@@ -32,7 +34,8 @@ export default async function AdminOrdersPage({
   const toDate = to ? new Date(new Date(to).getTime() + 24 * 60 * 60 * 1000) : null;
 
   const orders = (allOrders ?? []).filter((o) => {
-    if (status && o.status !== status) return false;
+    if (financial_status && o.financial_status !== financial_status) return false;
+    if (fulfillment_status && o.fulfillment_status !== fulfillment_status) return false;
     if (fromDate && new Date(o.created_at) < fromDate) return false;
     if (toDate && new Date(o.created_at) >= toDate) return false;
     if (query) {
@@ -42,11 +45,27 @@ export default async function AdminOrdersPage({
     return true;
   });
 
-  const hasAnyFilter = Boolean(q || status || from || to);
+  const hasAnyFilter = Boolean(q || financial_status || fulfillment_status || from || to);
 
   return (
     <div>
-      <h1 className="font-display text-2xl text-foreground">Orders</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl text-foreground">Orders</h1>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/admin/orders/drafts"
+            className="text-sm text-muted underline underline-offset-4 hover:text-foreground"
+          >
+            Drafts
+          </Link>
+          <Link
+            href="/admin/orders/new"
+            className="bg-accent px-4 py-2 text-xs font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90"
+          >
+            Create order
+          </Link>
+        </div>
+      </div>
 
       {error && (
         <p className="mt-6 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

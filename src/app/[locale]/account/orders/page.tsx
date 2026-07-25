@@ -3,6 +3,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, formatDate } from "@/lib/format";
+import type { FinancialStatus, FulfillmentStatus } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,27 @@ interface OrderItemThumbnail {
     product_images: { url: string; alt_text: string | null; sort_order: number }[];
   } | null;
 }
+
+interface OrderRow {
+  id: string;
+  financial_status: FinancialStatus;
+  fulfillment_status: FulfillmentStatus;
+  total_cents: number;
+  currency: string;
+  created_at: string;
+}
+
+// financial_status/fulfillment_status are two independent tracks (see
+// 20260812000001_financial_fulfillment_status.sql), so each tab is a
+// predicate over both fields rather than a plain .in("status", [...])
+// list the old single-status query used -- filtered in-memory below,
+// consistent with this page's existing client-side thumbnail-join style.
+const TAB_PREDICATES: Record<string, (o: OrderRow) => boolean> = {
+  processing: (o) => o.fulfillment_status !== "fulfilled" && o.fulfillment_status !== "cancelled",
+  shipped: (o) => o.fulfillment_status === "fulfilled",
+  returned: (o) => o.financial_status === "partially_refunded" || o.financial_status === "refunded",
+  cancelled: (o) => o.fulfillment_status === "cancelled",
+};
 
 export default async function OrdersPage({
   searchParams,
@@ -27,26 +49,28 @@ export default async function OrdersPage({
   ]);
 
   const TABS = [
-    { key: "all", label: t("tabAll"), statuses: null },
-    { key: "processing", label: t("tabProcessing"), statuses: ["pending", "paid"] },
-    { key: "shipped", label: t("tabShipped"), statuses: ["fulfilled"] },
-    { key: "returned", label: t("tabReturned"), statuses: ["refunded"] },
-    { key: "cancelled", label: t("tabCancelled"), statuses: ["cancelled"] },
+    { key: "all", label: t("tabAll") },
+    { key: "processing", label: t("tabProcessing") },
+    { key: "shipped", label: t("tabShipped") },
+    { key: "returned", label: t("tabReturned") },
+    { key: "cancelled", label: t("tabCancelled") },
   ] as const;
 
   const activeTab = TABS.find((tab) => tab.key === status) ?? TABS[0];
 
   const supabase = await createClient();
-  let query = supabase
+  const { data: rawOrders } = await supabase
     .from("orders")
-    .select("id, status, total_cents, currency, created_at")
+    .select("id, financial_status, fulfillment_status, total_cents, currency, created_at")
     .order("created_at", { ascending: false });
 
-  if (activeTab.statuses) {
-    query = query.in("status", activeTab.statuses);
-  }
-
-  const { data: orders } = await query;
+  // financial_status/fulfillment_status are plain-text CHECK-constrained
+  // columns, not real Postgres enums, so Supabase's generated type is
+  // `string` -- cast to the hand-maintained literal unions, same
+  // reasoning as OrderStatus elsewhere in this app.
+  const allOrders = (rawOrders ?? []) as OrderRow[];
+  const predicate = TAB_PREDICATES[activeTab.key];
+  const orders = predicate ? allOrders.filter(predicate) : allOrders;
 
   // One thumbnail per order (the first line item's primary image), fetched
   // in a single batched query keyed by order id rather than N+1 per row.
@@ -65,13 +89,30 @@ export default async function OrdersPage({
     }
   }
 
-  const STATUS_LABELS: Record<string, string> = {
+  // Show the more customer-relevant status per row: a refund always
+  // matters more than plain fulfillment progress, so financial_status
+  // wins whenever it indicates a refund; otherwise fall back to
+  // fulfillment_status -- recomposes what the old single-status display
+  // showed, from the two now-independent fields.
+  const FINANCIAL_STATUS_LABELS: Record<FinancialStatus, string> = {
     pending: t("statusPending"),
     paid: t("statusPaid"),
+    partially_refunded: t("statusPartiallyRefunded"),
+    refunded: t("statusReturned"),
+    voided: t("statusVoided"),
+  };
+  const FULFILLMENT_STATUS_LABELS: Record<FulfillmentStatus, string> = {
+    unfulfilled: t("statusUnfulfilled"),
+    partially_fulfilled: t("statusPartiallyFulfilled"),
     fulfilled: t("statusFulfilled"),
     cancelled: t("statusCancelled"),
-    refunded: t("statusReturned"),
   };
+  function statusLabel(order: OrderRow) {
+    if (order.financial_status !== "paid") {
+      return FINANCIAL_STATUS_LABELS[order.financial_status];
+    }
+    return FULFILLMENT_STATUS_LABELS[order.fulfillment_status];
+  }
 
   return (
     <div>
@@ -154,7 +195,7 @@ export default async function OrdersPage({
                   </Link>
                   <p className="mt-1 text-xs text-muted">
                     {formatDate(order.created_at, locale)} ·{" "}
-                    <span>{STATUS_LABELS[order.status] ?? order.status}</span>
+                    <span>{statusLabel(order)}</span>
                   </p>
                 </div>
 

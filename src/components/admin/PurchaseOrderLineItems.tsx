@@ -12,6 +12,11 @@ export interface ProductSearchOption {
   sku: string | null;
   imageUrl: string | null;
   stockQty: number;
+  // Optional -- only populated/used by the draft-order picker
+  // (DraftOrderLineItems), which needs the canonical customer-facing
+  // price. Purchase orders use their own unit_cost_cents (a supplier
+  // cost the admin enters, unrelated to this) and never set it.
+  priceCents?: number;
 }
 
 export interface LineItem {

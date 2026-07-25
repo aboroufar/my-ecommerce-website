@@ -52,7 +52,7 @@ export default async function AdminClientDetailPage({
   ] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, status, total_cents, currency, created_at")
+      .select("id, financial_status, fulfillment_status, total_cents, currency, created_at")
       .eq("client_id", id)
       .order("created_at", { ascending: false }),
     supabase
@@ -165,7 +165,10 @@ export default async function AdminClientDetailPage({
                   <span className="text-foreground">Order #{lastOrder.id.slice(0, 8)}</span>
                   <p className="mt-1 text-xs text-muted">
                     {new Date(lastOrder.created_at).toLocaleDateString()} ·{" "}
-                    <span className="capitalize">{lastOrder.status}</span>
+                    <span className="capitalize">
+                      {lastOrder.financial_status.replace(/_/g, " ")} ·{" "}
+                      {lastOrder.fulfillment_status.replace(/_/g, " ")}
+                    </span>
                   </p>
                 </div>
                 <span className="text-foreground">
@@ -197,7 +200,10 @@ export default async function AdminClientDetailPage({
                       </Link>
                       <p className="mt-1 text-xs text-muted">
                         {new Date(order.created_at).toLocaleDateString()} ·{" "}
-                        <span className="capitalize">{order.status}</span>
+                        <span className="capitalize">
+                          {order.financial_status.replace(/_/g, " ")} ·{" "}
+                          {order.fulfillment_status.replace(/_/g, " ")}
+                        </span>
                       </p>
                     </div>
                     <span className="text-foreground">

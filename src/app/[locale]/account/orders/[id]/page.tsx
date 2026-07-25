@@ -4,6 +4,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, formatDate } from "@/lib/format";
+import type { FinancialStatus, FulfillmentStatus } from "@/lib/supabase/types";
 
 interface ShippingAddress {
   name?: string;
@@ -34,7 +35,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, status, total_cents, currency, created_at, shipping_address, carrier, tracking_number, tracking_url"
+      "id, financial_status, fulfillment_status, total_cents, currency, created_at, shipping_address, carrier, tracking_number, tracking_url"
     )
     .eq("id", id)
     .single();
@@ -50,13 +51,26 @@ export default async function OrderDetailPage({
 
   const shipping = order.shipping_address as ShippingAddress | null;
 
-  const STATUS_LABELS: Record<string, string> = {
+  const financialStatus = order.financial_status as FinancialStatus;
+  const fulfillmentStatus = order.fulfillment_status as FulfillmentStatus;
+
+  const FINANCIAL_STATUS_LABELS: Record<FinancialStatus, string> = {
     pending: t("statusPending"),
     paid: t("statusPaid"),
+    partially_refunded: t("statusPartiallyRefunded"),
+    refunded: t("statusReturned"),
+    voided: t("statusVoided"),
+  };
+  const FULFILLMENT_STATUS_LABELS: Record<FulfillmentStatus, string> = {
+    unfulfilled: t("statusUnfulfilled"),
+    partially_fulfilled: t("statusPartiallyFulfilled"),
     fulfilled: t("statusFulfilled"),
     cancelled: t("statusCancelled"),
-    refunded: t("statusReturned"),
   };
+  const statusLabel =
+    financialStatus !== "paid"
+      ? FINANCIAL_STATUS_LABELS[financialStatus]
+      : FULFILLMENT_STATUS_LABELS[fulfillmentStatus];
 
   return (
     <div>
@@ -72,7 +86,7 @@ export default async function OrderDetailPage({
       </h1>
       <p className="mt-1 text-sm text-muted">
         {t("placed")} {formatDate(order.created_at, locale)} ·{" "}
-        <span>{STATUS_LABELS[order.status] ?? order.status}</span>
+        <span>{statusLabel}</span>
       </p>
 
       <ul className="mt-8 divide-y divide-line">

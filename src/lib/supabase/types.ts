@@ -623,6 +623,130 @@ export type Database = {
         }
         Relationships: []
       }
+      draft_order_items: {
+        Row: {
+          draft_order_id: string
+          id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          unit_price_cents: number
+          variant_id: string | null
+          variant_label: string | null
+        }
+        Insert: {
+          draft_order_id: string
+          id?: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          unit_price_cents: number
+          variant_id?: string | null
+          variant_label?: string | null
+        }
+        Update: {
+          draft_order_id?: string
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          unit_price_cents?: number
+          variant_id?: string | null
+          variant_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_order_items_draft_order_id_fkey"
+            columns: ["draft_order_id"]
+            isOneToOne: false
+            referencedRelation: "draft_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      draft_orders: {
+        Row: {
+          client_id: string | null
+          converted_order_id: string | null
+          created_at: string
+          currency: string
+          guest_email: string | null
+          guest_name: string | null
+          id: string
+          invoice_sent_at: string | null
+          shipping_cents: number
+          status: string
+          stripe_payment_link_id: string | null
+          stripe_payment_link_url: string | null
+          subtotal_cents: number
+          total_cents: number
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          converted_order_id?: string | null
+          created_at?: string
+          currency?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          invoice_sent_at?: string | null
+          shipping_cents?: number
+          status?: string
+          stripe_payment_link_id?: string | null
+          stripe_payment_link_url?: string | null
+          subtotal_cents: number
+          total_cents: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          converted_order_id?: string | null
+          created_at?: string
+          currency?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          invoice_sent_at?: string | null
+          shipping_cents?: number
+          status?: string
+          stripe_payment_link_id?: string | null
+          stripe_payment_link_url?: string | null
+          subtotal_cents?: number
+          total_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_orders_converted_order_id_fkey"
+            columns: ["converted_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       help_categories: {
         Row: {
           created_at: string
@@ -887,6 +1011,8 @@ export type Database = {
           currency: string
           discount_cents: number
           discount_code: string | null
+          financial_status: string
+          fulfillment_status: string
           id: string
           label_url: string | null
           pending_rates: Json | null
@@ -907,6 +1033,8 @@ export type Database = {
           currency?: string
           discount_cents?: number
           discount_code?: string | null
+          financial_status?: string
+          fulfillment_status?: string
           id?: string
           label_url?: string | null
           pending_rates?: Json | null
@@ -927,6 +1055,8 @@ export type Database = {
           currency?: string
           discount_cents?: number
           discount_code?: string | null
+          financial_status?: string
+          fulfillment_status?: string
           id?: string
           label_url?: string | null
           pending_rates?: Json | null
@@ -1475,6 +1605,89 @@ export type Database = {
           },
         ]
       }
+      refunds: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by_email: string | null
+          id: string
+          order_id: string
+          reason: string | null
+          stripe_refund_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by_email?: string | null
+          id?: string
+          order_id: string
+          reason?: string | null
+          stripe_refund_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by_email?: string | null
+          id?: string
+          order_id?: string
+          reason?: string | null
+          stripe_refund_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refund_line_items: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          order_item_id: string
+          quantity: number
+          refund_id: string
+          restocked: boolean
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          order_item_id: string
+          quantity: number
+          refund_id: string
+          restocked?: boolean
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          order_item_id?: string
+          quantity?: number
+          refund_id?: string
+          restocked?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_line_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_line_items_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "refunds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_content: {
         Row: {
           key: string
@@ -1722,6 +1935,14 @@ export type Database = {
         Args: { item_variant_id: string; item_quantity: number }
         Returns: boolean
       }
+      increment_stock: {
+        Args: { item_product_id: string; item_quantity: number }
+        Returns: boolean
+      }
+      increment_variant_stock: {
+        Args: { item_variant_id: string; item_quantity: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1866,3 +2087,26 @@ export type OrderStatus =
   | "fulfilled"
   | "cancelled"
   | "refunded"
+
+// orders.financial_status / orders.fulfillment_status /
+// draft_orders.status are the same kind of plain-text CHECK-constrained
+// column as orders.status above -- these literal unions are hand-added
+// for stricter typing at call sites. orders.status is kept only as a
+// deprecated, no-longer-written legacy column (see
+// 20260812000001_financial_fulfillment_status.sql); OrderStatus above
+// is likewise now only relevant for reading old data, nothing writes it
+// anymore. Both enums are deliberately trimmed to only the states this
+// app's own checkout/webhook/refund/fulfillment code can actually
+// produce, not the full state set Shopify itself supports.
+export type FinancialStatus =
+  | "pending"
+  | "paid"
+  | "partially_refunded"
+  | "refunded"
+  | "voided"
+export type FulfillmentStatus =
+  | "unfulfilled"
+  | "partially_fulfilled"
+  | "fulfilled"
+  | "cancelled"
+export type DraftOrderStatus = "open" | "invoice_sent" | "completed"
