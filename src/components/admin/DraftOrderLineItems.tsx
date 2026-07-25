@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { AddProductsModal } from "./AddProductsModal";
 import type { ProductSearchOption } from "./PurchaseOrderLineItems";
@@ -30,14 +30,19 @@ interface DraftLineItem {
 export function DraftOrderLineItems({
   options,
   currency,
+  onSubtotalChange,
 }: {
   options: ProductSearchOption[];
   currency: string;
+  onSubtotalChange?: (subtotalCents: number) => void;
 }) {
   const [items, setItems] = useState<DraftLineItem[]>([]);
 
   const priceByKey = new Map(
     options.map((o) => [`${o.productId}:${o.variantId ?? ""}`, o.priceCents])
+  );
+  const stockByKey = new Map(
+    options.map((o) => [`${o.productId}:${o.variantId ?? ""}`, o.stockQty])
   );
 
   function addItems(selected: ProductSearchOption[]) {
@@ -72,6 +77,15 @@ export function DraftOrderLineItems({
   const subtotalCents = items.reduce((sum, i) => sum + i.unit_price_cents * i.quantity, 0);
   const addedKeys = new Set(items.map((i) => i.key));
 
+  useEffect(() => {
+    onSubtotalChange?.(subtotalCents);
+  }, [subtotalCents, onSubtotalChange]);
+
+  const overstockedItems = items.filter((item) => {
+    const stockQty = stockByKey.get(item.key);
+    return stockQty !== undefined && item.quantity > stockQty;
+  });
+
   return (
     <div className="flex flex-col gap-4">
       <input
@@ -86,11 +100,28 @@ export function DraftOrderLineItems({
         )}
       />
 
-      <AddProductsModal options={options} alreadyAddedKeys={addedKeys} onAdd={addItems} />
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted">
+          {items.length === 0 ? "No products added yet." : `${items.length} product${items.length === 1 ? "" : "s"}`}
+        </span>
+        <AddProductsModal options={options} alreadyAddedKeys={addedKeys} onAdd={addItems} />
+      </div>
 
-      {items.length === 0 ? (
-        <p className="text-sm text-muted">No products added yet.</p>
-      ) : (
+      {overstockedItems.map((item) => {
+        const stockQty = stockByKey.get(item.key) ?? 0;
+        return (
+          <p
+            key={item.key}
+            className="border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          >
+            {item.product_name}
+            {item.variant_label && ` — ${item.variant_label}`} has {stockQty} unit
+            {stockQty === 1 ? "" : "s"} in stock.
+          </p>
+        );
+      })}
+
+      {items.length > 0 && (
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
             <tr>
@@ -136,13 +167,6 @@ export function DraftOrderLineItems({
           </tbody>
         </table>
       )}
-
-      <div className="border-t border-line pt-3 text-sm">
-        <div className="flex justify-between font-semibold text-foreground">
-          <span>Subtotal</span>
-          <span>{formatPrice(subtotalCents, currency, "en")}</span>
-        </div>
-      </div>
     </div>
   );
 }

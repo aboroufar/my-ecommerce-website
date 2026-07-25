@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createDraftOrder } from "@/lib/actions/draftOrders";
-import { DraftOrderLineItems } from "@/components/admin/DraftOrderLineItems";
+import { CreateOrderTotals } from "@/components/admin/CreateOrderTotals";
 import type { ProductSearchOption } from "@/components/admin/PurchaseOrderLineItems";
 
 export const dynamic = "force-dynamic";
@@ -84,41 +84,21 @@ export default async function NewDraftOrderPage({
         </p>
       )}
 
-      <form action={createDraftOrder} className="mt-8 grid max-w-3xl grid-cols-1 gap-8">
-        <section>
-          <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Customer</h2>
-          <ClientOrGuestFields clients={clients ?? []} />
-        </section>
-
-        <section>
-          <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Products</h2>
-          <div className="mt-3">
-            <DraftOrderLineItems options={options} currency="eur" />
+      <form action={createDraftOrder} className="mt-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+          <div className="min-w-0">
+            <CreateOrderTotals options={options} currency="eur" />
           </div>
-        </section>
 
-        <section>
-          <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Shipping</h2>
-          <label className="mt-3 flex max-w-xs flex-col gap-1.5">
-            <span className="text-sm text-foreground">Shipping charge</span>
-            <input
-              name="shipping_amount"
-              type="number"
-              min={0}
-              step="0.01"
-              defaultValue={0}
-              className="border border-line bg-background px-3 py-2 text-sm"
-            />
-          </label>
-        </section>
+          <div className="flex min-w-0 flex-col gap-6">
+            <div className="border border-line p-5">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Customer</h2>
+              <ClientOrGuestFields clients={clients ?? []} />
+            </div>
+          </div>
+        </div>
 
-        <div className="flex items-center gap-4">
-          <button
-            type="submit"
-            className="bg-accent px-4 py-2 text-xs font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90"
-          >
-            Save
-          </button>
+        <div className="mt-6">
           <Link
             href="/admin/orders"
             className="text-xs text-muted underline underline-offset-4 hover:text-foreground"
