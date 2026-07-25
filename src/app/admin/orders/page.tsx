@@ -23,7 +23,9 @@ export default async function AdminOrdersPage({
   const supabase = createAdminClient();
   const { data: allOrders } = await supabase
     .from("orders")
-    .select("id, financial_status, fulfillment_status, total_cents, currency, created_at, clients(email)")
+    .select(
+      "id, financial_status, fulfillment_status, total_cents, currency, created_at, tracking_number, tracking_url, clients(email)"
+    )
     .order("created_at", { ascending: false });
 
   const query = q?.trim().toLowerCase() ?? "";

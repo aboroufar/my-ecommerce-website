@@ -12,6 +12,8 @@ interface OrderRow {
   total_cents: number;
   currency: string;
   created_at: string;
+  tracking_number: string | null;
+  tracking_url: string | null;
   clients: { email: string } | null;
 }
 
@@ -112,6 +114,7 @@ export function OrdersBulkTable({ orders }: { orders: OrderRow[] }) {
             <th className="py-2 font-medium">Client</th>
             <th className="py-2 font-medium">Payment</th>
             <th className="py-2 font-medium">Fulfillment</th>
+            <th className="py-2 font-medium">Shipping</th>
             <th className="py-2 font-medium">Total</th>
             <th className="py-2 font-medium">Date</th>
             <th className="py-2" />
@@ -145,6 +148,25 @@ export function OrdersBulkTable({ orders }: { orders: OrderRow[] }) {
               </td>
               <td className="py-3 text-muted capitalize">{order.financial_status.replace(/_/g, " ")}</td>
               <td className="py-3 text-muted capitalize">{order.fulfillment_status.replace(/_/g, " ")}</td>
+              <td className="py-3 text-muted">
+                {order.tracking_number ? (
+                  order.tracking_url ? (
+                    <a
+                      href={order.tracking_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-accent underline underline-offset-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Tracking added
+                    </a>
+                  ) : (
+                    "Tracking added"
+                  )
+                ) : (
+                  "—"
+                )}
+              </td>
               <td className="py-3 text-foreground">
                 {formatPrice(order.total_cents, order.currency)}
               </td>
