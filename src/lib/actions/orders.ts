@@ -204,7 +204,7 @@ export async function fetchShippingRates(orderId: string, formData: FormData) {
   const parsed = rateRequestSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     redirect(
-      `/admin/orders/${orderId}?error=${encodeURIComponent(parsed.error.issues[0].message)}`
+      `/admin/orders/${orderId}/package?error=${encodeURIComponent(parsed.error.issues[0].message)}`
     );
   }
 
@@ -219,7 +219,7 @@ export async function fetchShippingRates(orderId: string, formData: FormData) {
   const shipping = order?.shipping_address as StripeShippingAddress | null;
   if (!shipping?.address?.line1) {
     redirect(
-      `/admin/orders/${orderId}?error=${encodeURIComponent("This order has no shipping address.")}`
+      `/admin/orders/${orderId}/package?error=${encodeURIComponent("This order has no shipping address.")}`
     );
   }
 
@@ -233,7 +233,7 @@ export async function fetchShippingRates(orderId: string, formData: FormData) {
 
   if (!settings?.ship_from_line1 || !settings?.ship_from_country) {
     redirect(
-      `/admin/orders/${orderId}?error=${encodeURIComponent(
+      `/admin/orders/${orderId}/package?error=${encodeURIComponent(
         "Set a shipping origin address in Admin → Settings before buying a label."
       )}`
     );
@@ -277,12 +277,12 @@ export async function fetchShippingRates(orderId: string, formData: FormData) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not fetch shipping rates.";
-    redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(message)}`);
+    redirect(`/admin/orders/${orderId}/package?error=${encodeURIComponent(message)}`);
   }
 
   if (rates.length === 0) {
     redirect(
-      `/admin/orders/${orderId}?error=${encodeURIComponent("No carrier rates were returned for this address.")}`
+      `/admin/orders/${orderId}/package?error=${encodeURIComponent("No carrier rates were returned for this address.")}`
     );
   }
 
@@ -291,8 +291,8 @@ export async function fetchShippingRates(orderId: string, formData: FormData) {
     .update({ pending_rates: JSON.parse(JSON.stringify(rates)) })
     .eq("id", orderId);
 
-  revalidatePath(`/admin/orders/${orderId}`);
-  redirect(`/admin/orders/${orderId}`);
+  revalidatePath(`/admin/orders/${orderId}/package`);
+  redirect(`/admin/orders/${orderId}/package`);
 }
 
 const buyLabelSchema = z.object({
@@ -378,6 +378,6 @@ export async function clearPendingRates(orderId: string) {
   const supabase = createAdminClient();
   await supabase.from("orders").update({ pending_rates: null }).eq("id", orderId);
 
-  revalidatePath(`/admin/orders/${orderId}`);
-  redirect(`/admin/orders/${orderId}`);
+  revalidatePath(`/admin/orders/${orderId}/package`);
+  redirect(`/admin/orders/${orderId}/package`);
 }

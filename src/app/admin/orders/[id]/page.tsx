@@ -2,12 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPrice } from "@/lib/format";
-import {
-  markOrderFulfilled,
-  fetchShippingRates,
-  buyShippingLabel,
-  clearPendingRates,
-} from "@/lib/actions/orders";
+import { markOrderFulfilled } from "@/lib/actions/orders";
 import { RefundModal } from "@/components/admin/RefundModal";
 import { OrderActionsMenu } from "@/components/admin/OrderActionsMenu";
 import { OrderNoteEditor } from "@/components/admin/OrderNoteEditor";
@@ -27,15 +22,6 @@ interface ShippingAddress {
     postal_code?: string;
     country?: string;
   };
-}
-
-interface PendingRate {
-  rateId: string;
-  provider: string;
-  serviceLevel: string;
-  amount: string;
-  currency: string;
-  estimatedDays: number | null;
 }
 
 const FINANCIAL_STATUS_LABELS: Record<FinancialStatus, string> = {
@@ -90,7 +76,7 @@ export default async function AdminOrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, client_id, financial_status, fulfillment_status, total_cents, discount_cents, discount_code, shipping_cents, currency, created_at, shipping_address, stripe_payment_intent_id, clients(name, email), carrier, tracking_number, tracking_url, label_url, pending_rates, notes, confirmation_email_sent_at"
+      "id, client_id, financial_status, fulfillment_status, total_cents, discount_cents, discount_code, shipping_cents, currency, created_at, shipping_address, stripe_payment_intent_id, clients(name, email), carrier, tracking_number, tracking_url, label_url, notes, confirmation_email_sent_at"
     )
     .eq("id", id)
     .single();
@@ -142,11 +128,7 @@ export default async function AdminOrderDetailPage({
   const financialStatus = order.financial_status as FinancialStatus;
   const fulfillmentStatus = order.fulfillment_status as FulfillmentStatus;
   const shipping = order.shipping_address as ShippingAddress | null;
-  const pendingRates = order.pending_rates as PendingRate[] | null;
   const markFulfilledWithId = markOrderFulfilled.bind(null, id);
-  const fetchRatesWithId = fetchShippingRates.bind(null, id);
-  const buyLabelWithId = buyShippingLabel.bind(null, id);
-  const clearRatesWithId = clearPendingRates.bind(null, id);
 
   const refundedQtyByItem = new Map<string, number>();
   for (const refund of refunds ?? []) {
@@ -296,100 +278,18 @@ export default async function AdminOrderDetailPage({
                     </a>
                   )}
                 </div>
-              ) : pendingRates && pendingRates.length > 0 ? (
-                <form action={buyLabelWithId} className="space-y-3">
-                  <ul className="space-y-2">
-                    {pendingRates.map((rate, i) => (
-                      <li key={rate.rateId}>
-                        <label className="flex items-center gap-3 border border-line p-3 text-sm">
-                          <input
-                            type="radio"
-                            name="rate_id"
-                            value={rate.rateId}
-                            defaultChecked={i === 0}
-                            required
-                          />
-                          <span className="flex-1">
-                            {rate.provider} — {rate.serviceLevel}
-                            {rate.estimatedDays != null && ` · ${rate.estimatedDays}d`}
-                          </span>
-                          <span className="font-medium text-foreground">
-                            {rate.amount} {rate.currency}
-                          </span>
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="submit"
-                      className="bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
-                    >
-                      Buy label
-                    </button>
-                    <button
-                      type="submit"
-                      formAction={clearRatesWithId}
-                      className="text-xs text-muted underline underline-offset-4 hover:text-foreground"
-                    >
-                      Start over
-                    </button>
-                  </div>
-                </form>
               ) : shipping?.address ? (
-                <form action={fetchRatesWithId} className="grid grid-cols-2 gap-3">
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-xs text-muted">Weight (g)</span>
-                    <input
-                      name="weight_grams"
-                      type="number"
-                      min={1}
-                      step="1"
-                      required
-                      className="border border-line bg-transparent px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-xs text-muted">Length (cm)</span>
-                    <input
-                      name="length_cm"
-                      type="number"
-                      min={0.1}
-                      step="0.1"
-                      required
-                      className="border border-line bg-transparent px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-xs text-muted">Width (cm)</span>
-                    <input
-                      name="width_cm"
-                      type="number"
-                      min={0.1}
-                      step="0.1"
-                      required
-                      className="border border-line bg-transparent px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-xs text-muted">Height (cm)</span>
-                    <input
-                      name="height_cm"
-                      type="number"
-                      min={0.1}
-                      step="0.1"
-                      required
-                      className="border border-line bg-transparent px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className="col-span-2 bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
-                  >
-                    Get rates
-                  </button>
-                </form>
-              ) : null}
+                <Link
+                  href={`/admin/orders/${id}/package`}
+                  className="inline-block bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+                >
+                  Create shipping label
+                </Link>
+              ) : (
+                <p className="text-sm text-muted">
+                  This order has no shipping address to create a label for.
+                </p>
+              )}
 
               {fulfillmentStatus !== "fulfilled" && fulfillmentStatus !== "cancelled" && (
                 <form action={markFulfilledWithId} className="mt-3">
