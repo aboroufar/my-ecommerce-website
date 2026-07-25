@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createDraftOrder } from "@/lib/actions/draftOrders";
 import { CreateOrderTotals } from "@/components/admin/CreateOrderTotals";
+import { CustomerCardPicker, type ClientOption } from "@/components/admin/CustomerCardPicker";
 import type { ProductSearchOption } from "@/components/admin/PurchaseOrderLineItems";
 
 export const dynamic = "force-dynamic";
@@ -14,16 +15,48 @@ export default async function NewDraftOrderPage({
   const { error } = await searchParams;
   const supabase = createAdminClient();
 
-  const [{ data: clients }, { data: products }] = await Promise.all([
-    supabase.from("clients").select("id, name, email").order("name", { ascending: true }),
-    supabase
-      .from("products")
-      .select(
-        "id, name, sku, price_cents, stock_qty, product_images(url, sort_order), product_option_types(id, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, product_variant_options(option_value_id))"
-      )
-      .eq("status", "active")
-      .order("name", { ascending: true }),
-  ]);
+  const [{ data: clients }, { data: products }, { data: orderCounts }, { data: addresses }] =
+    await Promise.all([
+      supabase.from("clients").select("id, name, email").order("name", { ascending: true }),
+      supabase
+        .from("products")
+        .select(
+          "id, name, sku, price_cents, stock_qty, product_images(url, sort_order), product_option_types(id, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, product_variant_options(option_value_id))"
+        )
+        .eq("status", "active")
+        .order("name", { ascending: true }),
+      supabase.from("orders").select("client_id").not("client_id", "is", null),
+      supabase
+        .from("addresses")
+        .select("client_id, line1, line2, city, region, postal_code, country, is_default, is_billing"),
+    ]);
+
+  const orderCountByClient = new Map<string, number>();
+  for (const order of orderCounts ?? []) {
+    if (!order.client_id) continue;
+    orderCountByClient.set(order.client_id, (orderCountByClient.get(order.client_id) ?? 0) + 1);
+  }
+
+  const addressesByClient = new Map<string, typeof addresses>();
+  for (const address of addresses ?? []) {
+    const list = addressesByClient.get(address.client_id) ?? [];
+    list.push(address);
+    addressesByClient.set(address.client_id, list);
+  }
+
+  const clientOptions: ClientOption[] = (clients ?? []).map((c) => {
+    const clientAddresses = addressesByClient.get(c.id) ?? [];
+    const shippingAddress = clientAddresses.find((a) => a.is_default) ?? clientAddresses[0] ?? null;
+    const billingAddress = clientAddresses.find((a) => a.is_billing) ?? null;
+    return {
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      orderCount: orderCountByClient.get(c.id) ?? 0,
+      shippingAddress,
+      billingAddress,
+    };
+  });
 
   const options: ProductSearchOption[] = [];
   for (const product of products ?? []) {
@@ -93,7 +126,7 @@ export default async function NewDraftOrderPage({
           <div className="flex min-w-0 flex-col gap-6">
             <div className="border border-line p-5">
               <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Customer</h2>
-              <ClientOrGuestFields clients={clients ?? []} />
+              <CustomerCardPicker clients={clientOptions} />
             </div>
           </div>
         </div>
@@ -107,45 +140,6 @@ export default async function NewDraftOrderPage({
           </Link>
         </div>
       </form>
-    </div>
-  );
-}
-
-function ClientOrGuestFields({
-  clients,
-}: {
-  clients: { id: string; name: string | null; email: string }[];
-}) {
-  return (
-    <div className="mt-3 flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5">
-        <span className="text-sm text-foreground">Existing client</span>
-        <select name="client_id" defaultValue="" className="border border-line bg-background px-3 py-2 text-sm">
-          <option value="">— None, use guest details below —</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name ?? c.email} ({c.email})
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="grid grid-cols-2 gap-4">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-foreground">Guest name</span>
-          <input name="guest_name" className="border border-line bg-background px-3 py-2 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm text-foreground">Guest email</span>
-          <input
-            name="guest_email"
-            type="email"
-            className="border border-line bg-background px-3 py-2 text-sm"
-          />
-        </label>
-      </div>
-      <p className="text-xs text-muted">
-        Choose an existing client above, or leave it unselected and fill in a guest name and email.
-      </p>
     </div>
   );
 }
