@@ -1003,10 +1003,91 @@ export type Database = {
           },
         ]
       }
+      order_notes: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      order_tag_links: {
+        Row: {
+          order_id: string
+          tag_id: string
+        }
+        Insert: {
+          order_id: string
+          tag_id: string
+        }
+        Update: {
+          order_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_tag_links_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_tag_links_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "order_tags"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      order_tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           carrier: string | null
           client_id: string | null
+          confirmation_email_sent_at: string | null
           created_at: string
           currency: string
           discount_cents: number
@@ -1015,6 +1096,7 @@ export type Database = {
           fulfillment_status: string
           id: string
           label_url: string | null
+          notes: string | null
           pending_rates: Json | null
           shipping_address: Json | null
           shipping_cents: number
@@ -1029,6 +1111,7 @@ export type Database = {
         Insert: {
           carrier?: string | null
           client_id?: string | null
+          confirmation_email_sent_at?: string | null
           created_at?: string
           currency?: string
           discount_cents?: number
@@ -1037,6 +1120,7 @@ export type Database = {
           fulfillment_status?: string
           id?: string
           label_url?: string | null
+          notes?: string | null
           pending_rates?: Json | null
           shipping_address?: Json | null
           shipping_cents?: number
@@ -1051,6 +1135,7 @@ export type Database = {
         Update: {
           carrier?: string | null
           client_id?: string | null
+          confirmation_email_sent_at?: string | null
           created_at?: string
           currency?: string
           discount_cents?: number
@@ -1059,6 +1144,7 @@ export type Database = {
           fulfillment_status?: string
           id?: string
           label_url?: string | null
+          notes?: string | null
           pending_rates?: Json | null
           shipping_address?: Json | null
           shipping_cents?: number

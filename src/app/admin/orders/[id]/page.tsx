@@ -9,6 +9,10 @@ import {
   clearPendingRates,
 } from "@/lib/actions/orders";
 import { RefundModal } from "@/components/admin/RefundModal";
+import { OrderActionsMenu } from "@/components/admin/OrderActionsMenu";
+import { OrderNoteEditor } from "@/components/admin/OrderNoteEditor";
+import { OrderCommentForm } from "@/components/admin/OrderCommentForm";
+import { OrderTagChecklist } from "@/components/admin/OrderTagChecklist";
 import type { FinancialStatus, FulfillmentStatus } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
@@ -86,38 +90,54 @@ export default async function AdminOrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, client_id, financial_status, fulfillment_status, total_cents, discount_cents, discount_code, shipping_cents, currency, created_at, shipping_address, stripe_payment_intent_id, clients(name, email), carrier, tracking_number, tracking_url, label_url, pending_rates"
+      "id, client_id, financial_status, fulfillment_status, total_cents, discount_cents, discount_code, shipping_cents, currency, created_at, shipping_address, stripe_payment_intent_id, clients(name, email), carrier, tracking_number, tracking_url, label_url, pending_rates, notes, confirmation_email_sent_at"
     )
     .eq("id", id)
     .single();
 
   if (!order) notFound();
 
-  const [{ data: items }, { data: refunds }, { count: clientOrderCount }, { data: billingAddress }] =
-    await Promise.all([
-      supabase
-        .from("order_items")
-        .select("id, product_name, variant_label, quantity, unit_price_cents")
-        .eq("order_id", id),
-      supabase
-        .from("refunds")
-        .select(
-          "id, amount_cents, reason, created_at, refund_line_items(order_item_id, quantity, amount_cents, restocked)"
-        )
-        .eq("order_id", id)
-        .order("created_at", { ascending: false }),
-      order.client_id
-        ? supabase.from("orders").select("id", { count: "exact", head: true }).eq("client_id", order.client_id)
-        : Promise.resolve({ count: null }),
-      order.client_id
-        ? supabase
-            .from("addresses")
-            .select("line1, line2, city, region, postal_code, country")
-            .eq("client_id", order.client_id)
-            .eq("is_billing", true)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
+  const [
+    { data: items },
+    { data: refunds },
+    { count: clientOrderCount },
+    { data: billingAddress },
+    { data: sourceDraftOrder },
+    { data: comments },
+    { data: allTags },
+    { data: tagLinks },
+  ] = await Promise.all([
+    supabase
+      .from("order_items")
+      .select("id, product_name, variant_label, quantity, unit_price_cents")
+      .eq("order_id", id),
+    supabase
+      .from("refunds")
+      .select(
+        "id, amount_cents, reason, created_at, refund_line_items(order_item_id, quantity, amount_cents, restocked)"
+      )
+      .eq("order_id", id)
+      .order("created_at", { ascending: false }),
+    order.client_id
+      ? supabase.from("orders").select("id", { count: "exact", head: true }).eq("client_id", order.client_id)
+      : Promise.resolve({ count: null }),
+    order.client_id
+      ? supabase
+          .from("addresses")
+          .select("line1, line2, city, region, postal_code, country")
+          .eq("client_id", order.client_id)
+          .eq("is_billing", true)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from("draft_orders").select("id").eq("converted_order_id", id).maybeSingle(),
+    supabase
+      .from("order_notes")
+      .select("id, body, created_at")
+      .eq("order_id", id)
+      .order("created_at", { ascending: false }),
+    supabase.from("order_tags").select("id, name").order("name", { ascending: true }),
+    supabase.from("order_tag_links").select("tag_id").eq("order_id", id),
+  ]);
 
   const financialStatus = order.financial_status as FinancialStatus;
   const fulfillmentStatus = order.fulfillment_status as FulfillmentStatus;
@@ -138,6 +158,30 @@ export default async function AdminOrderDetailPage({
 
   const subtotalCents = (items ?? []).reduce((sum, item) => sum + item.unit_price_cents * item.quantity, 0);
 
+  // Timeline: real staff comments (order_notes) merged with synthetic
+  // system events computed from columns that already exist -- same
+  // approach as the client detail page's own Timeline, not a stored
+  // event log.
+  const timelineEvents: { id: string; body: string; created_at: string }[] = [
+    ...(comments ?? []).map((c) => ({ id: c.id, body: c.body, created_at: c.created_at })),
+    { id: "placed", body: "Order was placed.", created_at: order.created_at },
+  ];
+  if (order.confirmation_email_sent_at) {
+    timelineEvents.push({
+      id: "confirmation-email",
+      body: "Order confirmation email was sent.",
+      created_at: order.confirmation_email_sent_at,
+    });
+  }
+  if (sourceDraftOrder) {
+    timelineEvents.push({
+      id: "from-draft",
+      body: `Created from Draft Order #${sourceDraftOrder.id.slice(0, 8)}.`,
+      created_at: order.created_at,
+    });
+  }
+  timelineEvents.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
   return (
     <div>
       <Link
@@ -155,8 +199,20 @@ export default async function AdminOrderDetailPage({
           <p className="mt-1 text-sm text-muted">
             Placed {new Date(order.created_at).toLocaleString()} ·{" "}
             {order.clients?.email ?? "Guest"}
+            {sourceDraftOrder && (
+              <>
+                {" · "}
+                <Link
+                  href={`/admin/orders/drafts/${sourceDraftOrder.id}`}
+                  className="text-accent underline underline-offset-4"
+                >
+                  from Draft Orders
+                </Link>
+              </>
+            )}
           </p>
         </div>
+        <OrderActionsMenu orderId={order.id} />
       </div>
 
       {error && (
@@ -432,13 +488,17 @@ export default async function AdminOrderDetailPage({
         </div>
       </div>
 
-        {/* Sidebar: customer + addresses. Order risk/conversion summary/
-            tags/notes from the reference screenshot are deliberately
-            omitted -- none of that has any backing data in this schema
-            (no fraud scoring, no analytics tracking, no order tags/notes
-            table), so faking those sections would show empty or
-            hardcoded content instead of real information. */}
+        {/* Sidebar: Notes, Customer + addresses, Tags. Order risk/
+            conversion summary from the reference screenshot are
+            deliberately omitted -- no fraud scoring or analytics
+            infrastructure exists in this schema, so faking those
+            sections would show empty or hardcoded content instead of
+            real information. */}
         <div className="flex flex-col gap-6">
+          <div className="border border-line p-5">
+            <OrderNoteEditor orderId={order.id} notes={order.notes} />
+          </div>
+
           <div className="border border-line p-5">
             <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Customer</h3>
             {order.clients ? (
@@ -497,6 +557,32 @@ export default async function AdminOrderDetailPage({
               <p className="mt-1 text-sm text-muted">Same as shipping address</p>
             )}
           </div>
+
+          <div className="border border-line p-5">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Tags</h3>
+            <div className="mt-3">
+              <OrderTagChecklist
+                orderId={order.id}
+                tags={allTags ?? []}
+                selectedIds={(tagLinks ?? []).map((l) => l.tag_id)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-muted">Timeline</h2>
+        <div className="mt-3">
+          <OrderCommentForm orderId={order.id} />
+          <ul className="mt-4 flex flex-col gap-4">
+            {timelineEvents.map((event) => (
+              <li key={event.id} className="border-l-2 border-line pl-4 text-sm">
+                <p className="text-foreground">{event.body}</p>
+                <p className="mt-0.5 text-xs text-muted">{new Date(event.created_at).toLocaleString()}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

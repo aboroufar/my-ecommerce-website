@@ -121,6 +121,69 @@ export async function bulkCancelOrders(formData: FormData) {
   redirect("/admin/orders");
 }
 
+/**
+ * Single-order version of bulkCancelOrders, for the order detail page's
+ * "More actions" menu.
+ */
+export async function cancelOrder(orderId: string) {
+  await requireAdmin();
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({ fulfillment_status: "cancelled", status: "cancelled" })
+    .eq("id", orderId);
+
+  if (error) {
+    redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/account/orders");
+  redirect(`/admin/orders/${orderId}`);
+}
+
+/**
+ * Puts every line item on an order back into stock, independent of any
+ * refund record -- Shopify's own "Restock" top-bar button does the
+ * same thing for an order whose items were never actually shipped
+ * (e.g. cancelled after payment). Reuses the same
+ * increment_stock/increment_variant_stock RPCs already used by
+ * refund-restock in src/lib/actions/refunds.ts, but isn't tied to a
+ * refund -- this is a direct stock adjustment.
+ */
+export async function restockOrder(orderId: string) {
+  await requireAdmin();
+
+  const supabase = createAdminClient();
+  const { data: orderItems, error: fetchError } = await supabase
+    .from("order_items")
+    .select("product_id, variant_id, quantity")
+    .eq("order_id", orderId);
+
+  if (fetchError) {
+    redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(fetchError.message)}`);
+  }
+
+  for (const item of orderItems ?? []) {
+    if (item.variant_id) {
+      await supabase.rpc("increment_variant_stock", {
+        item_variant_id: item.variant_id,
+        item_quantity: item.quantity,
+      });
+    } else if (item.product_id) {
+      await supabase.rpc("increment_stock", {
+        item_product_id: item.product_id,
+        item_quantity: item.quantity,
+      });
+    }
+  }
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  redirect(`/admin/orders/${orderId}`);
+}
+
 const rateRequestSchema = z.object({
   weight_grams: z.coerce.number().positive("Weight must be greater than 0"),
   length_cm: z.coerce.number().positive("Length must be greater than 0"),

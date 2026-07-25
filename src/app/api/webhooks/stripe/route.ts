@@ -120,6 +120,15 @@ async function markOrderPaid(
       currency: order.currency,
       orderUrl,
     });
+
+    // sendOrderConfirmationEmail never throws (see AGENTS.md), so this
+    // always runs once a send was attempted -- best-effort timestamp for
+    // the order detail page's Timeline, not itself allowed to fail
+    // webhook processing if the update errors.
+    await supabase
+      .from("orders")
+      .update({ confirmation_email_sent_at: new Date().toISOString() })
+      .eq("id", orderId);
   }
 }
 
