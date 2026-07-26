@@ -56,6 +56,74 @@ export async function createPackageProfile(formData: FormData) {
   redirect("/admin/packages");
 }
 
+/**
+ * Same validation/insert as createPackageProfile, but returns the new row
+ * instead of redirecting -- used by AddPackageModal on the order package
+ * page so a profile can be created and selected without leaving that page,
+ * mirroring createSupplierInline's {data} | {error} shape.
+ */
+export async function createPackageProfileInline(formData: FormData): Promise<
+  | {
+      id: string;
+      name: string;
+      lengthCm: number | null;
+      widthCm: number | null;
+      heightCm: number | null;
+      emptyWeightGrams: number | null;
+    }
+  | { error: string }
+> {
+  await requireAdmin();
+
+  const parsed = packageProfileSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const supabase = createAdminClient();
+  const saveForFutureUse = formData.get("save_for_future_use") === "on";
+
+  if (!saveForFutureUse) {
+    return {
+      id: crypto.randomUUID(),
+      name: parsed.data.name,
+      lengthCm: parsed.data.length_cm === "" ? null : parsed.data.length_cm,
+      widthCm: parsed.data.width_cm === "" ? null : parsed.data.width_cm,
+      heightCm: parsed.data.height_cm === "" ? null : parsed.data.height_cm,
+      emptyWeightGrams:
+        parsed.data.empty_weight_grams === "" ? null : parsed.data.empty_weight_grams,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("package_profiles")
+    .insert({
+      name: parsed.data.name,
+      package_type: parsed.data.package_type,
+      length_cm: parsed.data.length_cm === "" ? null : parsed.data.length_cm,
+      width_cm: parsed.data.width_cm === "" ? null : parsed.data.width_cm,
+      height_cm: parsed.data.height_cm === "" ? null : parsed.data.height_cm,
+      empty_weight_grams:
+        parsed.data.empty_weight_grams === "" ? null : parsed.data.empty_weight_grams,
+    })
+    .select("id, name, length_cm, width_cm, height_cm, empty_weight_grams")
+    .single();
+
+  if (error || !data) return { error: error?.message ?? "Could not create package" };
+
+  revalidatePath("/admin/packages");
+  revalidatePath("/admin/products");
+
+  return {
+    id: data.id,
+    name: data.name,
+    lengthCm: data.length_cm,
+    widthCm: data.width_cm,
+    heightCm: data.height_cm,
+    emptyWeightGrams: data.empty_weight_grams,
+  };
+}
+
 export async function updatePackageProfile(id: string, formData: FormData) {
   await requireAdmin();
 

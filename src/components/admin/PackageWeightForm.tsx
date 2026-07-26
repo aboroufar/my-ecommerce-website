@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AddPackageModal } from "./AddPackageModal";
 
 export interface PackageOrderItem {
   id: string;
@@ -50,8 +51,10 @@ export function PackageWeightForm({
   const [itemWeights, setItemWeights] = useState<Record<string, number>>({});
   const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [manualDims, setManualDims] = useState({ length: "", width: "", height: "" });
+  const [extraProfiles, setExtraProfiles] = useState<PackageProfileOption[]>([]);
 
-  const selectedProfile = packageProfiles.find((p) => p.id === selectedProfileId) ?? null;
+  const profiles = [...packageProfiles, ...extraProfiles];
+  const selectedProfile = profiles.find((p) => p.id === selectedProfileId) ?? null;
 
   const itemsWeightGrams = useMemo(
     () => items.reduce((sum, item) => sum + (itemWeights[item.id] ?? 0) * item.quantity, 0),
@@ -111,15 +114,23 @@ export function PackageWeightForm({
       </div>
 
       <div className="border border-line p-5">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Package</h3>
-        {packageProfiles.length > 0 ? (
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Package</h3>
+          <AddPackageModal
+            onCreated={(pkg) => {
+              setExtraProfiles((prev) => [...prev, pkg]);
+              setSelectedProfileId(pkg.id);
+            }}
+          />
+        </div>
+        {profiles.length > 0 ? (
           <select
             value={selectedProfileId}
             onChange={(e) => setSelectedProfileId(e.target.value)}
             className="mt-3 w-full border border-line bg-background px-2.5 py-1.5 text-sm"
           >
             <option value="">Select a package…</option>
-            {packageProfiles.map((profile) => (
+            {profiles.map((profile) => (
               <option key={profile.id} value={profile.id}>
                 {profile.name}
                 {profile.lengthCm && profile.widthCm && profile.heightCm
