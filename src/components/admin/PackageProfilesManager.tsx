@@ -15,6 +15,7 @@ interface PackageProfile {
   width_cm: number | null;
   height_cm: number | null;
   empty_weight_grams: number | null;
+  item_weight_grams: number | null;
 }
 
 const PACKAGE_TYPE_LABELS: Record<string, string> = {
@@ -24,13 +25,14 @@ const PACKAGE_TYPE_LABELS: Record<string, string> = {
 };
 
 function formatDims(profile: PackageProfile): string {
-  const { length_cm, width_cm, height_cm, empty_weight_grams } = profile;
+  const { length_cm, width_cm, height_cm, empty_weight_grams, item_weight_grams } = profile;
   const dims =
     length_cm && width_cm && height_cm
       ? `${length_cm} × ${width_cm} × ${height_cm} cm`
       : null;
-  const weight = empty_weight_grams ? `${empty_weight_grams} g empty` : null;
-  return [dims, weight].filter(Boolean).join(", ") || "No dimensions set";
+  const emptyWeight = empty_weight_grams ? `${empty_weight_grams} g empty` : null;
+  const itemWeight = item_weight_grams ? `${item_weight_grams} g item` : null;
+  return [dims, emptyWeight, itemWeight].filter(Boolean).join(", ") || "No dimensions set";
 }
 
 export function PackageProfilesManager({ profiles }: { profiles: PackageProfile[] }) {
@@ -169,18 +171,32 @@ function PackageProfileForm({
         </label>
       </div>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs text-muted">Empty weight (g)</span>
-        <input
-          name="empty_weight_grams"
-          type="number"
-          step="1"
-          min="0"
-          defaultValue={profile?.empty_weight_grams ?? ""}
-          placeholder="Weight of the packaging itself, before the product"
-          className="border border-line bg-background px-3 py-2 text-sm"
-        />
-      </label>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs text-muted">Empty weight (g)</span>
+          <input
+            name="empty_weight_grams"
+            type="number"
+            step="1"
+            min="0"
+            defaultValue={profile?.empty_weight_grams ?? ""}
+            placeholder="Weight of the packaging itself"
+            className="border border-line bg-background px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs text-muted">Item weight (g)</span>
+          <input
+            name="item_weight_grams"
+            type="number"
+            step="1"
+            min="0"
+            defaultValue={profile?.item_weight_grams ?? ""}
+            placeholder="Weight of one product using this package"
+            className="border border-line bg-background px-3 py-2 text-sm"
+          />
+        </label>
+      </div>
 
       <div className="flex gap-2 pt-1">
         <button

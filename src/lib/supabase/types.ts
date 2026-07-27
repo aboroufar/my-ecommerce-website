@@ -1172,6 +1172,7 @@ export type Database = {
           empty_weight_grams: number | null
           height_cm: number | null
           id: string
+          item_weight_grams: number | null
           length_cm: number | null
           name: string
           package_type: string
@@ -1182,6 +1183,7 @@ export type Database = {
           empty_weight_grams?: number | null
           height_cm?: number | null
           id?: string
+          item_weight_grams?: number | null
           length_cm?: number | null
           name: string
           package_type?: string
@@ -1192,6 +1194,7 @@ export type Database = {
           empty_weight_grams?: number | null
           height_cm?: number | null
           id?: string
+          item_weight_grams?: number | null
           length_cm?: number | null
           name?: string
           package_type?: string
@@ -1379,7 +1382,6 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
-          dimensions_text: string | null
           gender: string | null
           id: string
           is_popular: boolean
@@ -1391,7 +1393,6 @@ export type Database = {
           status: string
           stock_qty: number
           updated_at: string
-          weight_text: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -1399,7 +1400,6 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
-          dimensions_text?: string | null
           gender?: string | null
           id?: string
           is_popular?: boolean
@@ -1411,7 +1411,6 @@ export type Database = {
           status?: string
           stock_qty?: number
           updated_at?: string
-          weight_text?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -1419,7 +1418,6 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
-          dimensions_text?: string | null
           gender?: string | null
           id?: string
           is_popular?: boolean
@@ -1431,7 +1429,6 @@ export type Database = {
           status?: string
           stock_qty?: number
           updated_at?: string
-          weight_text?: string | null
         }
         Relationships: [
           {
@@ -1517,33 +1514,30 @@ export type Database = {
       product_variants: {
         Row: {
           created_at: string
-          dimensions_text: string | null
           id: string
+          package_profile_id: string | null
           price_cents: number
           product_id: string
           sku: string | null
           stock_qty: number
-          weight_text: string | null
         }
         Insert: {
           created_at?: string
-          dimensions_text?: string | null
           id?: string
+          package_profile_id?: string | null
           price_cents: number
           product_id: string
           sku?: string | null
           stock_qty?: number
-          weight_text?: string | null
         }
         Update: {
           created_at?: string
-          dimensions_text?: string | null
           id?: string
+          package_profile_id?: string | null
           price_cents?: number
           product_id?: string
           sku?: string | null
           stock_qty?: number
-          weight_text?: string | null
         }
         Relationships: [
           {
@@ -1551,6 +1545,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_variants_package_profile_id_fkey"
+            columns: ["package_profile_id"]
+            isOneToOne: false
+            referencedRelation: "package_profiles"
             referencedColumns: ["id"]
           },
         ]

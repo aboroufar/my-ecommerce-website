@@ -75,8 +75,12 @@ export function ProductAddToCart() {
 /** "Additional information" tab content -- weight/dimensions of the currently-selected variant. */
 export function SelectedVariantInfo() {
   const { product, matchedVariant } = useProductDetail();
-  const weightText = matchedVariant?.weight_text ?? product.weight_text;
-  const dimensionsText = matchedVariant?.dimensions_text ?? product.dimensions_text;
+  const pkg = matchedVariant?.package_profiles ?? product.package_profiles;
+  const weightText = pkg?.item_weight_grams ? `${pkg.item_weight_grams} g` : null;
+  const dimensionsText =
+    pkg?.length_cm && pkg?.width_cm && pkg?.height_cm
+      ? `${pkg.length_cm} × ${pkg.width_cm} × ${pkg.height_cm} cm`
+      : null;
 
   if (!weightText && !dimensionsText) {
     return <p>No additional information yet.</p>;

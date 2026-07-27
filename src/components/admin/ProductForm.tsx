@@ -6,6 +6,7 @@ import {
   type ProductHighlightsDefaults,
 } from "./ProductHighlightsManager";
 import { TagChecklist, type TagOption } from "./TagChecklist";
+import { PackageProfileField, type PackageProfileOption } from "./PackageProfileField";
 
 interface CategoryOption {
   id: string;
@@ -13,11 +14,6 @@ interface CategoryOption {
 }
 
 interface BrandOption {
-  id: string;
-  name: string;
-}
-
-interface PackageOption {
   id: string;
   name: string;
 }
@@ -57,8 +53,6 @@ interface ProductFormValues {
   price?: number; // dollars, not cents -- this is a display/input concern
   compare_at_price?: number | null; // dollars, same reasoning
   sku?: string | null;
-  weight_text?: string | null;
-  dimensions_text?: string | null;
   packageProfileId?: string | null;
   stock_qty?: number;
   status?: ProductStatus;
@@ -91,7 +85,7 @@ export function ProductForm({
   categories: CategoryOption[];
   tags: TagOption[];
   brands: BrandOption[];
-  packageProfiles: PackageOption[];
+  packageProfiles: PackageProfileOption[];
 }) {
   return (
     <form action={action} className="mt-8 flex flex-col gap-6">
@@ -179,49 +173,23 @@ export function ProductForm({
             title="Shipping"
             hint="Used when this product has no variants (or as a fallback for variants that don't set their own)."
           >
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Weight" hint="e.g. 0.5 kg">
-                <input
-                  name="weight_text"
-                  defaultValue={defaultValues?.weight_text ?? ""}
-                  placeholder="0.5 kg"
-                  className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
-                />
-              </Field>
-              <Field label="Dimensions" hint="e.g. 10 × 5 × 3 cm">
-                <input
-                  name="dimensions_text"
-                  defaultValue={defaultValues?.dimensions_text ?? ""}
-                  placeholder="10 × 5 × 3 cm"
-                  className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
-                />
-              </Field>
-            </div>
-
             <Field
               label="Package"
-              hint="Optional. Manage reusable package profiles from Admin → Packages."
+              hint="Weight and dimensions come from the assigned package. Manage reusable packages from Admin → Packages."
             >
-              <select
+              <PackageProfileField
                 name="package_profile_id"
-                defaultValue={defaultValues?.packageProfileId ?? ""}
-                className="rounded-md border border-line bg-transparent px-3 py-2 text-sm"
-              >
-                <option value="">None</option>
-                {packageProfiles.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.name}
-                  </option>
-                ))}
-              </select>
+                profiles={packageProfiles}
+                defaultValue={defaultValues?.packageProfileId}
+              />
             </Field>
           </Card>
 
           <Card
             title="Variants"
-            hint="Add option types like Size or Skin type to sell this product in priced/stocked variants instead of one fixed price. Each combination gets its own price, stock, weight and dimensions."
+            hint="Add option types like Size or Skin type to sell this product in priced/stocked variants instead of one fixed price. Each combination gets its own price, stock and package."
           >
-            <ProductOptionsManager defaults={defaultValues?.options} />
+            <ProductOptionsManager defaults={defaultValues?.options} packageProfiles={packageProfiles} />
           </Card>
 
           <Card

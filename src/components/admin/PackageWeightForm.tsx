@@ -8,6 +8,7 @@ export interface PackageOrderItem {
   productName: string;
   variantLabel: string | null;
   quantity: number;
+  itemWeightGrams: number | null;
 }
 
 export interface PackageProfileOption {
@@ -48,7 +49,6 @@ export function PackageWeightForm({
   packageProfiles: PackageProfileOption[];
   fetchRatesAction: (formData: FormData) => void;
 }) {
-  const [itemWeights, setItemWeights] = useState<Record<string, number>>({});
   const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [manualDims, setManualDims] = useState({ length: "", width: "", height: "" });
   const [extraProfiles, setExtraProfiles] = useState<PackageProfileOption[]>([]);
@@ -57,9 +57,10 @@ export function PackageWeightForm({
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId) ?? null;
 
   const itemsWeightGrams = useMemo(
-    () => items.reduce((sum, item) => sum + (itemWeights[item.id] ?? 0) * item.quantity, 0),
-    [items, itemWeights]
+    () => items.reduce((sum, item) => sum + (item.itemWeightGrams ?? 0) * item.quantity, 0),
+    [items]
   );
+  const itemsMissingWeight = items.filter((item) => item.itemWeightGrams == null);
   const packageTareGrams = selectedProfile?.emptyWeightGrams ?? 0;
   const totalWeightGrams = itemsWeightGrams + packageTareGrams;
 
@@ -89,28 +90,20 @@ export function PackageWeightForm({
                   {item.variantLabel && <span className="text-muted"> — {item.variantLabel}</span>}
                 </td>
                 <td className="py-2 text-muted">{item.quantity}</td>
-                <td className="py-2">
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      min={0}
-                      step="1"
-                      value={itemWeights[item.id] ?? ""}
-                      onChange={(e) =>
-                        setItemWeights((prev) => ({
-                          ...prev,
-                          [item.id]: Math.max(0, Number(e.target.value) || 0),
-                        }))
-                      }
-                      className="w-20 border border-line bg-background px-2 py-1 text-sm"
-                    />
-                    <span className="text-xs text-muted">g</span>
-                  </div>
+                <td className="py-2 text-muted">
+                  {item.itemWeightGrams != null ? `${item.itemWeightGrams} g` : "No package assigned"}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {itemsMissingWeight.length > 0 && (
+          <p className="mt-3 border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            {itemsMissingWeight.length === 1
+              ? "1 item has no package assigned -- its weight is not included below."
+              : `${itemsMissingWeight.length} items have no package assigned -- their weight is not included below.`}
+          </p>
+        )}
       </div>
 
       <div className="border border-line p-5">

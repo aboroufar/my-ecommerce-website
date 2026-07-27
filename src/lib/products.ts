@@ -46,13 +46,19 @@ export interface ProductOptionType {
   product_option_values: ProductOptionValue[];
 }
 
+export interface PackageProfileRef {
+  length_cm: number | null;
+  width_cm: number | null;
+  height_cm: number | null;
+  item_weight_grams: number | null;
+}
+
 export interface ProductVariant {
   id: string;
   sku: string | null;
   price_cents: number;
   stock_qty: number;
-  weight_text: string | null;
-  dimensions_text: string | null;
+  package_profiles: PackageProfileRef | null;
   product_variant_options: { option_value_id: string }[];
 }
 
@@ -79,8 +85,7 @@ export interface ProductDetail extends Omit<ProductSummary, "product_reviews"> {
   description: string | null;
   sku: string | null;
   stock_qty: number;
-  weight_text: string | null;
-  dimensions_text: string | null;
+  package_profiles: PackageProfileRef | null;
   product_option_types: ProductOptionType[];
   product_variants: ProductVariant[];
   product_reviews: ProductReview[];
@@ -492,7 +497,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, brand_id, gender, weight_text, dimensions_text, product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, weight_text, dimensions_text, product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at), product_highlights(id, label, icon, sort_order), product_tags(tags(name, slug))"
+        "id, name, slug, description, price_cents, compare_at_price_cents, currency, sku, stock_qty, is_popular, brand_id, gender, package_profiles(length_cm, width_cm, height_cm, item_weight_grams), product_images(url, alt_text, sort_order), product_categories(categories(name, slug, parent_id)), product_option_types(id, name, sort_order, product_option_values(id, label, sort_order)), product_variants(id, sku, price_cents, stock_qty, package_profiles(length_cm, width_cm, height_cm, item_weight_grams), product_variant_options(option_value_id)), product_reviews(id, reviewer_name, rating, body, created_at), product_highlights(id, label, icon, sort_order), product_tags(tags(name, slug))"
       )
       .eq("slug", slug)
       .eq("status", "active")

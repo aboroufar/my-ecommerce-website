@@ -194,9 +194,9 @@ const rateRequestSchema = z.object({
 /**
  * Fetches live carrier rates for an order's real shipping address (captured
  * by Stripe at checkout) against the shop's ship-from address, using the
- * parcel weight/dimensions the admin enters here -- product weight_text is
- * freeform text, not structured data a shipping API can use, so this is
- * asked for per-shipment rather than derived from product data.
+ * parcel weight/dimensions resolved on the /package page (computed from
+ * each line's assigned package_profiles item weight, plus the chosen
+ * shipping box's own tare weight and dimensions).
  */
 export async function fetchShippingRates(orderId: string, formData: FormData) {
   await requireAdmin();

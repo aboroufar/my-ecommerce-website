@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { PackageProfileOption } from "./PackageProfileField";
 
 interface OptionValueState {
   label: string;
@@ -16,8 +17,7 @@ interface VariantState {
   price: string;
   stock_qty: string;
   sku: string;
-  weight_text: string;
-  dimensions_text: string;
+  package_profile_id: string;
 }
 
 export interface ProductOptionsDefaults {
@@ -57,8 +57,10 @@ function comboKey(indexes: number[]): string {
  */
 export function ProductOptionsManager({
   defaults,
+  packageProfiles,
 }: {
   defaults?: ProductOptionsDefaults;
+  packageProfiles: PackageProfileOption[];
 }) {
   const [optionTypes, setOptionTypes] = useState<OptionTypeState[]>(
     defaults?.optionTypes ?? []
@@ -68,15 +70,14 @@ export function ProductOptionsManager({
   const initialVariantMap = useMemo(() => {
     const map = new Map<
       string,
-      { price: string; stock_qty: string; sku: string; weight_text: string; dimensions_text: string }
+      { price: string; stock_qty: string; sku: string; package_profile_id: string }
     >();
     for (const v of defaults?.variants ?? []) {
       map.set(comboKey(v.valueIndexes), {
         price: v.price,
         stock_qty: v.stock_qty,
         sku: v.sku,
-        weight_text: v.weight_text,
-        dimensions_text: v.dimensions_text,
+        package_profile_id: v.package_profile_id,
       });
     }
     return map;
@@ -134,7 +135,7 @@ export function ProductOptionsManager({
 
   function updateVariantField(
     indexes: number[],
-    field: "price" | "stock_qty" | "sku" | "weight_text" | "dimensions_text",
+    field: "price" | "stock_qty" | "sku" | "package_profile_id",
     value: string
   ) {
     const key = comboKey(indexes);
@@ -144,8 +145,7 @@ export function ProductOptionsManager({
         price: "",
         stock_qty: "0",
         sku: "",
-        weight_text: "",
-        dimensions_text: "",
+        package_profile_id: "",
       };
       next.set(key, { ...existing, [field]: value });
       return next;
@@ -164,16 +164,14 @@ export function ProductOptionsManager({
         price: "0",
         stock_qty: "0",
         sku: "",
-        weight_text: "",
-        dimensions_text: "",
+        package_profile_id: "",
       };
       return {
         valueIndexes: indexes,
         price: data.price || "0",
         stock_qty: data.stock_qty || "0",
         sku: data.sku,
-        weight_text: data.weight_text,
-        dimensions_text: data.dimensions_text,
+        package_profile_id: data.package_profile_id,
       };
     }),
   };
@@ -253,7 +251,7 @@ export function ProductOptionsManager({
       {combos.length > 0 && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
-            Variants -- price, stock, weight and dimensions per combination
+            Variants -- price, stock and package per combination
           </p>
           <table className="mt-2 w-full text-left text-sm">
             <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
@@ -266,8 +264,7 @@ export function ProductOptionsManager({
                 <th className="py-1.5 pr-3 font-medium">Price (EUR)</th>
                 <th className="py-1.5 pr-3 font-medium">Stock</th>
                 <th className="py-1.5 pr-3 font-medium">SKU</th>
-                <th className="py-1.5 pr-3 font-medium">Weight</th>
-                <th className="py-1.5 font-medium">Dimensions</th>
+                <th className="py-1.5 font-medium">Package</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -277,8 +274,7 @@ export function ProductOptionsManager({
                   price: "",
                   stock_qty: "0",
                   sku: "",
-                  weight_text: "",
-                  dimensions_text: "",
+                  package_profile_id: "",
                 };
                 return (
                   <tr key={key}>
@@ -322,25 +318,21 @@ export function ProductOptionsManager({
                         className="w-28 border border-line bg-background px-2 py-1 text-xs"
                       />
                     </td>
-                    <td className="py-1.5 pr-3">
-                      <input
-                        value={data.weight_text}
-                        onChange={(e) =>
-                          updateVariantField(indexes, "weight_text", e.target.value)
-                        }
-                        placeholder="0.5 kg"
-                        className="w-24 border border-line bg-background px-2 py-1 text-xs"
-                      />
-                    </td>
                     <td className="py-1.5">
-                      <input
-                        value={data.dimensions_text}
+                      <select
+                        value={data.package_profile_id}
                         onChange={(e) =>
-                          updateVariantField(indexes, "dimensions_text", e.target.value)
+                          updateVariantField(indexes, "package_profile_id", e.target.value)
                         }
-                        placeholder="1 × 2 × 3 cm"
-                        className="w-28 border border-line bg-background px-2 py-1 text-xs"
-                      />
+                        className="w-36 border border-line bg-background px-2 py-1 text-xs"
+                      >
+                        <option value="">Product default</option>
+                        {packageProfiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                   </tr>
                 );

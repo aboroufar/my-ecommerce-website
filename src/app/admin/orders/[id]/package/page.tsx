@@ -41,13 +41,41 @@ export default async function AdminOrderPackagePage({
   const [{ data: items }, { data: packageProfiles }] = await Promise.all([
     supabase
       .from("order_items")
-      .select("id, product_name, variant_label, quantity")
+      .select("id, product_name, variant_label, quantity, product_id, variant_id")
       .eq("order_id", id),
     supabase
       .from("package_profiles")
-      .select("id, name, length_cm, width_cm, height_cm, empty_weight_grams")
+      .select("id, name, length_cm, width_cm, height_cm, empty_weight_grams, item_weight_grams")
       .order("name", { ascending: true }),
   ]);
+
+  // Resolve each line's per-unit weight from its assigned package: the
+  // variant's own package_profile_id if it has one, else the product's --
+  // same fallback order as the PDP's weight/dimensions display.
+  const productIds = [...new Set((items ?? []).map((i) => i.product_id).filter((v): v is string => !!v))];
+  const variantIds = [...new Set((items ?? []).map((i) => i.variant_id).filter((v): v is string => !!v))];
+
+  const [{ data: products }, { data: variants }] = await Promise.all([
+    productIds.length > 0
+      ? supabase.from("products").select("id, package_profile_id").in("id", productIds)
+      : Promise.resolve({ data: [] as { id: string; package_profile_id: string | null }[] }),
+    variantIds.length > 0
+      ? supabase.from("product_variants").select("id, package_profile_id").in("id", variantIds)
+      : Promise.resolve({ data: [] as { id: string; package_profile_id: string | null }[] }),
+  ]);
+
+  const packageProfileIdByProduct = new Map((products ?? []).map((p) => [p.id, p.package_profile_id]));
+  const packageProfileIdByVariant = new Map((variants ?? []).map((v) => [v.id, v.package_profile_id]));
+  const itemWeightByProfileId = new Map((packageProfiles ?? []).map((p) => [p.id, p.item_weight_grams]));
+
+  function resolveItemWeightGrams(item: { product_id: string | null; variant_id: string | null }): number | null {
+    const profileId =
+      (item.variant_id && packageProfileIdByVariant.get(item.variant_id)) ||
+      (item.product_id && packageProfileIdByProduct.get(item.product_id)) ||
+      null;
+    if (!profileId) return null;
+    return itemWeightByProfileId.get(profileId) ?? null;
+  }
 
   const shipping = order.shipping_address as ShippingAddress | null;
   const pendingRates = order.pending_rates as PendingRate[] | null;
@@ -99,6 +127,7 @@ export default async function AdminOrderPackagePage({
                 productName: item.product_name,
                 variantLabel: item.variant_label,
                 quantity: item.quantity,
+                itemWeightGrams: resolveItemWeightGrams(item),
               }))}
               packageProfiles={(packageProfiles ?? []).map((p) => ({
                 id: p.id,

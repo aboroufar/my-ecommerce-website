@@ -12,7 +12,9 @@ export default async function AdminPackagesPage({
   const supabase = createAdminClient();
   const { data: profiles } = await supabase
     .from("package_profiles")
-    .select("id, name, package_type, length_cm, width_cm, height_cm, empty_weight_grams")
+    .select(
+      "id, name, package_type, length_cm, width_cm, height_cm, empty_weight_grams, item_weight_grams"
+    )
     .order("name", { ascending: true });
 
   return (

@@ -16,6 +16,10 @@ const packageProfileSchema = z.object({
     .union([z.coerce.number().positive(), z.literal("")])
     .optional()
     .default(""),
+  item_weight_grams: z
+    .union([z.coerce.number().positive(), z.literal("")])
+    .optional()
+    .default(""),
 });
 
 /**
@@ -47,6 +51,8 @@ export async function createPackageProfile(formData: FormData) {
     height_cm: parsed.data.height_cm === "" ? null : parsed.data.height_cm,
     empty_weight_grams:
       parsed.data.empty_weight_grams === "" ? null : parsed.data.empty_weight_grams,
+    item_weight_grams:
+      parsed.data.item_weight_grams === "" ? null : parsed.data.item_weight_grams,
   });
 
   if (error) redirect(`/admin/packages?error=${encodeURIComponent(error.message)}`);
@@ -70,6 +76,7 @@ export async function createPackageProfileInline(formData: FormData): Promise<
       widthCm: number | null;
       heightCm: number | null;
       emptyWeightGrams: number | null;
+      itemWeightGrams: number | null;
     }
   | { error: string }
 > {
@@ -92,6 +99,8 @@ export async function createPackageProfileInline(formData: FormData): Promise<
       heightCm: parsed.data.height_cm === "" ? null : parsed.data.height_cm,
       emptyWeightGrams:
         parsed.data.empty_weight_grams === "" ? null : parsed.data.empty_weight_grams,
+      itemWeightGrams:
+        parsed.data.item_weight_grams === "" ? null : parsed.data.item_weight_grams,
     };
   }
 
@@ -105,8 +114,10 @@ export async function createPackageProfileInline(formData: FormData): Promise<
       height_cm: parsed.data.height_cm === "" ? null : parsed.data.height_cm,
       empty_weight_grams:
         parsed.data.empty_weight_grams === "" ? null : parsed.data.empty_weight_grams,
+      item_weight_grams:
+        parsed.data.item_weight_grams === "" ? null : parsed.data.item_weight_grams,
     })
-    .select("id, name, length_cm, width_cm, height_cm, empty_weight_grams")
+    .select("id, name, length_cm, width_cm, height_cm, empty_weight_grams, item_weight_grams")
     .single();
 
   if (error || !data) return { error: error?.message ?? "Could not create package" };
@@ -121,6 +132,7 @@ export async function createPackageProfileInline(formData: FormData): Promise<
     widthCm: data.width_cm,
     heightCm: data.height_cm,
     emptyWeightGrams: data.empty_weight_grams,
+    itemWeightGrams: data.item_weight_grams,
   };
 }
 
@@ -145,6 +157,8 @@ export async function updatePackageProfile(id: string, formData: FormData) {
       height_cm: parsed.data.height_cm === "" ? null : parsed.data.height_cm,
       empty_weight_grams:
         parsed.data.empty_weight_grams === "" ? null : parsed.data.empty_weight_grams,
+      item_weight_grams:
+        parsed.data.item_weight_grams === "" ? null : parsed.data.item_weight_grams,
     })
     .eq("id", id);
 
