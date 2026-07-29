@@ -13,6 +13,7 @@ import {
 import { ProductCard } from "@/components/ProductCard";
 import { SortDropdown } from "@/components/SortDropdown";
 import { ShopSidebar } from "@/components/ShopSidebar";
+import { ProductsGridLayout } from "@/components/ProductsGridLayout";
 
 export const revalidate = 60;
 
@@ -62,6 +63,42 @@ export default async function ProductsPage({
   const categories = allCategories.filter((c) => !c.display_only);
 
   const activeCategory = categories.find((c) => c.slug === category);
+  const activeFilterCount = [category, brand, gender, maxPrice].filter(Boolean).length;
+
+  const heading = (
+    <div className="mb-10">
+      <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+        {t("catalog")}
+      </span>
+      <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
+        {activeCategory?.name ?? activeTag?.name ?? t("shopAll")}
+      </h1>
+    </div>
+  );
+  const hasActiveFilter = !!category || !!tag || !!brand || !!gender;
+
+  function ProductGrid({ extraColumn }: { extraColumn: boolean }) {
+    return (
+      <>
+        {heading}
+        {products.length === 0 ? (
+          <EmptyState hasFilter={hasActiveFilter} t={t} />
+        ) : (
+          <div
+            className={
+              extraColumn
+                ? "grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4"
+                : "grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3"
+            }
+          >
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <main className="w-full flex-1">
@@ -72,38 +109,24 @@ export default async function ProductsPage({
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 lg:flex-row">
-        <ShopSidebar
-          categories={categories}
-          activeSlug={category}
-          maxPrice={maxPrice}
-          maxPriceCents={catalogMaxPriceCents}
-          brands={brands}
-          activeBrandId={brand}
-          showGender
-          activeGender={gender}
+      <div className="mx-auto w-full max-w-6xl px-6 py-12">
+        <ProductsGridLayout
+          activeFilterCount={activeFilterCount}
+          sidebar={
+            <ShopSidebar
+              categories={categories}
+              activeSlug={category}
+              maxPrice={maxPrice}
+              maxPriceCents={catalogMaxPriceCents}
+              brands={brands}
+              activeBrandId={brand}
+              showGender
+              activeGender={gender}
+            />
+          }
+          gridWithFilters={<ProductGrid extraColumn={false} />}
+          gridWithoutFilters={<ProductGrid extraColumn={true} />}
         />
-
-        <div className="min-w-0 flex-1">
-          <div className="mb-10">
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-              {t("catalog")}
-            </span>
-            <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
-              {activeCategory?.name ?? activeTag?.name ?? t("shopAll")}
-            </h1>
-          </div>
-
-          {products.length === 0 ? (
-            <EmptyState hasFilter={!!category || !!tag || !!brand || !!gender} t={t} />
-          ) : (
-            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </main>
   );

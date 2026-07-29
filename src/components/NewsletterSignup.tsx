@@ -23,7 +23,7 @@ export function NewsletterSignup() {
 
   if (status === "done") {
     return (
-      <p className="text-sm text-foreground">
+      <p className="text-sm text-header-footer-text">
         {t("success")}
       </p>
     );
@@ -31,23 +31,23 @@ export function NewsletterSignup() {
 
   return (
     <div>
-      <form action={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:gap-0">
+      <form action={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:gap-2">
         <input
           type="email"
           name="email"
           required
           placeholder={t("emailPlaceholder")}
-          className="flex-1 border border-line bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-foreground focus:outline-none focus:ring-2 focus:ring-accent/40 sm:border-r-0"
+          className="flex-1 rounded-full border border-header-footer-text/30 bg-transparent px-4 py-2 text-sm text-header-footer-text placeholder:text-header-footer-text/50 focus:border-header-footer-text focus:outline-none focus:ring-2 focus:ring-header-footer-text/30"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="bg-foreground px-5 py-2 text-xs font-medium uppercase tracking-wide text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="rounded-full bg-header-footer-text px-5 py-2 text-xs font-medium uppercase tracking-wide text-header-footer transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {status === "loading" ? t("subscribing") : t("subscribe")}
         </button>
       </form>
-      {error && <p className="mt-2 text-xs text-red-700">{error}</p>}
+      {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
     </div>
   );
 }

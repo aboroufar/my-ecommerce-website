@@ -4,7 +4,10 @@ export type HomepageSectionKey =
   | "hero"
   | "category_grid"
   | "sale"
+  | "promo_banner"
   | "best_sellers"
+  | "journal"
+  | "newsletter_photo"
   | "brand_bar";
 
 export interface HomepageSection {
@@ -23,8 +26,11 @@ const defaults: HomepageSection[] = [
   { key: "hero", label: "Hero slideshow", enabled: true, sort_order: 0 },
   { key: "category_grid", label: "Brand highlights", enabled: true, sort_order: 1 },
   { key: "sale", label: "Products on sale", enabled: true, sort_order: 2 },
-  { key: "best_sellers", label: "Top bestsellers", enabled: true, sort_order: 3 },
-  { key: "brand_bar", label: "Brand bar", enabled: true, sort_order: 4 },
+  { key: "promo_banner", label: "Promo banner", enabled: true, sort_order: 3 },
+  { key: "best_sellers", label: "Top bestsellers", enabled: true, sort_order: 4 },
+  { key: "journal", label: "Journal / editorial posts", enabled: true, sort_order: 5 },
+  { key: "newsletter_photo", label: "Newsletter signup (photo)", enabled: true, sort_order: 6 },
+  { key: "brand_bar", label: "Brand bar", enabled: true, sort_order: 7 },
 ];
 
 /**

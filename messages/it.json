@@ -343,7 +343,8 @@
     "signInToSave": "Accedi per salvare questo articolo nei preferiti",
     "sale": "Saldi",
     "popular": "Popolare",
-    "addToCart": "Aggiungi {name} al carrello"
+    "addToCart": "Aggiungi {name} al carrello",
+    "addToCartLabel": "Aggiungi al carrello"
   },
   "orderSummary": {
     "subtotal": "Subtotale",
@@ -394,7 +395,9 @@
     "emptyFilteredHeading": "Ancora nessun prodotto in questa categoria.",
     "viewAllProducts": "Vedi tutti i prodotti",
     "emptyHeading": "Ancora nessun prodotto.",
-    "emptyBody": "Una volta che il tuo progetto Supabase è connesso e migrato, i prodotti contrassegnati {statusActive} appariranno qui automaticamente. Esegui {seedCommand} per dati di esempio."
+    "emptyBody": "Una volta che il tuo progetto Supabase è connesso e migrato, i prodotti contrassegnati {statusActive} appariranno qui automaticamente. Esegui {seedCommand} per dati di esempio.",
+    "hideFilter": "Nascondi filtro",
+    "showFilter": "Mostra filtro"
   },
   "promoPage": {
     "title": "Promo — Storefront",
@@ -412,6 +415,21 @@
     "showAll": "Vedi tutto",
     "emptyCategory": "Ancora nessun prodotto in questa categoria.",
     "viewAll": "Vedi tutto"
+  },
+  "promoBanner": {
+    "eyebrow": "Tempo limitato",
+    "heading": "Risparmia sul tuo prossimo ordine",
+    "body": "Torna a trovarci per offerte stagionali e sconti a tempo limitato sui tuoi preferiti.",
+    "cta": "Acquista ora"
+  },
+  "journalSection": {
+    "eyebrow": "Dal giornale",
+    "heading": "Storie da leggere",
+    "readMore": "Leggi di più"
+  },
+  "newsletterPhoto": {
+    "heading": "Resta aggiornato",
+    "body": "Iscriviti per ricevere novità, consigli e offerte direttamente nella tua casella di posta."
   },
   "categoryGrid": {
     "sampleImage": "Immagine di esempio",

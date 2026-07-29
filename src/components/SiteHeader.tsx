@@ -22,7 +22,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-background/95 shadow-[0_1px_0_rgba(32,30,28,0.03)] backdrop-blur">
-      <div className="bg-foreground px-6 py-2 text-xs text-background">
+      <div className="bg-header-footer px-6 py-2 text-xs text-header-footer-text">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="hidden items-center gap-6 sm:flex">
             {settings.header_email && (

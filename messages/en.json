@@ -343,7 +343,8 @@
     "signInToSave": "Sign in to save this to your wishlist",
     "sale": "Sale",
     "popular": "Popular",
-    "addToCart": "Add {name} to cart"
+    "addToCart": "Add {name} to cart",
+    "addToCartLabel": "Add to cart"
   },
   "orderSummary": {
     "subtotal": "Subtotal",
@@ -394,7 +395,9 @@
     "emptyFilteredHeading": "No products in this category yet.",
     "viewAllProducts": "View all products",
     "emptyHeading": "No products yet.",
-    "emptyBody": "Once your Supabase project is connected and migrated, products marked {statusActive} will show up here automatically. Run {seedCommand} for sample data."
+    "emptyBody": "Once your Supabase project is connected and migrated, products marked {statusActive} will show up here automatically. Run {seedCommand} for sample data.",
+    "hideFilter": "Hide filter",
+    "showFilter": "Show filter"
   },
   "promoPage": {
     "title": "Promo — Storefront",
@@ -412,6 +415,21 @@
     "showAll": "Show all",
     "emptyCategory": "No products in this category yet.",
     "viewAll": "View all"
+  },
+  "promoBanner": {
+    "eyebrow": "Limited time",
+    "heading": "Save on your next order",
+    "body": "Check back for seasonal offers and limited-time discounts on your favorites.",
+    "cta": "Shop now"
+  },
+  "journalSection": {
+    "eyebrow": "From the journal",
+    "heading": "Stories worth reading",
+    "readMore": "Read more"
+  },
+  "newsletterPhoto": {
+    "heading": "Stay in the loop",
+    "body": "Sign up for news, tips, and offers straight to your inbox."
   },
   "categoryGrid": {
     "sampleImage": "Sample image",

@@ -7,6 +7,9 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { SaleSection } from "@/components/SaleSection";
 import { HeroSlideshow } from "@/components/HeroSlideshow";
 import { BrandBar } from "@/components/BrandBar";
+import { PromoBanner } from "@/components/PromoBanner";
+import { JournalSection } from "@/components/JournalSection";
+import { NewsletterPhotoSection } from "@/components/NewsletterPhotoSection";
 
 export default async function Home() {
   const [allProducts, allCategories, heroSlides, sections, brands] = await Promise.all([
@@ -29,7 +32,10 @@ export default async function Home() {
     hero: <HeroSlideshow slides={heroSlides} />,
     category_grid: <CategoryGrid categories={categories} products={allProducts} />,
     sale: <SaleSection products={allProducts} categories={filterableCategories} />,
+    promo_banner: <PromoBanner />,
     best_sellers: <BestSellers products={allProducts} categories={filterableCategories} />,
+    journal: <JournalSection />,
+    newsletter_photo: <NewsletterPhotoSection />,
     brand_bar: <BrandBar brands={brands} />,
   };
 

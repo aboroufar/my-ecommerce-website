@@ -32,7 +32,7 @@ export function ShopSidebar({
   activeGender?: string;
 }) {
   return (
-    <aside className="w-full shrink-0 rounded-lg bg-surface p-6 lg:w-72">
+    <aside className="w-full shrink-0 rounded-lg border border-line bg-surface p-6 lg:w-72">
       <SearchBox />
 
       <PriceRangeSlider maxPriceCents={maxPriceCents} currentMaxPrice={maxPrice} />

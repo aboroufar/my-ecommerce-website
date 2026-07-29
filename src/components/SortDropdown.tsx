@@ -29,11 +29,11 @@ export function SortDropdown({ current }: { current: ProductSort }) {
   }
 
   return (
-    <div className="relative inline-flex items-center border border-line">
+    <div className="relative inline-flex items-center rounded-full border border-line">
       <select
         value={current}
         onChange={(e) => handleChange(e.target.value)}
-        className="appearance-none bg-background px-4 py-2.5 pr-9 text-sm text-foreground focus:outline-none"
+        className="appearance-none rounded-full bg-background px-4 py-2.5 pr-9 text-sm text-foreground focus:outline-none"
         aria-label={t("ariaLabel")}
       >
         {Object.entries(sortLabels).map(([value, label]) => (

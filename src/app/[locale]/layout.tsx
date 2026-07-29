@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
+import { Figtree, Playfair_Display } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import "../globals.css";
@@ -9,14 +9,22 @@ import { CartProvider } from "@/components/CartProvider";
 import { WishlistProvider } from "@/components/WishlistProvider";
 import { routing } from "@/i18n/routing";
 
-// Figtree is a geometric sans-serif close to Avenir Next (used site-wide,
-// including headings, on douglas.it) -- one typeface everywhere instead
-// of a serif/sans pairing, matching that reference site's uniform look.
 const figtree = Figtree({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-figtree",
+});
+
+// Serif display face for the storefront only -- /admin has its own
+// separate <html> root (src/app/admin/layout.tsx) and never gets the
+// "storefront" class below, so it keeps Figtree for --font-display
+// automatically without any admin-side changes.
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-playfair",
 });
 
 export const metadata: Metadata = {
@@ -39,7 +47,10 @@ export default async function RootLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
 
   return (
-    <html lang={locale} className={`h-full antialiased ${figtree.variable}`}>
+    <html
+      lang={locale}
+      className={`storefront h-full antialiased ${figtree.variable} ${playfair.variable}`}
+    >
       <body className="min-h-full flex flex-col font-sans">
         <NextIntlClientProvider>
           <CartProvider>
