@@ -64,21 +64,45 @@ export type Database = {
           },
         ]
       }
+      admin_activity_log: {
+        Row: {
+          action: string
+          admin_email: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          action?: string
+          admin_email: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          admin_email?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       admins: {
         Row: {
           created_at: string
           email: string
           id: string
+          role: string
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
+          role?: string
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
+          role?: string
         }
         Relationships: []
       }
@@ -1801,13 +1825,30 @@ export type Database = {
           blog_author_name: string
           blog_author_photo_url: string
           blog_author_twitter_url: string
+          business_address_line1: string
+          business_address_line2: string
+          business_city: string
+          business_country: string
+          business_legal_name: string
+          business_phone: string
+          business_postal_code: string
+          business_region: string
+          business_type: string
           categories_menu_label: string
+          checkout_settings: Json
+          delivery_estimate_enabled: boolean
           free_shipping_threshold_cents: number
+          fulfillment_time_days: number
+          google_signin_enabled: boolean
           header_address: string
           header_email: string
           header_phone: string
           help_page_enabled: boolean
           id: boolean
+          order_id_prefix: string
+          order_id_suffix: string
+          payment_capture_method: string
+          payment_methods_enabled: string[]
           reviews_enabled: boolean
           ship_from_city: string | null
           ship_from_country: string | null
@@ -1825,6 +1866,12 @@ export type Database = {
           social_instagram_url: string
           social_linkedin_url: string
           social_twitter_url: string
+          store_currency: string
+          store_timezone: string
+          store_unit_system: string
+          store_weight_unit: string
+          transit_time_max_days: number
+          transit_time_min_days: number
           updated_at: string
         }
         Insert: {
@@ -1834,13 +1881,30 @@ export type Database = {
           blog_author_name?: string
           blog_author_photo_url?: string
           blog_author_twitter_url?: string
+          business_address_line1?: string
+          business_address_line2?: string
+          business_city?: string
+          business_country?: string
+          business_legal_name?: string
+          business_phone?: string
+          business_postal_code?: string
+          business_region?: string
+          business_type?: string
           categories_menu_label?: string
+          checkout_settings?: Json
+          delivery_estimate_enabled?: boolean
           free_shipping_threshold_cents?: number
+          fulfillment_time_days?: number
+          google_signin_enabled?: boolean
           header_address?: string
           header_email?: string
           header_phone?: string
           help_page_enabled?: boolean
           id?: boolean
+          order_id_prefix?: string
+          order_id_suffix?: string
+          payment_capture_method?: string
+          payment_methods_enabled?: string[]
           reviews_enabled?: boolean
           ship_from_city?: string | null
           ship_from_country?: string | null
@@ -1858,6 +1922,12 @@ export type Database = {
           social_instagram_url?: string
           social_linkedin_url?: string
           social_twitter_url?: string
+          store_currency?: string
+          store_timezone?: string
+          store_unit_system?: string
+          store_weight_unit?: string
+          transit_time_max_days?: number
+          transit_time_min_days?: number
           updated_at?: string
         }
         Update: {
@@ -1867,13 +1937,30 @@ export type Database = {
           blog_author_name?: string
           blog_author_photo_url?: string
           blog_author_twitter_url?: string
+          business_address_line1?: string
+          business_address_line2?: string
+          business_city?: string
+          business_country?: string
+          business_legal_name?: string
+          business_phone?: string
+          business_postal_code?: string
+          business_region?: string
+          business_type?: string
           categories_menu_label?: string
+          checkout_settings?: Json
+          delivery_estimate_enabled?: boolean
           free_shipping_threshold_cents?: number
+          fulfillment_time_days?: number
+          google_signin_enabled?: boolean
           header_address?: string
           header_email?: string
           header_phone?: string
           help_page_enabled?: boolean
           id?: boolean
+          order_id_prefix?: string
+          order_id_suffix?: string
+          payment_capture_method?: string
+          payment_methods_enabled?: string[]
           reviews_enabled?: boolean
           ship_from_city?: string | null
           ship_from_country?: string | null
@@ -1891,6 +1978,12 @@ export type Database = {
           social_instagram_url?: string
           social_linkedin_url?: string
           social_twitter_url?: string
+          store_currency?: string
+          store_timezone?: string
+          store_unit_system?: string
+          store_weight_unit?: string
+          transit_time_max_days?: number
+          transit_time_min_days?: number
           updated_at?: string
         }
         Relationships: []

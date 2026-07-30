@@ -4,15 +4,11 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 import { getStripe } from "@/lib/stripe";
 import { discountConfigSchema, type DiscountConfig } from "@/lib/discounts";
 import type { Json } from "@/lib/supabase/types";
 
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const discountFormSchema = z.object({
   discount_type: z.enum(["amount_off_products", "buy_x_get_y", "amount_off_order", "free_shipping"]),
@@ -125,7 +121,7 @@ async function archiveStripePromotionCode(promotionCodeId: string | null) {
 }
 
 export async function createDiscountCode(formData: FormData) {
-  await requireAdmin();
+  await requireSection("discounts");
 
   const parsed = discountFormSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -182,7 +178,7 @@ export async function createDiscountCode(formData: FormData) {
 }
 
 export async function updateDiscountCode(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("discounts");
 
   const parsed = discountFormSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -246,7 +242,7 @@ export async function updateDiscountCode(id: string, formData: FormData) {
 }
 
 export async function deleteDiscountCode(id: string) {
-  await requireAdmin();
+  await requireSection("discounts");
 
   const supabase = createAdminClient();
 
@@ -264,7 +260,7 @@ export async function deleteDiscountCode(id: string) {
 }
 
 export async function toggleDiscountCode(id: string, active: boolean) {
-  await requireAdmin();
+  await requireSection("discounts");
 
   const supabase = createAdminClient();
   const nextActive = !active;

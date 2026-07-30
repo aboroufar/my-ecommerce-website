@@ -15,6 +15,11 @@ export interface SiteSettings {
   social_instagram_url: string;
   shipping_flat_rate_cents: number;
   free_shipping_threshold_cents: number;
+  google_signin_enabled: boolean;
+  delivery_estimate_enabled: boolean;
+  fulfillment_time_days: number;
+  transit_time_min_days: number;
+  transit_time_max_days: number;
 }
 
 const defaults: SiteSettings = {
@@ -32,6 +37,11 @@ const defaults: SiteSettings = {
   social_instagram_url: "",
   shipping_flat_rate_cents: 590,
   free_shipping_threshold_cents: 7500,
+  google_signin_enabled: true,
+  delivery_estimate_enabled: false,
+  fulfillment_time_days: 1,
+  transit_time_min_days: 3,
+  transit_time_max_days: 5,
 };
 
 /**
@@ -46,7 +56,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const { data, error } = await supabase
       .from("site_settings")
       .select(
-        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label, reviews_enabled, help_page_enabled, social_facebook_url, social_twitter_url, social_linkedin_url, social_instagram_url, shipping_flat_rate_cents, free_shipping_threshold_cents"
+        "site_name, site_logo_url, header_email, header_phone, header_address, categories_menu_label, reviews_enabled, help_page_enabled, social_facebook_url, social_twitter_url, social_linkedin_url, social_instagram_url, shipping_flat_rate_cents, free_shipping_threshold_cents, google_signin_enabled, delivery_estimate_enabled, fulfillment_time_days, transit_time_min_days, transit_time_max_days"
       )
       .eq("id", true)
       .maybeSingle();

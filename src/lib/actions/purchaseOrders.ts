@@ -4,12 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const PAYMENT_TERMS = [
   "none",
@@ -66,7 +62,7 @@ function parseLineItems(
  * a fixed set of named FormData fields.
  */
 export async function createPurchaseOrder(formData: FormData) {
-  await requireAdmin();
+  await requireSection("purchaseOrders");
 
   const parsed = purchaseOrderSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -125,7 +121,7 @@ export async function createPurchaseOrder(formData: FormData) {
 }
 
 export async function updatePurchaseOrderDetails(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("purchaseOrders");
 
   const parsed = purchaseOrderSchema
     .omit({ itemsJson: true })
@@ -163,7 +159,7 @@ const statusUpdateSchema = z.object({
 });
 
 export async function updatePurchaseOrderStatus(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("purchaseOrders");
 
   const parsed = statusUpdateSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -203,7 +199,7 @@ const receivedQuantitySchema = z.array(
  * stock from a received PO is a separate, clearly-scoped follow-up.
  */
 export async function updateReceivedQuantities(purchaseOrderId: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("purchaseOrders");
 
   const parsed = receiveItemsSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -241,7 +237,7 @@ export async function updateReceivedQuantities(purchaseOrderId: string, formData
 }
 
 export async function deletePurchaseOrder(id: string) {
-  await requireAdmin();
+  await requireSection("purchaseOrders");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("purchase_orders").delete().eq("id", id);

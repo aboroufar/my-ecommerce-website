@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import "../globals.css";
-import { getSessionUser, isAdminEmail } from "@/lib/auth";
+import { getSessionUser, isAdminEmail, getAdminRole } from "@/lib/auth";
 import { MagicLinkForm } from "@/components/auth/MagicLinkForm";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -67,13 +67,20 @@ export default async function AdminLayout({
     );
   }
 
+  const role = await getAdminRole(user.email);
+
   return (
     <html lang="en" className={`h-full antialiased ${figtree.variable}`}>
-      <body className="min-h-full font-sans">
+      {/* Shopify-style admin canvas: a light gray page background with
+          white cards floating on top, distinct from the storefront's
+          cream/white surfaces. Scoped to this subtree only (admin has its
+          own <html>/<body>, no shared parent with [locale]) so it can't
+          leak into customer-facing pages. */}
+      <body className="min-h-full font-sans" style={{ backgroundColor: "#f1f1f1" }}>
         <div className="flex min-h-screen">
-          <AdminSidebar userEmail={user.email ?? ""} />
+          <AdminSidebar userEmail={user.email ?? ""} role={role} />
           <div className="min-w-0 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-5xl px-6 py-10">{children}</div>
+            <div className="mx-auto w-full max-w-5xl px-6 py-8">{children}</div>
           </div>
         </div>
       </body>

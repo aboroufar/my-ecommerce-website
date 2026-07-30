@@ -3,15 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 export async function toggleHomepageSection(key: string, enabled: boolean) {
-  await requireAdmin();
+  await requireSection("content");
 
   const supabase = createAdminClient();
   await supabase.from("homepage_sections").update({ enabled }).eq("key", key);
@@ -26,7 +22,7 @@ export async function toggleHomepageSection(key: string, enabled: boolean) {
  * short, fixed list of section keys.
  */
 export async function moveHomepageSection(key: string, direction: "up" | "down") {
-  await requireAdmin();
+  await requireSection("content");
 
   const supabase = createAdminClient();
   const { data: sections } = await supabase

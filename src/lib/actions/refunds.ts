@@ -2,17 +2,10 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 import { getStripe } from "@/lib/stripe";
 import type Stripe from "stripe";
-
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-  return user;
-}
 
 const refundLineSchema = z.object({
   orderItemId: z.string().uuid(),
@@ -55,7 +48,7 @@ function mapReasonToStripeReason(reason?: string): Stripe.RefundCreateParams.Rea
 export async function createRefund(
   input: CreateRefundInput
 ): Promise<{ error: string } | { success: true }> {
-  const admin = await requireAdmin();
+  const admin = await requireSection("orders");
 
   const parsed = createRefundSchema.safeParse(input);
   if (!parsed.success) {

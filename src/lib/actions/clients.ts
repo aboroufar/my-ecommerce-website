@@ -5,17 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 /** clients.phone has a unique constraint (see 20260811000001) -- every
  * write path surfaces its 23505 as this same clear message instead of
@@ -238,7 +229,7 @@ const newClientSchema = z.object({
  * second one.
  */
 export async function createClientAccount(formData: FormData) {
-  await requireAdmin();
+  await requireSection("clients");
 
   const parsed = newClientSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -331,7 +322,7 @@ const updateClientSchema = z.object({
  * concept -- membership in newsletter_subscribers -- and is synced here.
  */
 export async function updateClientAccount(clientId: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("clients");
 
   const parsed = updateClientSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -391,7 +382,7 @@ export async function updateClientAccount(clientId: string, formData: FormData) 
  * longer has a client record anywhere in the app.
  */
 export async function deleteClientAccount(clientId: string) {
-  await requireAdmin();
+  await requireSection("clients");
 
   const supabase = createAdminClient();
   const { error } = await supabase.auth.admin.deleteUser(clientId);
@@ -418,7 +409,7 @@ export async function addClientNote(
   clientId: string,
   body: string
 ): Promise<{ error: string } | { success: true }> {
-  await requireAdmin();
+  await requireSection("clients");
 
   const parsed = clientNoteSchema.safeParse({ body });
   if (!parsed.success) {

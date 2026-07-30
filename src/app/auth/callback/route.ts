@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { isAdminEmail } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -25,6 +27,20 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Record one "accessed shop" row per admin sign-in (not per page
+      // view -- that'd flood the table) for the Store activity log at
+      // /admin/settings/general. Scoped to the admin sign-in path and
+      // fire-and-forget so a logging failure never blocks the redirect.
+      if (next.startsWith("/admin") && data.user?.email && (await isAdminEmail(data.user.email))) {
+        const adminSupabase = createAdminClient();
+        void adminSupabase
+          .from("admin_activity_log")
+          .insert({ admin_email: data.user.email, action: "accessed_shop" })
+          .then(({ error: logError }) => {
+            if (logError) console.error("admin_activity_log insert failed:", logError.message);
+          });
+      }
+
       // Nudge a customer with an incomplete profile (date_of_birth/gender
       // still null -- the case for every brand-new signup, since sign-up
       // is email-only now with no other fields collected) to

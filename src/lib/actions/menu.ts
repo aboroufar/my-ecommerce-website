@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
 const columnSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -16,13 +16,9 @@ const itemSchema = z.object({
   href: z.string().min(1, "Link is required"),
 });
 
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 export async function createMenuColumn(formData: FormData) {
-  await requireAdmin();
+  await requireSection("menu");
 
   const parsed = columnSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -49,7 +45,7 @@ export async function createMenuColumn(formData: FormData) {
 }
 
 export async function updateMenuColumn(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("menu");
 
   const parsed = columnSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -67,7 +63,7 @@ export async function updateMenuColumn(id: string, formData: FormData) {
 }
 
 export async function deleteMenuColumn(id: string) {
-  await requireAdmin();
+  await requireSection("menu");
 
   const supabase = createAdminClient();
   // menu_items rows reference this column with ON DELETE CASCADE, so
@@ -80,7 +76,7 @@ export async function deleteMenuColumn(id: string) {
 }
 
 export async function toggleMenuColumn(id: string, enabled: boolean) {
-  await requireAdmin();
+  await requireSection("menu");
 
   const supabase = createAdminClient();
   await supabase.from("menu_columns").update({ enabled }).eq("id", id);
@@ -90,7 +86,7 @@ export async function toggleMenuColumn(id: string, enabled: boolean) {
 }
 
 export async function createMenuItem(formData: FormData) {
-  await requireAdmin();
+  await requireSection("menu");
 
   const parsed = itemSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -118,7 +114,7 @@ export async function createMenuItem(formData: FormData) {
 }
 
 export async function updateMenuItem(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("menu");
 
   const schema = z.object({
     label: z.string().min(1, "Label is required"),
@@ -140,7 +136,7 @@ export async function updateMenuItem(id: string, formData: FormData) {
 }
 
 export async function deleteMenuItem(id: string) {
-  await requireAdmin();
+  await requireSection("menu");
 
   const supabase = createAdminClient();
   await supabase.from("menu_items").delete().eq("id", id);
@@ -152,7 +148,7 @@ export async function deleteMenuItem(id: string) {
 
 /** Swaps sort_order with the adjacent column in the given direction. */
 export async function moveMenuColumn(id: string, direction: "up" | "down") {
-  await requireAdmin();
+  await requireSection("menu");
 
   const supabase = createAdminClient();
   const { data: columns } = await supabase
@@ -181,7 +177,7 @@ export async function moveMenuColumn(id: string, direction: "up" | "down") {
 
 /** Swaps sort_order with the adjacent item (within the same column) in the given direction. */
 export async function moveMenuItem(id: string, columnId: string, direction: "up" | "down") {
-  await requireAdmin();
+  await requireSection("menu");
 
   const supabase = createAdminClient();
   const { data: items } = await supabase

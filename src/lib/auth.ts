@@ -62,3 +62,29 @@ export async function getAdminUser() {
   if (!user || !(await isAdminEmail(user.email))) return null;
   return user;
 }
+
+/**
+ * Looks up the caller's role from the `admins` table. Defaults to the
+ * full-access "admin" role when the email isn't in the table (the
+ * ADMIN_EMAILS env-var fallback case in isAdminEmail has no row to read a
+ * role from) or the lookup fails, matching the existing "never lock the
+ * owner out" fallback philosophy in this file.
+ */
+export async function getAdminRole(email?: string | null): Promise<import("@/lib/permissions").AdminRole> {
+  if (!email) return "admin";
+
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("admins")
+      .select("role")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+
+    if (error || !data) return "admin";
+    return data.role as import("@/lib/permissions").AdminRole;
+  } catch (err) {
+    console.error("getAdminRole: admins table check failed, defaulting to admin role:", err);
+    return "admin";
+  }
+}

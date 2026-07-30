@@ -6,7 +6,13 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function SignInForm({ next = "/account" }: { next?: string }) {
+export function SignInForm({
+  next = "/account",
+  googleSigninEnabled = true,
+}: {
+  next?: string;
+  googleSigninEnabled?: boolean;
+}) {
   const t = useTranslations("signInForm");
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -46,19 +52,24 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
         {t("title")}
       </h1>
 
-      <GoogleButton onClick={handleGoogleSignIn} />
-
-      <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-wide text-muted">
-        <span className="h-px flex-1 bg-line" />
-        {t("or")}
-        <span className="h-px flex-1 bg-line" />
-      </div>
+      {googleSigninEnabled && (
+        <>
+          <GoogleButton onClick={handleGoogleSignIn} />
+          <div className="my-6 flex items-center gap-4 text-xs uppercase tracking-wide text-muted">
+            <span className="h-px flex-1 bg-line" />
+            {t("or")}
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
 
       {error && <p className="mt-4 text-sm text-red-700">{error}</p>}
 
       <Link
         href="/auth/magic-link"
-        className="mt-6 flex w-full items-center justify-center border border-line px-6 py-3.5 text-sm font-medium uppercase tracking-wide text-foreground transition-colors hover:border-foreground"
+        className={`flex w-full items-center justify-center border border-line px-6 py-3.5 text-sm font-medium uppercase tracking-wide text-foreground transition-colors hover:border-foreground ${
+          googleSigninEnabled ? "" : "mt-6"
+        }`}
       >
         {t("emailMeLink")}
       </Link>

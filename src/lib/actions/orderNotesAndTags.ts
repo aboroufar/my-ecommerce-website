@@ -4,20 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-/**
- * Notes, staff comments, and tags for order records -- direct copies of
- * the client-detail-page precedent (src/lib/actions/clients.ts's
- * addClientNote, src/lib/actions/clientTags.ts), retargeted at orders.
- * Kept in their own file rather than folded into orders.ts since these
- * are a distinct feature area (Timeline/Notes/Tags sidebar) from order
- * fulfillment/cancellation actions.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const orderNoteFieldSchema = z.object({
   notes: z.string(),
@@ -33,7 +21,7 @@ export async function setOrderNote(
   orderId: string,
   notes: string
 ): Promise<{ error: string } | { success: true }> {
-  await requireAdmin();
+  await requireSection("orders");
 
   const parsed = orderNoteFieldSchema.safeParse({ notes });
   if (!parsed.success) {
@@ -68,7 +56,7 @@ export async function addOrderComment(
   orderId: string,
   body: string
 ): Promise<{ error: string } | { success: true }> {
-  await requireAdmin();
+  await requireSection("orders");
 
   const parsed = orderCommentSchema.safeParse({ body });
   if (!parsed.success) {
@@ -110,7 +98,7 @@ const tagSchema = z.object({
 export async function createOrderTagInline(
   name: string
 ): Promise<{ id: string; name: string } | { error: string }> {
-  await requireAdmin();
+  await requireSection("orders");
 
   const parsed = tagSchema.safeParse({ name });
   if (!parsed.success) {
@@ -139,7 +127,7 @@ export async function createOrderTagInline(
  * same "delete all, reinsert" approach as setClientTags/setProductTags.
  */
 export async function setOrderTags(orderId: string, tagIds: string[]) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const supabase = createAdminClient();
   await supabase.from("order_tag_links").delete().eq("order_id", orderId);

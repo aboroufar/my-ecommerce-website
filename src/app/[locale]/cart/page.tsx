@@ -5,9 +5,10 @@ import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useCart } from "@/components/CartProvider";
-import { formatPrice, getSaleInfo } from "@/lib/format";
+import { formatPrice, formatDate, getSaleInfo } from "@/lib/format";
 import { cartLineKey } from "@/lib/cart-types";
 import { calculateShippingCents } from "@/lib/shipping";
+import { computeDeliveryEstimate } from "@/lib/deliveryEstimate";
 
 export default function CartPage() {
   const t = useTranslations("cart");
@@ -22,6 +23,10 @@ export default function CartPage() {
   const [shippingSettings, setShippingSettings] = useState({
     flatRateCents: 0,
     freeThresholdCents: 0,
+    deliveryEstimateEnabled: false,
+    fulfillmentTimeDays: 1,
+    transitTimeMinDays: 3,
+    transitTimeMaxDays: 5,
   });
 
   const currency = items[0]?.currency ?? "eur";
@@ -41,6 +46,12 @@ export default function CartPage() {
   const discountCents = Math.max(0, originalSubtotalCents - subtotalCents);
   const totalCents = subtotalCents + shippingCents;
   const originalTotalCents = originalSubtotalCents + shippingCents;
+  const deliveryEstimate = computeDeliveryEstimate({
+    delivery_estimate_enabled: shippingSettings.deliveryEstimateEnabled,
+    fulfillment_time_days: shippingSettings.fulfillmentTimeDays,
+    transit_time_min_days: shippingSettings.transitTimeMinDays,
+    transit_time_max_days: shippingSettings.transitTimeMaxDays,
+  });
 
   useEffect(() => {
     fetch("/api/site-settings/shipping")
@@ -49,6 +60,10 @@ export default function CartPage() {
         setShippingSettings({
           flatRateCents: body.shippingFlatRateCents,
           freeThresholdCents: body.freeShippingThresholdCents,
+          deliveryEstimateEnabled: body.deliveryEstimateEnabled,
+          fulfillmentTimeDays: body.fulfillmentTimeDays,
+          transitTimeMinDays: body.transitTimeMinDays,
+          transitTimeMaxDays: body.transitTimeMaxDays,
         })
       )
       .catch(() => {});
@@ -244,6 +259,15 @@ export default function CartPage() {
               {formatPrice(totalCents, currency, locale)}
             </span>
           </div>
+          {deliveryEstimate && (
+            <p className="mt-3 border-t border-line pt-3 text-xs text-muted">
+              {tOrder("estimatedDelivery")}{" "}
+              <span className="font-medium text-foreground">
+                {formatDate(deliveryEstimate.earliest, locale, { month: "short", day: "numeric" })} –{" "}
+                {formatDate(deliveryEstimate.latest, locale, { month: "short", day: "numeric" })}
+              </span>
+            </p>
+          )}
         </div>
 
         {error && (

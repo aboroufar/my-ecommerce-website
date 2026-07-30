@@ -4,18 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-/**
- * Organizational tags for client records, kept in their own
- * client_tags/client_tag_links tables so they don't share a pool with
- * product tags, discount labels, or blog tags -- mirrors
- * src/lib/actions/discountLabels.ts, but against client_tags.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 function slugify(name: string): string {
   return name
@@ -33,7 +23,7 @@ const tagSchema = z.object({
 export async function createClientTagInline(
   name: string
 ): Promise<{ id: string; name: string } | { error: string }> {
-  await requireAdmin();
+  await requireSection("clients");
 
   const parsed = tagSchema.safeParse({ name });
   if (!parsed.success) {
@@ -61,7 +51,7 @@ export async function createClientTagInline(
  * safer than diffing add/remove given how small this list always is.
  */
 export async function setClientTags(clientId: string, tagIds: string[]) {
-  await requireAdmin();
+  await requireSection("clients");
 
   const supabase = createAdminClient();
   await supabase.from("client_tag_links").delete().eq("client_id", clientId);

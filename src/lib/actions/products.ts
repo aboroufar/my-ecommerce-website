@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 import { setProductCategories } from "@/lib/actions/categories";
 import { setProductOptions } from "@/lib/actions/productOptions";
 import { setProductHighlights } from "@/lib/actions/productHighlights";
@@ -36,15 +36,6 @@ const productSchema = z.object({
   package_profile_id: z.union([z.string().uuid(), z.literal("")]).optional().default(""),
 });
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const imagesPayloadSchema = z.array(
   z.object({
@@ -90,7 +81,7 @@ async function setProductImages(
 }
 
 export async function createProduct(formData: FormData) {
-  await requireAdmin();
+  await requireSection("products");
 
   const parsed = productSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -146,7 +137,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("products");
 
   const parsed = productSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -202,7 +193,7 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
-  await requireAdmin();
+  await requireSection("products");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("products").delete().eq("id", id);
@@ -222,7 +213,7 @@ export async function deleteProduct(id: string) {
 }
 
 export async function bulkUpdateProductStatus(formData: FormData) {
-  await requireAdmin();
+  await requireSection("products");
 
   const ids = formData.getAll("product_ids") as string[];
   const status = formData.get("bulk_status");
@@ -251,7 +242,7 @@ export async function bulkUpdateProductStatus(formData: FormData) {
 }
 
 export async function bulkDeleteProducts(formData: FormData) {
-  await requireAdmin();
+  await requireSection("products");
 
   const ids = formData.getAll("product_ids") as string[];
   if (ids.length === 0) {

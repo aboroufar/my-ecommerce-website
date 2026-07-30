@@ -3,18 +3,9 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 import { HIGHLIGHT_ICON_KEYS } from "@/components/highlightIcons";
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const highlightsPayloadSchema = z.array(
   z.object({
@@ -30,7 +21,7 @@ const highlightsPayloadSchema = z.array(
  * always edited as one unit from the admin form, never incrementally.
  */
 export async function setProductHighlights(productId: string, highlightsJson: string) {
-  await requireAdmin();
+  await requireSection("products");
 
   let raw: unknown;
   try {

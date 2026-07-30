@@ -4,19 +4,10 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 import { parseWhereClause } from "@/lib/segmentQuery";
 import type { Json } from "@/lib/supabase/types";
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const segmentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -24,7 +15,7 @@ const segmentSchema = z.object({
 });
 
 export async function createSegment(formData: FormData) {
-  await requireAdmin();
+  await requireSection("segments");
 
   const parsed = segmentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -54,7 +45,7 @@ export async function createSegment(formData: FormData) {
 }
 
 export async function updateSegment(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("segments");
 
   const parsed = segmentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -89,7 +80,7 @@ export async function updateSegment(id: string, formData: FormData) {
 }
 
 export async function duplicateSegment(id: string) {
-  await requireAdmin();
+  await requireSection("segments");
 
   const supabase = createAdminClient();
   const { data: original, error: fetchError } = await supabase
@@ -122,7 +113,7 @@ export async function duplicateSegment(id: string) {
 }
 
 export async function deleteSegment(id: string) {
-  await requireAdmin();
+  await requireSection("segments");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("client_segments").delete().eq("id", id);

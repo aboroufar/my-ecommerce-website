@@ -22,6 +22,7 @@ import { StarRating } from "@/components/StarRating";
 import { ReviewsTabContent } from "@/components/ReviewsTabContent";
 import { HighlightIcon } from "@/components/highlightIcons";
 import { WishlistButton } from "@/components/WishlistButton";
+import { EstimatedDelivery } from "@/components/EstimatedDelivery";
 import { routing } from "@/i18n/routing";
 import { getLocale } from "next-intl/server";
 
@@ -170,6 +171,8 @@ export default async function ProductDetailPage({
             )}
 
             <ProductAddToCart />
+
+            <EstimatedDelivery settings={siteSettings} />
 
             <div className="mt-3">
               <WishlistButton productId={product.id} />

@@ -3,17 +3,8 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const optionsPayloadSchema = z.object({
   optionTypes: z.array(
@@ -49,7 +40,7 @@ const optionsPayloadSchema = z.object({
  * variants -- doesn't map cleanly onto FormData's flat key/value model.
  */
 export async function setProductOptions(productId: string, optionsJson: string) {
-  await requireAdmin();
+  await requireSection("products");
 
   let raw: unknown;
   try {

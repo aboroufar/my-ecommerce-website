@@ -4,18 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-/**
- * Organizational labels for discount records, kept in their own
- * discount_labels/discount_label_links tables so they don't share a pool
- * with product tags or blog tags -- mirrors src/lib/actions/tags.ts, but
- * against discount_labels instead of the product-facing tags table.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 function slugify(name: string): string {
   return name
@@ -33,7 +23,7 @@ const labelSchema = z.object({
 export async function createDiscountLabelInline(
   name: string
 ): Promise<{ id: string; name: string } | { error: string }> {
-  await requireAdmin();
+  await requireSection("discounts");
 
   const parsed = labelSchema.safeParse({ name });
   if (!parsed.success) {

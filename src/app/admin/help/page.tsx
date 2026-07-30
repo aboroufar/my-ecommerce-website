@@ -33,7 +33,7 @@ export default async function AdminHelpPage({
         Manage the category groups and topics shown on the public{" "}
         <span className="text-foreground">/help</span> page. Turn the page on
         or off from{" "}
-        <a href="/admin/settings" className="text-accent underline underline-offset-4 hover:opacity-80">
+        <a href="/admin/settings/general" className="text-accent underline underline-offset-4 hover:opacity-80">
           Settings
         </a>
         .

@@ -4,17 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const PAYMENT_TERMS = [
   "none",
@@ -59,7 +50,7 @@ const supplierSchema = z.object({
 export async function createSupplierInline(
   company: string
 ): Promise<{ id: string; company: string } | { error: string }> {
-  await requireAdmin();
+  await requireSection("suppliers");
 
   const parsed = z.object({ company: z.string().min(1, "Company is required") }).safeParse({ company });
   if (!parsed.success) {
@@ -82,7 +73,7 @@ export async function createSupplierInline(
 }
 
 export async function createSupplier(formData: FormData) {
-  await requireAdmin();
+  await requireSection("suppliers");
 
   const parsed = supplierSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -133,7 +124,7 @@ export async function createSupplier(formData: FormData) {
 }
 
 export async function updateSupplier(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("suppliers");
 
   const parsed = supplierSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -189,7 +180,7 @@ export async function updateSupplier(id: string, formData: FormData) {
 }
 
 export async function deleteSupplier(id: string) {
-  await requireAdmin();
+  await requireSection("suppliers");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("suppliers").delete().eq("id", id);

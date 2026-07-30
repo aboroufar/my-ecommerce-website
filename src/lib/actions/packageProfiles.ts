@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
 const packageProfileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -22,18 +22,9 @@ const packageProfileSchema = z.object({
     .default(""),
 });
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 export async function createPackageProfile(formData: FormData) {
-  await requireAdmin();
+  await requireSection("packages");
 
   const parsed = packageProfileSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -80,7 +71,7 @@ export async function createPackageProfileInline(formData: FormData): Promise<
     }
   | { error: string }
 > {
-  await requireAdmin();
+  await requireSection("packages");
 
   const parsed = packageProfileSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -137,7 +128,7 @@ export async function createPackageProfileInline(formData: FormData): Promise<
 }
 
 export async function updatePackageProfile(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("packages");
 
   const parsed = packageProfileSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -170,7 +161,7 @@ export async function updatePackageProfile(id: string, formData: FormData) {
 }
 
 export async function deletePackageProfile(id: string) {
-  await requireAdmin();
+  await requireSection("packages");
 
   const supabase = createAdminClient();
   // products.package_profile_id references this with ON DELETE SET NULL,

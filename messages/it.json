@@ -336,6 +336,9 @@
     "reviews": "Recensioni ({count})",
     "relatedItems": "Articoli correlati"
   },
+  "estimatedDelivery": {
+    "label": "Consegna stimata:"
+  },
   "productCard": {
     "removeFromWishlist": "Rimuovi dai preferiti",
     "addToWishlist": "Aggiungi ai preferiti",
@@ -352,7 +355,8 @@
     "shipping": "Spedizione",
     "free": "Gratis",
     "total": "Totale",
-    "vatIncluded": "IVA inclusa"
+    "vatIncluded": "IVA inclusa",
+    "estimatedDelivery": "Consegna stimata:"
   },
   "variantSelector": {
     "selectOption": "Seleziona {option}"

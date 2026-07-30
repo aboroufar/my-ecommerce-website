@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 import { HELP_ICON_KEYS } from "@/components/helpIcons";
 
 const categorySchema = z.object({
@@ -19,13 +19,9 @@ const topicSchema = z.object({
   body_html: z.string().optional().default(""),
 });
 
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 export async function createHelpCategory(formData: FormData) {
-  await requireAdmin();
+  await requireSection("help");
 
   const parsed = categorySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -52,7 +48,7 @@ export async function createHelpCategory(formData: FormData) {
 }
 
 export async function updateHelpCategory(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("help");
 
   const parsed = categorySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -70,7 +66,7 @@ export async function updateHelpCategory(id: string, formData: FormData) {
 }
 
 export async function deleteHelpCategory(id: string) {
-  await requireAdmin();
+  await requireSection("help");
 
   const supabase = createAdminClient();
   // help_topics rows reference this category with ON DELETE CASCADE, so
@@ -84,7 +80,7 @@ export async function deleteHelpCategory(id: string) {
 
 /** Swaps sort_order with the adjacent category in the given direction. */
 export async function moveHelpCategory(id: string, direction: "up" | "down") {
-  await requireAdmin();
+  await requireSection("help");
 
   const supabase = createAdminClient();
   const { data: categories } = await supabase
@@ -112,7 +108,7 @@ export async function moveHelpCategory(id: string, direction: "up" | "down") {
 }
 
 export async function createHelpTopic(formData: FormData) {
-  await requireAdmin();
+  await requireSection("help");
 
   const parsed = topicSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -140,7 +136,7 @@ export async function createHelpTopic(formData: FormData) {
 }
 
 export async function updateHelpTopic(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("help");
 
   const schema = z.object({
     title: z.string().min(1, "Title is required"),
@@ -162,7 +158,7 @@ export async function updateHelpTopic(id: string, formData: FormData) {
 }
 
 export async function deleteHelpTopic(id: string) {
-  await requireAdmin();
+  await requireSection("help");
 
   const supabase = createAdminClient();
   await supabase.from("help_topics").delete().eq("id", id);
@@ -174,7 +170,7 @@ export async function deleteHelpTopic(id: string) {
 
 /** Swaps sort_order with the adjacent topic (within the same category) in the given direction. */
 export async function moveHelpTopic(id: string, categoryId: string, direction: "up" | "down") {
-  await requireAdmin();
+  await requireSection("help");
 
   const supabase = createAdminClient();
   const { data: topics } = await supabase

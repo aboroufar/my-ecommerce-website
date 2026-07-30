@@ -8,6 +8,8 @@ import { getOrCreateStripeCustomer } from "@/lib/stripeCustomer";
 import { calculateShippingCents } from "@/lib/shipping";
 import { routing } from "@/i18n/routing";
 import { getClientFacts } from "@/lib/segments";
+import { resolvePaymentMethodTypes } from "@/lib/payments";
+import { parseCheckoutSettings, resolveCheckoutSessionOptions } from "@/lib/checkoutSettings";
 import {
   evaluateDiscountEligibility,
   discountCategory,
@@ -254,7 +256,9 @@ export async function POST(req: NextRequest) {
   // can be checked against the real pre-discount shipping cost.
   const { data: shippingSettings } = await supabase
     .from("site_settings")
-    .select("shipping_flat_rate_cents, free_shipping_threshold_cents")
+    .select(
+      "shipping_flat_rate_cents, free_shipping_threshold_cents, payment_capture_method, payment_methods_enabled, checkout_settings"
+    )
     .eq("id", true)
     .maybeSingle();
 
@@ -462,6 +466,18 @@ export async function POST(req: NextRequest) {
   try {
     const stripe = getStripe();
 
+    // Only "automatic" and "manual" are real Stripe PaymentIntent capture
+    // modes. "on_fulfillment" (this app's Payments settings) has no native
+    // Stripe equivalent for Checkout Sessions -- it authorizes the same as
+    // "manual" here, and the actual capture is triggered later by
+    // markOrderFulfilled/bulkMarkOrdersFulfilled (src/lib/actions/orders.ts)
+    // once the order's fulfillment_status flips to "fulfilled".
+    const captureMethod =
+      shippingSettings?.payment_capture_method === "manual" ||
+      shippingSettings?.payment_capture_method === "on_fulfillment"
+        ? "manual"
+        : "automatic";
+
     // Same one-time-object pattern used elsewhere in this route: create a
     // fresh Shipping Rate per checkout attempt rather than syncing a
     // persistent Stripe object, so site_settings stays the source of
@@ -505,11 +521,23 @@ export async function POST(req: NextRequest) {
         };
       }),
       shipping_address_collection: { allowed_countries: ["IT"] },
-      payment_method_types: ["card", "klarna", "satispay", "paypal"],
+      payment_method_types: resolvePaymentMethodTypes(shippingSettings?.payment_methods_enabled),
+      ...resolveCheckoutSessionOptions(parseCheckoutSettings(shippingSettings?.checkout_settings)),
       // Discounts are computed by this app, never redeemed by the
       // shopper on Stripe's page -- Stripe's own promo-code field is
       // disabled so the two paths can never disagree about eligibility.
       allow_promotion_codes: false,
+      // capture_method carries the real Stripe mode; the PaymentIntent's own
+      // metadata separately records the *store's* selected option (which
+      // for "on_fulfillment" is still "manual" at the Stripe level) so the
+      // fulfillment action in src/lib/actions/orders.ts knows whether to
+      // trigger the capture itself once an order ships.
+      payment_intent_data: {
+        capture_method: captureMethod,
+        metadata: {
+          capture_mode: shippingSettings?.payment_capture_method ?? "automatic",
+        },
+      },
       ...(discountCoupon ? { discounts: [{ coupon: discountCoupon.id }] } : {}),
       ...(shippingRateId
         ? { shipping_options: [{ shipping_rate: shippingRateId }] }

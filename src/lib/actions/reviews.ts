@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
 /**
  * Public submission -- no auth required, matches the guest-checkout /
@@ -64,19 +64,9 @@ export async function submitReview(
   return { ok: true };
 }
 
-/**
- * Every action below re-checks admin auth itself rather than relying
- * solely on the /admin layout guard -- server actions are callable
- * directly over the network, so the layout's redirect alone isn't enough
- * protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 export async function approveReview(id: string) {
-  await requireAdmin();
+  await requireSection("reviews");
   const supabase = createAdminClient();
   await supabase.from("product_reviews").update({ status: "approved" }).eq("id", id);
   revalidatePath("/products", "layout");
@@ -84,7 +74,7 @@ export async function approveReview(id: string) {
 }
 
 export async function rejectReview(id: string) {
-  await requireAdmin();
+  await requireSection("reviews");
   const supabase = createAdminClient();
   await supabase.from("product_reviews").update({ status: "rejected" }).eq("id", id);
   revalidatePath("/products", "layout");
@@ -92,7 +82,7 @@ export async function rejectReview(id: string) {
 }
 
 export async function deleteReview(id: string) {
-  await requireAdmin();
+  await requireSection("reviews");
   const supabase = createAdminClient();
   await supabase.from("product_reviews").delete().eq("id", id);
   revalidatePath("/products", "layout");

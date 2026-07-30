@@ -4,8 +4,9 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 import { getShippingRates, purchaseShippingLabel } from "@/lib/shippo";
+import { getStripe } from "@/lib/stripe";
 
 interface StripeShippingAddress {
   name?: string;
@@ -19,14 +20,31 @@ interface StripeShippingAddress {
   };
 }
 
+
 /**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
+ * Captures the order's PaymentIntent if (and only if) it was authorized
+ * under the "on_fulfillment" Payments setting (see payment_intent_data
+ * .metadata.capture_mode, set at session creation in
+ * src/app/api/checkout/route.ts). "manual" orders are deliberately left
+ * alone -- those require an explicit admin capture action, not an implicit
+ * one just because the order shipped. Errors are logged, not thrown:
+ * fulfillment itself already succeeded in the database and shouldn't be
+ * rolled back over a capture hiccup (mirrors sendOrderConfirmationEmail's
+ * swallow-and-log pattern in src/lib/email.ts).
  */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
+async function captureOrderPaymentIfDue(paymentIntentId: string | null) {
+  if (!paymentIntentId) return;
+
+  try {
+    const stripe = getStripe();
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (intent.status !== "requires_capture") return;
+    if (intent.metadata?.capture_mode !== "on_fulfillment") return;
+
+    await stripe.paymentIntents.capture(paymentIntentId);
+  } catch (err) {
+    console.error(`Failed to capture payment for PaymentIntent ${paymentIntentId}:`, err);
+  }
 }
 
 /**
@@ -38,12 +56,12 @@ async function requireAdmin() {
  * unpaid order.
  */
 export async function markOrderFulfilled(orderId: string) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const supabase = createAdminClient();
   const { data: order } = await supabase
     .from("orders")
-    .select("financial_status")
+    .select("financial_status, stripe_payment_intent_id")
     .eq("id", orderId)
     .single();
 
@@ -62,6 +80,8 @@ export async function markOrderFulfilled(orderId: string) {
     redirect(`/admin/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
   }
 
+  await captureOrderPaymentIfDue(order.stripe_payment_intent_id);
+
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/account/orders");
@@ -75,7 +95,7 @@ export async function markOrderFulfilled(orderId: string) {
  * scoped to the two genuinely common bulk operations instead.
  */
 export async function bulkMarkOrdersFulfilled(formData: FormData) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const ids = formData.getAll("order_ids") as string[];
   if (ids.length === 0) {
@@ -83,6 +103,12 @@ export async function bulkMarkOrdersFulfilled(formData: FormData) {
   }
 
   const supabase = createAdminClient();
+  const { data: paidOrders } = await supabase
+    .from("orders")
+    .select("stripe_payment_intent_id")
+    .in("id", ids)
+    .eq("financial_status", "paid");
+
   const { error } = await supabase
     .from("orders")
     .update({ fulfillment_status: "fulfilled", status: "fulfilled" })
@@ -93,13 +119,17 @@ export async function bulkMarkOrdersFulfilled(formData: FormData) {
     redirect(`/admin/orders?error=${encodeURIComponent(error.message)}`);
   }
 
+  await Promise.all(
+    (paidOrders ?? []).map((o) => captureOrderPaymentIfDue(o.stripe_payment_intent_id))
+  );
+
   revalidatePath("/admin/orders");
   revalidatePath("/account/orders");
   redirect("/admin/orders");
 }
 
 export async function bulkCancelOrders(formData: FormData) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const ids = formData.getAll("order_ids") as string[];
   if (ids.length === 0) {
@@ -126,7 +156,7 @@ export async function bulkCancelOrders(formData: FormData) {
  * "More actions" menu.
  */
 export async function cancelOrder(orderId: string) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const supabase = createAdminClient();
   const { error } = await supabase
@@ -154,7 +184,7 @@ export async function cancelOrder(orderId: string) {
  * refund -- this is a direct stock adjustment.
  */
 export async function restockOrder(orderId: string) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const supabase = createAdminClient();
   const { data: orderItems, error: fetchError } = await supabase
@@ -199,7 +229,7 @@ const rateRequestSchema = z.object({
  * shipping box's own tare weight and dimensions).
  */
 export async function fetchShippingRates(orderId: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const parsed = rateRequestSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -309,7 +339,7 @@ const buyLabelSchema = z.object({
  * form only needs to submit the chosen rate id.
  */
 export async function buyShippingLabel(orderId: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const parsed = buyLabelSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -373,7 +403,7 @@ export async function buyShippingLabel(orderId: string, formData: FormData) {
  * admin can re-enter weight/dimensions and fetch fresh rates.
  */
 export async function clearPendingRates(orderId: string) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const supabase = createAdminClient();
   await supabase.from("orders").update({ pending_rates: null }).eq("id", orderId);

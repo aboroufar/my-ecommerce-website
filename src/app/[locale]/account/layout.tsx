@@ -1,6 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getSessionUser } from "@/lib/auth";
+import { getSiteSettings } from "@/lib/siteSettings";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
@@ -12,7 +13,8 @@ export default async function AccountLayout({
   const user = await getSessionUser();
 
   if (!user) {
-    return <SignInForm next="/account" />;
+    const { google_signin_enabled } = await getSiteSettings();
+    return <SignInForm next="/account" googleSigninEnabled={google_signin_enabled} />;
   }
 
   const [t, locale] = await Promise.all([

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
 const slideSchema = z.object({
   headline: z.string().min(1, "Headline is required"),
@@ -13,18 +13,9 @@ const slideSchema = z.object({
   link_url: z.string().min(1, "A link is required"),
 });
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 export async function createHeroSlide(formData: FormData) {
-  await requireAdmin();
+  await requireSection("content");
 
   const parsed = slideSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -55,7 +46,7 @@ export async function createHeroSlide(formData: FormData) {
 }
 
 export async function updateHeroSlide(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("content");
 
   const parsed = slideSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -80,7 +71,7 @@ export async function updateHeroSlide(id: string, formData: FormData) {
 }
 
 export async function deleteHeroSlide(id: string) {
-  await requireAdmin();
+  await requireSection("content");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("hero_slides").delete().eq("id", id);
@@ -100,7 +91,7 @@ export async function deleteHeroSlide(id: string) {
  * a very short list.
  */
 export async function moveHeroSlide(id: string, direction: "up" | "down") {
-  await requireAdmin();
+  await requireSection("content");
 
   const supabase = createAdminClient();
   const { data: slides } = await supabase

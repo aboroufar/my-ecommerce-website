@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
 const brandSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -12,13 +12,9 @@ const brandSchema = z.object({
   link_url: z.union([z.string().min(1), z.literal("")]).optional(),
 });
 
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 export async function createBrand(formData: FormData) {
-  await requireAdmin();
+  await requireSection("brands");
 
   const parsed = brandSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -48,7 +44,7 @@ export async function createBrand(formData: FormData) {
 }
 
 export async function updateBrand(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("brands");
 
   const parsed = brandSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -73,7 +69,7 @@ export async function updateBrand(id: string, formData: FormData) {
 }
 
 export async function deleteBrand(id: string) {
-  await requireAdmin();
+  await requireSection("brands");
 
   const supabase = createAdminClient();
   await supabase.from("brands").delete().eq("id", id);
@@ -88,7 +84,7 @@ export async function deleteBrand(id: string) {
  * pattern as moveHeroSlide.
  */
 export async function moveBrand(id: string, direction: "up" | "down") {
-  await requireAdmin();
+  await requireSection("brands");
 
   const supabase = createAdminClient();
   const { data: brands } = await supabase

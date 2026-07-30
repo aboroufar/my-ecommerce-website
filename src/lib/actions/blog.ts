@@ -4,12 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 function slugify(name: string): string {
   return name
@@ -61,7 +57,7 @@ async function setPostTags(postId: string, tagIds: string[]) {
 }
 
 export async function createPost(formData: FormData) {
-  await requireAdmin();
+  await requireSection("blog");
 
   const parsed = postSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -102,7 +98,7 @@ export async function createPost(formData: FormData) {
 }
 
 export async function updatePost(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("blog");
 
   const parsed = postSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -158,7 +154,7 @@ export async function updatePost(id: string, formData: FormData) {
 }
 
 export async function deletePost(id: string) {
-  await requireAdmin();
+  await requireSection("blog");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("blog_posts").delete().eq("id", id);
@@ -179,7 +175,7 @@ const categorySchema = z.object({
 });
 
 export async function createBlogCategory(formData: FormData) {
-  await requireAdmin();
+  await requireSection("blog");
 
   const parsed = categorySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -204,7 +200,7 @@ export async function createBlogCategory(formData: FormData) {
 }
 
 export async function deleteBlogCategory(id: string) {
-  await requireAdmin();
+  await requireSection("blog");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("blog_categories").delete().eq("id", id);
@@ -227,7 +223,7 @@ const tagSchema = z.object({
 // blog_tags is its own pool, separate from product tags and discount
 // labels -- see supabase/migrations/20260722000001_separate_tag_pools.sql.
 export async function createBlogTag(formData: FormData) {
-  await requireAdmin();
+  await requireSection("blog");
 
   const parsed = tagSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -252,7 +248,7 @@ export async function createBlogTag(formData: FormData) {
 }
 
 export async function deleteBlogTag(id: string) {
-  await requireAdmin();
+  await requireSection("blog");
 
   const supabase = createAdminClient();
   const { error } = await supabase.from("blog_tags").delete().eq("id", id);

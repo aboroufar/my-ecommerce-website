@@ -4,14 +4,10 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 import { getStripe } from "@/lib/stripe";
 import { promoteDraftOrder } from "@/lib/orderStock";
 
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 const draftLineSchema = z.object({
   productId: z.string().uuid(),
@@ -65,7 +61,7 @@ const createDraftOrderSchema = z
  * from the submitted lines_json.
  */
 export async function createDraftOrder(formData: FormData) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const parsed = createDraftOrderSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -185,7 +181,7 @@ export async function createDraftOrder(formData: FormData) {
  * duplicated implementation.
  */
 export async function markDraftOrderPaid(draftOrderId: string) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const supabase = createAdminClient();
   const { data: draftOrder } = await supabase
@@ -228,7 +224,7 @@ export async function markDraftOrderPaid(draftOrderId: string) {
  * webhook can resolve it back to this draft when paid.
  */
 export async function sendDraftOrderInvoice(draftOrderId: string) {
-  await requireAdmin();
+  await requireSection("orders");
 
   const supabase = createAdminClient();
   const { data: draftOrder } = await supabase

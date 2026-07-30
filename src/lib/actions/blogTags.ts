@@ -4,17 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-/**
- * Tags for blog posts, kept in their own blog_tags/blog_post_tag_links
- * tables so they don't share a pool with product tags or discount
- * labels -- mirrors src/lib/actions/tags.ts, but against blog_tags.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 function slugify(name: string): string {
   return name
@@ -32,7 +23,7 @@ const tagSchema = z.object({
 export async function createBlogTagInline(
   name: string
 ): Promise<{ id: string; name: string } | { error: string }> {
-  await requireAdmin();
+  await requireSection("blog");
 
   const parsed = tagSchema.safeParse({ name });
   if (!parsed.success) {

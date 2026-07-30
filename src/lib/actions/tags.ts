@@ -4,17 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 function slugify(name: string): string {
   return name
@@ -30,7 +21,7 @@ const tagSchema = z.object({
 });
 
 export async function createTag(formData: FormData) {
-  await requireAdmin();
+  await requireSection("tags");
 
   const parsed = tagSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -64,7 +55,7 @@ export async function createTag(formData: FormData) {
 export async function createTagInline(
   name: string
 ): Promise<{ id: string; name: string } | { error: string }> {
-  await requireAdmin();
+  await requireSection("tags");
 
   const parsed = tagSchema.safeParse({ name });
   if (!parsed.success) {
@@ -88,7 +79,7 @@ export async function createTagInline(
 }
 
 export async function deleteTag(id: string) {
-  await requireAdmin();
+  await requireSection("tags");
 
   const supabase = createAdminClient();
   // product_tags rows reference this tag with ON DELETE CASCADE, so
@@ -113,7 +104,7 @@ export async function deleteTag(id: string) {
  * (a handful of checkboxes in the product form).
  */
 export async function setProductTags(productId: string, tagIds: string[]) {
-  await requireAdmin();
+  await requireSection("tags");
 
   const supabase = createAdminClient();
   await supabase.from("product_tags").delete().eq("product_id", productId);

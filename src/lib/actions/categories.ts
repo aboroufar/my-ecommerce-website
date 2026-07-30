@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUser } from "@/lib/auth";
+import { requireSection } from "@/lib/permissions.server";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -22,18 +22,9 @@ const categorySchema = z.object({
   featured_in_grid: z.preprocess((v) => v === "on", z.boolean()),
 });
 
-/**
- * Every action here re-checks admin auth itself rather than relying solely
- * on the layout guard -- server actions are callable directly over the
- * network, so the layout's redirect alone isn't enough protection.
- */
-async function requireAdmin() {
-  const user = await getAdminUser();
-  if (!user) redirect("/admin");
-}
 
 export async function createCategory(formData: FormData) {
-  await requireAdmin();
+  await requireSection("categories");
 
   const parsed = categorySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -71,7 +62,7 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(id: string, formData: FormData) {
-  await requireAdmin();
+  await requireSection("categories");
 
   const editPath = `/admin/categories/${id}/edit`;
 
@@ -109,7 +100,7 @@ export async function updateCategory(id: string, formData: FormData) {
 }
 
 export async function deleteCategory(id: string) {
-  await requireAdmin();
+  await requireSection("categories");
 
   const supabase = createAdminClient();
   // product_categories rows reference this category with ON DELETE CASCADE,
@@ -140,7 +131,7 @@ export async function setProductCategories(
   productId: string,
   categoryIds: string[]
 ) {
-  await requireAdmin();
+  await requireSection("categories");
 
   const supabase = createAdminClient();
   await supabase.from("product_categories").delete().eq("product_id", productId);
@@ -163,7 +154,7 @@ export async function setProductCategories(
  * other categories are untouched.
  */
 export async function setCategoryProducts(formData: FormData) {
-  await requireAdmin();
+  await requireSection("categories");
 
   const categoryId = String(formData.get("category_id") ?? "");
   if (!categoryId) {

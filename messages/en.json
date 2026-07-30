@@ -336,6 +336,9 @@
     "reviews": "Reviews ({count})",
     "relatedItems": "Related items"
   },
+  "estimatedDelivery": {
+    "label": "Estimated delivery:"
+  },
   "productCard": {
     "removeFromWishlist": "Remove from wishlist",
     "addToWishlist": "Add to wishlist",
@@ -352,7 +355,8 @@
     "shipping": "Shipping",
     "free": "Free",
     "total": "Total",
-    "vatIncluded": "VAT included"
+    "vatIncluded": "VAT included",
+    "estimatedDelivery": "Estimated delivery:"
   },
   "variantSelector": {
     "selectOption": "Select {option}"
